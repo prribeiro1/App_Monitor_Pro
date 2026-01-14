@@ -413,7 +413,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
   );
 };
 
-const APP_VERSION = '1.2.6';
+const APP_VERSION = '1.2.7';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);

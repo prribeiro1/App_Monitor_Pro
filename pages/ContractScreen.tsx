@@ -147,7 +147,7 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
                 return;
             }
 
-            const PRODUCTION_URL = 'https://monitor-pro.netlify.app';
+            const PRODUCTION_URL = 'https://app-monitor-pro.vercel.app';
             let link = '';
 
             if (data) {
