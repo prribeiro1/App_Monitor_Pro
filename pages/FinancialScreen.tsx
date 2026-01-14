@@ -75,10 +75,17 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
 
     const sendWhatsAppReminder = (student: Student, payment?: Payment) => {
-        const rawPhone = student.responsiblePhone || student.contact;
-        const cleanPhone = rawPhone?.replace(/\D/g, '');
+        let cleanPhone = (student.responsiblePhone || student.contact || '').replace(/\D/g, '');
+
         if (!cleanPhone) {
-            alert("Aluno sem telefone cadastrado.");
+            const manualPhone = prompt("Telefone não encontrado. Digite o número (DDD + Número):", "");
+            if (manualPhone) {
+                cleanPhone = manualPhone.replace(/\D/g, '');
+            }
+        }
+
+        if (!cleanPhone) {
+            alert("É necessário um telefone para enviar o comprovante/cobrança.");
             return;
         }
 
