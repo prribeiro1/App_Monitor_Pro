@@ -1,4 +1,7 @@
 import { dbService } from './db';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 
 export const backupRepository = {
     // Gera o arquivo para download local (Android/Browser)
@@ -32,22 +35,64 @@ export const backupRepository = {
             const data = await dbService.exportAllData();
             const jsonString = JSON.stringify(data, null, 2);
             const fileName = `backup_escolar_${new Date().toISOString().split('T')[0]}.json`;
-            const file = new File([jsonString], fileName, { type: 'application/json' });
 
-            if (navigator.share && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    title: 'Backup Monitor Escolar',
-                    text: 'Backup dos dados do Monitor Escolar Pro',
-                    files: [file]
-                });
+            if (Capacitor.isNativePlatform()) {
+                // Lógica Nativa (Android/iOS)
+                try {
+                    // 1. Salvar arquivo no Cache
+                    const result = await Filesystem.writeFile({
+                        path: fileName,
+                        data: jsonString,
+                        directory: Directory.Cache,
+                        encoding: Encoding.UTF8
+                    });
+
+                    // 2. Compartilhar o arquivo
+                    await Share.share({
+                        title: 'Backup Monitor Escolar',
+                        text: 'Backup dos dados do Monitor Escolar Pro',
+                        url: result.uri,
+                        dialogTitle: 'Salvar Backup'
+                    });
+                } catch (nativeError) {
+                    console.error("Erro nativo no share:", nativeError);
+                    alert("Erro ao compartilhar nativamente: " + JSON.stringify(nativeError));
+                }
             } else {
-                // Fallback para download normal se não suportar share
-                await backupRepository.exportDataLocal();
+                // Lógica Web (Browser)
+                const file = new File([jsonString], fileName, { type: 'application/json' });
+                if (navigator.share && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'Backup Monitor Escolar',
+                        text: 'Backup dos dados do Monitor Escolar Pro',
+                        files: [file]
+                    });
+                } else {
+                    // Fallback para download normal
+                    await backupRepository.exportDataLocal();
+                }
             }
         } catch (error) {
             console.error('Erro ao compartilhar backup:', error);
             // Se der erro no share (ex: cancelado), tenta download normal
             await backupRepository.exportDataLocal();
+        }
+    },
+
+    // Importar Dados (Restaurar Backup)
+    importData: async (jsonString: string): Promise<void> => {
+        try {
+            const data = JSON.parse(jsonString);
+
+            // Validação básica
+            if (!data.routes || !data.students || !data.generatedAt) {
+                throw new Error("Arquivo de backup inválido ou corrompido.");
+            }
+
+            await dbService.importData(data);
+        } catch (error) {
+            console.error('Erro ao importar dados:', error);
+            throw error;
         }
     },
 

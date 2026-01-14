@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Pro - Gestão de Transporte Escolar</title>
+    <meta name="description" content="O app mais completo para gestão de transporte escolar. Chamada digital, rotas GPS, financeiro, manutenção e contratos em um só lugar.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --light-gray: #f1f5f9;
+            --white: #ffffff;
+            --warning: #f59e0b;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-cta {
+            background: var(--secondary);
+            color: var(--white) !important;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: background 0.3s !important;
+        }
+
+        .nav-cta:hover {
+            background: var(--secondary-dark) !important;
+        }
+
+        /* HERO */
+        .hero {
+            padding: 8rem 2rem 4rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .hero-content h1 span {
+            color: var(--primary);
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .badge-icon {
+            color: var(--secondary);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--secondary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--dark);
+            border: 2px solid var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: var(--dark);
+            color: var(--white);
+        }
+
+        .hero-image {
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .phone-mockup {
+            background: var(--dark);
+            padding: 1rem;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .phone-screen {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .phone-screen p {
+            color: var(--gray);
+            text-align: center;
+        }
+
+        /* URGENCY BANNER */
+        .urgency-banner {
+            background: linear-gradient(90deg, var(--warning) 0%, #ea580c 100%);
+            color: var(--white);
+            text-align: center;
+            padding: 1rem 2rem;
+        }
+
+        .urgency-banner p {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .urgency-banner span {
+            background: var(--white);
+            color: var(--warning);
+            padding: 0.25rem 0.75rem;
+            border-radius: 5px;
+            margin-left: 0.5rem;
+            font-weight: 700;
+        }
+
+        /* SECTIONS GENERAL */
+        section {
+            padding: 5rem 2rem;
+        }
+
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* PROBLEMS SECTION */
+        .problems {
+            background: var(--light-gray);
+        }
+
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .problem-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .problem-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .problem-card p {
+            color: var(--gray);
+        }
+
+        .transition-text {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* SOLUTION SECTION */
+        .solution {
+            background: var(--primary);
+            color: var(--white);
+            text-align: center;
+        }
+
+        .solution h2 {
+            color: var(--white);
+        }
+
+        .solution p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* FEATURES SECTION */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .feature-card p {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        /* DIFFERENTIALS */
+        .differentials {
+            background: var(--light-gray);
+        }
+
+        .diff-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .diff-box {
+            padding: 2rem;
+            border-radius: 16px;
+        }
+
+        .diff-box.others {
+            background: var(--white);
+            border: 2px solid #fecaca;
+        }
+
+        .diff-box.ours {
+            background: var(--white);
+            border: 2px solid var(--secondary);
+        }
+
+        .diff-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .diff-box.others h3 {
+            color: #dc2626;
+        }
+
+        .diff-box.ours h3 {
+            color: var(--secondary);
+        }
+
+        .diff-box ul {
+            list-style: none;
+        }
+
+        .diff-box li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            color: var(--gray);
+        }
+
+        .diff-box.others li::before {
+            content: "✗";
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .diff-box.ours li::before {
+            content: "✓";
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .diff-conclusion {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        /* TESTIMONIALS */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .stars {
+            color: var(--warning);
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .testimonial-card blockquote {
+            font-style: italic;
+            color: var(--gray);
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        /* PRICING */
+        .pricing {
+            background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+        }
+
+        .pricing-banner {
+            background: linear-gradient(90deg, var(--warning) 0%, #ea580c 100%);
+            color: var(--white);
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 3rem;
+        }
+
+        .pricing-banner h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .pricing-card {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .pricing-card.featured {
+            border: 3px solid var(--secondary);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.07);
+        }
+
+        .popular-tag {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary);
+            color: var(--white);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        .price {
+            margin-bottom: 1.5rem;
+        }
+
+        .price-old {
+            text-decoration: line-through;
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .price-current {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .price-period {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .pricing-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--gray);
+        }
+
+        .pricing-features li::before {
+            content: "✓";
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .pricing-ideal {
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-style: italic;
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--gray);
+        }
+
+        /* HOW IT WORKS */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0 auto 1rem;
+        }
+
+        .step-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .step-card p {
+            color: var(--gray);
+        }
+
+        /* FAQ */
+        .faq {
+            background: var(--light-gray);
+        }
+
+        .faq-grid {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--white);
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 1.5rem;
+            background: var(--white);
+            border: none;
+            text-align: left;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .faq-question:hover {
+            background: var(--light-gray);
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            color: var(--gray);
+            display: none;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        /* FINAL CTA */
+        .final-cta {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            text-align: center;
+        }
+
+        .final-cta h2 {
+            color: var(--white);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .final-cta > .section-container > p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .urgency-box {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+
+        .urgency-box p {
+            font-size: 1.1rem;
+        }
+
+        .final-cta .btn {
+            font-size: 1.25rem;
+            padding: 1.25rem 3rem;
+        }
+
+        .guarantee-items {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .guarantee-items span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--dark);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        footer .logo {
+            margin-bottom: 1rem;
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        footer a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+
+        /* MOBILE MENU */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 968px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-content h1 {
+                font-size: 2.25rem;
+            }
+
+            .hero-badges {
+                justify-content: center;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-image {
+                order: -1;
+            }
+
+            .diff-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+
+            .pricing-card.featured:hover {
+                transform: translateY(-5px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero {
+                padding: 6rem 1rem 3rem;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            section {
+                padding: 3rem 1rem;
+            }
+
+            .section-header h2 {
+                font-size: 1.75rem;
+            }
+
+            .final-cta h2 {
+                font-size: 1.75rem;
+            }
+
+            .guarantee-items {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* WHATSAPP FLOAT */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 999;
+            transition: transform 0.3s;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+
+        .whatsapp-float svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">Monitor<span>Pro</span></div>
+        <ul class="nav-links">
+            <li><a href="#funcionalidades">Funcionalidades</a></li>
+            <li><a href="#planos">Planos</a></li>
+            <li><a href="#faq">Dúvidas</a></li>
+            <li><a href="https://wa.me/5500000000000?text=Oi!%20Quero%20testar%20o%20Monitor%20Pro" class="nav-cta">Testar Grátis</a></li>
+        </ul>
+        <button class="mobile-menu-btn">☰</button>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Chega de caderno, planilha e <span>bagunça.</span></h1>
+                <p>O app que organiza toda a sua van escolar em um só lugar. Rotas, chamada, financeiro, manutenção e contratos — tudo no celular, funcionando até sem internet.</p>
+                
+                <div class="hero-badges">
+                    <div class="badge">
+                        <span class="badge-icon">✓</span>
+                        Funciona 100% Offline
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">✓</span>
+                        Backup Seguro
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">✓</span>
+                        Relatórios em PDF
+                    </div>
+                </div>
+
+                <div class="hero-buttons">
+                    <a href="https://wa.me/5500000000000?text=Oi!%20Quero%20testar%20o%20Monitor%20Pro" class="btn btn-primary">
+                        Quero Testar Grátis →
+                    </a>
+                    <a href="#funcionalidades" class="btn btn-secondary">
+                        Ver Funcionalidades
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-image">
+                <div class="phone-mockup">
+                    <div class="phone-screen">
+                        <!-- SUBSTITUA POR PRINT DO SEU APP -->
+                        <p>📱<br><br>Coloque aqui o print do seu app</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- URGENCY BANNER -->
+    <div class="urgency-banner">
+        <p>🎁 LANÇAMENTO ESPECIAL — Desconto válido só até <span>26/01</span></p>
+    </div>
+
+    <!-- PROBLEMS -->
+    <section class="problems">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Você se identifica com isso?</h2>
+                <p>A rotina do transporte escolar pode ser caótica. Veja se algum desses problemas é seu:</p>
+            </div>
+
+            <div class="problems-grid">
+                <div class="problem-card">
+                    <span class="problem-icon">😩</span>
+                    <p>Anota tudo no caderno e vive perdendo informação importante</p>
+                </div>
+                <div class="problem-card">
+                    <span class="problem-icon">😩</span>
+                    <p>Não sabe direito quanto tem pra receber no final do mês</p>
+                </div>
+                <div class="problem-card">
+                    <span class="problem-icon">😩</span>
+                    <p>Esquece a manutenção da van e só lembra quando dá problema</p>
+                </div>
+                <div class="problem-card">
+                    <span class="problem-icon">😩</span>
+                    <p>Perde tempo montando listas de chamada no papel toda semana</p>
+                </div>
+                <div class="problem-card">
+                    <span class="problem-icon">😩</span>
+                    <p>Não tem um contrato profissional pra passar pros pais</p>
+                </div>
+                <div class="problem-card">
+                    <span class="problem-icon">😩</span>
+                    <p>Fica sem saber o que responder quando perguntam "meu filho foi hoje?"</p>
+                </div>
+            </div>
+
+            <p class="transition-text">Se você marcou pelo menos 2 desses, o Monitor Pro foi feito pra você.</p>
+        </div>
+    </section>
+
+    <!-- SOLUTION -->
+    <section class="solution">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Apresentamos o Monitor Pro</h2>
+                <p>O aplicativo mais completo para quem trabalha com transporte escolar. Desenvolvido por quem entende a correria do seu dia a dia. Simples de usar, funciona offline e organiza TUDO em um só lugar.</p>
+                <br><br>
+                <p><strong>Chega de gambiarras. É hora de profissionalizar.</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="funcionalidades">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Tudo o que você precisa em um único app</h2>
+                <p>Cada função foi pensada pra facilitar sua rotina — não pra complicar.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3>Chamada Digital</h3>
+                    <p>Registre presença e falta com um toque. Acabou a era do papel e caneta. Rápido, prático e organizado.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Rotas com GPS</h3>
+                    <p>Visualize seus pontos de embarque no mapa. Otimize o trajeto, economize combustível e nunca se perca.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Controle Financeiro</h3>
+                    <p>Saiba exatamente quanto tem a receber. Controle mensalidades, pagamentos atrasados e fluxo de caixa.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📄</div>
+                    <h3>Relatórios em PDF</h3>
+                    <p>Gere relatórios de frequência com um clique. Envie direto pros pais pelo WhatsApp. Profissionalismo na prática.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Manutenção por Km</h3>
+                    <p>Receba avisos antes do problema acontecer. Cadastre as manutenções e o app te lembra na quilometragem certa.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>Geração de Contratos</h3>
+                    <p>Contratos prontos e profissionais. Preencha os dados e envie pros responsáveis. Sem dor de cabeça.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚠️</div>
+                    <h3>Registro de Ocorrências</h3>
+                    <p>Documentou, tá protegido. Registre qualquer incidente durante o trajeto com data e detalhes.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📶</div>
+                    <h3>Funciona 100% Offline</h3>
+                    <p>Sem internet? Sem problema. Seus dados ficam salvos no celular. Use em qualquer lugar.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">☁️</div>
+                    <h3>Backup Seguro</h3>
+                    <p>Seus dados sempre protegidos. Faça backup e restaure quando precisar. Você no controle.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DIFFERENTIALS -->
+    <section class="differentials">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Por que o Monitor Pro é diferente?</h2>
+            </div>
+
+            <div class="diff-grid">
+                <div class="diff-box others">
+                    <h3>❌ Outros Apps</h3>
+                    <ul>
+                        <li>Focam só no financeiro ou só na chamada</li>
+                        <li>Precisam de internet pra funcionar</li>
+                        <li>Suporte demorado ou inexistente</li>
+                        <li>Você precisa de vários apps diferentes</li>
+                        <li>Interface complicada e confusa</li>
+                    </ul>
+                </div>
+                <div class="diff-box ours">
+                    <h3>✅ Monitor Pro</h3>
+                    <ul>
+                        <li>Gestão COMPLETA em um único app</li>
+                        <li>Funciona 100% offline</li>
+                        <li>Suporte humano 7 dias por semana</li>
+                        <li>Tudo integrado: chamada, rotas, financeiro, manutenção, contratos...</li>
+                        <li>Interface simples e fácil de usar</li>
+                    </ul>
+                </div>
+            </div>
+
+            <p class="diff-conclusion">Enquanto outros resolvem um pedaço do problema, nós resolvemos tudo.</p>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section>
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Quem já testou, aprovou</h2>
+                <p>Veja o que os profissionais do transporte escolar estão dizendo:</p>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <blockquote>"Finalmente consigo saber quanto tenho pra receber no mês. Antes era tudo no caderno e eu vivia me perdendo."</blockquote>
+                    <p class="testimonial-author">— João, condutor em São Paulo</p>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <blockquote>"O app é muito fácil de usar. Achei que ia ser complicado mas em 10 minutos já tava funcionando."</blockquote>
+                    <p class="testimonial-author">— Maria, monitora em Curitiba</p>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <blockquote>"O melhor é funcionar sem internet. Na minha rota pega mal o sinal e mesmo assim uso normal."</blockquote>
+                    <p class="testimonial-author">— Carlos, condutor em BH</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="pricing" id="planos">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Planos que cabem no seu bolso</h2>
+                <p>Menos que um lanche por mês pra organizar todo seu negócio.</p>
+            </div>
+
+            <div class="pricing-banner">
+                <h3>🎁 LANÇAMENTO ESPECIAL — SÓ ATÉ 26/01</h3>
+                <p>Garanta o desconto de lançamento antes que acabe!</p>
+            </div>
+
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Básico</h3>
+                    <div class="price">
+                        <span class="price-current">R$ 9,90</span>
+                        <span class="price-period">/mês</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>Cadastro de alunos</li>
+                        <li>Chamada digital</li>
+                        <li>Relatórios básicos</li>
+                        <li>Funciona offline</li>
+                        <li>Backup seguro</li>
+                    </ul>
+                    <p class="pricing-ideal">Ideal pra quem tá começando</p>
+                    <a href="https://wa.me/5500000000000?text=Oi!%20Quero%20o%20plano%20Básico" class="btn btn-secondary">Quero o Básico</a>
+                </div>
+
+                <div class="pricing-card featured">
+                    <span class="popular-tag">⭐ MAIS POPULAR</span>
+                    <h3>Pro</h3>
+                    <div class="price">
+                        <span class="price-old">De R$ 19,90 por</span><br>
+                        <span class="price-current">R$ 14,90</span>
+                        <span class="price-period">/mês</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>TUDO do Básico</li>
+                        <li>Rotas com GPS</li>
+                        <li>Controle financeiro completo</li>
+                        <li>Manutenção por km</li>
+                        <li>Geração de contratos</li>
+                        <li>Registro de ocorrências</li>
+                        <li>Relatórios avançados em PDF</li>
+                        <li>Suporte prioritário 7 dias</li>
+                    </ul>
+                    <p class="pricing-ideal">Gestão completa da sua van</p>
+                    <a href="https://wa.me/5500000000000?text=Oi!%20Quero%20o%20plano%20Pro" class="btn btn-primary">Quero o Pro</a>
+                </div>
+
+                <div class="pricing-card">
+                    <h3>Anual</h3>
+                    <div class="price">
+                        <span class="price-current">R$ 149,90</span>
+                        <span class="price-period">/ano</span>
+                    </div>
+                    <p style="color: var(--secondary); font-weight: 600; margin-bottom: 1rem;">≈ R$ 12,49/mês — Economia de 37%</p>
+                    <ul class="pricing-features">
+                        <li>TUDO do Pro</li>
+                        <li>Pague uma vez, use o ano todo</li>
+                        <li>Maior economia</li>
+                        <li>Suporte prioritário</li>
+                        <li>Atualizações inclusas</li>
+                    </ul>
+                    <p class="pricing-ideal">Pra quem quer economizar</p>
+                    <a href="https://wa.me/5500000000000?text=Oi!%20Quero%20o%20plano%20Anual" class="btn btn-secondary">Quero o Anual</a>
+                </div>
+            </div>
+
+            <p class="pricing-footer">💳 Pagamento seguro • Acesso imediato • Suporte incluso</p>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section>
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Comece em 3 passos simples</h2>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Fale Conosco</h3>
+                    <p>Clique no botão e chama no WhatsApp. Tire suas dúvidas e escolha seu plano.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Baixe o App</h3>
+                    <p>Disponível na Play Store. Instalou, ativou, pronto.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Organize sua Van</h3>
+                    <p>Cadastre seus alunos e comece a usar. Em 15 minutos você já tá no controle.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq" id="faq">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Dúvidas Frequentes</h2>
+            </div>
+
+            <div class="faq-grid">
+                <div class="faq-item active">
+                    <button class="faq-question">
+                        Funciona sem internet?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Sim! O Monitor Pro funciona 100% offline. Seus dados ficam salvos no celular. Você só precisa de internet pra fazer backup ou atualizações.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Posso testar antes de pagar?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Sim! Oferecemos um período de teste gratuito pra você conhecer o app antes de decidir. É só chamar no WhatsApp.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        É difícil de usar?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Não! O app foi feito pra ser simples. Se você usa WhatsApp, consegue usar o Monitor Pro. E qualquer dúvida, nosso suporte te ajuda.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        E se eu não gostar?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Sem problemas. Se não ficar satisfeito nos primeiros 7 dias, devolvemos seu dinheiro. Sem burocracia.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Funciona no meu celular?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>O Monitor Pro funciona em celulares Android. Em breve teremos versão para iPhone também.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Como funciona o suporte?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Nosso suporte é humano e funciona 7 dias por semana pelo WhatsApp. Nada de robô ou espera de dias pra resposta.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Meus dados ficam seguros?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Sim! Você pode fazer backup a qualquer momento. Seus dados são seus e ficam protegidos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="final-cta">
+        <div class="section-container">
+            <h2>Pronto pra profissionalizar sua van?</h2>
+            <p>Enquanto você continua no caderno, outros condutores já estão organizados.</p>
+            
+            <div class="urgency-box">
+                <p>⏰ Oferta de lançamento válida só até <strong>26/01</strong>.<br>Depois o preço volta ao normal.</p>
+            </div>
+
+            <br>
+
+            <a href="https://wa.me/5500000000000?text=Oi!%20Quero%20começar%20a%20usar%20o%20Monitor%20Pro" class="btn btn-primary">
+                Quero Começar Agora →
+            </a>
+
+            <div class="guarantee-items">
+                <span>✓ Teste grátis disponível</span>
+                <span>✓ Suporte 7 dias por semana</span>
+                <span>✓ Satisfação garantida ou dinheiro de volta</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="logo">Monitor<span>Pro</span></div>
+        <p>O app do transportador escolar profissional</p>
+        <p>📱 Disponível na <a href="#">Play Store</a></p>
+        <p>💬 Suporte: <a href="https://wa.me/5500000000000">(00) 00000-0000</a></p>
+        <br>
+        <p>© 2025 Monitor Pro. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- WHATSAPP FLOAT -->
+    <a href="https://wa.me/5500000000000?text=Oi!%20Vim%20pelo%20site%20e%20quero%20saber%20mais%20sobre%20o%20Monitor%20Pro" class="whatsapp-float" target="_blank">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+    </a>
+
+    <!-- FAQ SCRIPT -->
+    <script>
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.parentElement;
+                const isActive = faqItem.classList.contains('active');
+                
+                // Close all
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Open clicked if wasn't active
+                if (!isActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

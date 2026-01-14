@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obrigado! - Monitor Escolar Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Meta Pixel Code -->
+    <script>
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1384113173506701');
+        fbq('track', 'PageView');
+        fbq('track', 'Purchase', { currency: "BRL", value: 1.00 }); // Track conversion
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+            src="https://www.facebook.com/tr?id=1384113173506701&ev=PageView&noscript=1" /></noscript>
+    <!-- End Meta Pixel Code -->
+    <style>
+        .thank-you-hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding-top: 80px;
+            /* Navbar space */
+        }
+
+        .success-icon {
+            color: #22c55e;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
+
+        .step-box {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 30px auto;
+            max-width: 500px;
+            text-align: left;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            background-color: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <img src="logo.png" alt="Monitor Pro Logo" class="logo-img"
+                    style="height: 40px; width: auto; margin-right: 10px;">
+                <span>Monitor <span class="highlight">Pro</span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero thank-you-hero">
+        <div class="container">
+            <i data-lucide="check-circle" class="success-icon"></i>
+            <h1>Pagamento Confirmado! 🎉</h1>
+            <p style="text-align: center; margin-bottom: 30px;">Seja bem-vindo ao time. Siga os passos abaixo para
+                começar:</p>
+
+            <div class="step-box">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>Aguarde seu Acesso</strong><br>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">Estamos gerando seu usuário e senha.
+                            Você receberá no seu WhatsApp em instantes.</span>
+                    </div>
+                </div>
+            </div>
+
+            <p style="margin-top: 30px; color: var(--text-muted); font-size: 0.9rem;">
+                Dúvidas? <a href="https://wa.me/5522999837547" style="color: var(--primary);">Chamar no WhatsApp</a>
+            </p>
+        </div>
+    </header>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

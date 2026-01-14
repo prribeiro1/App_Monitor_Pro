@@ -1,32 +1,114 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { authService } from '../services/auth';
 import { Icon } from '../components/Icon';
 
-interface Props {
-  onLogin: () => void;
-}
+export const LoginScreen: React.FC = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-export const LoginScreen: React.FC<Props> = ({ onLogin }) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      await authService.signIn(username, password);
+      // O App.tsx vai detectar a mudança de sessão automaticamente
+    } catch (err: any) {
+      console.error(err);
+      if (err.message.includes('Invalid login')) {
+        setError('Usuário ou senha incorretos.');
+      } else {
+        setError('Erro ao entrar. Verifique sua conexão.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-navy-900 p-6">
-      <div className="w-full max-w-sm bg-navy-800 p-8 rounded-2xl shadow-2xl border border-navy-700 text-center">
-        <div className="bg-navy-900 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-primary-500 shadow-lg shadow-primary-500/20">
-          <Icon name="bus" size={40} className="text-primary-500" />
+    <div className="min-h-screen bg-navy-900 flex items-center justify-center p-4">
+      <div className="bg-navy-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-navy-700">
+
+        {/* Logo / Header */}
+        <div className="text-center mb-8">
+          <div className="bg-transparent w-24 h-24 flex items-center justify-center mx-auto mb-2">
+            <img src="/logo.png" alt="Logo Monitor Pro" className="w-full h-full object-contain" />
+          </div>
+          <h1 className="text-2xl font-bold text-white">Monitor Pro</h1>
+          <p className="text-gray-400 text-sm mt-2">Área Restrita</p>
         </div>
-        
-        <h2 className="text-2xl font-bold text-white mb-2">Monitor Escolar</h2>
-        <p className="text-gray-400 mb-8">Gestão de transporte inteligente</p>
 
-        <button 
-          onClick={onLogin}
-          className="w-full bg-white text-gray-900 font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-100 transition-all active:scale-95 shadow-lg"
-        >
-          <Icon name="google" size={20} className="text-red-600" />
-          Entrar com Google
-        </button>
+        {/* Form */}
+        <form onSubmit={handleLogin} className="space-y-4">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm text-center">
+              {error}
+            </div>
+          )}
 
-        <p className="mt-6 text-xs text-gray-500">
-          Ao entrar, seus dados serão sincronizados com o Google Drive para backup.
-        </p>
+          <div>
+            <label className="block text-gray-400 text-xs font-bold uppercase mb-2">Usuário</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon name="user" size={18} className="text-gray-500" />
+              </div>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="bg-navy-900 text-white pl-10 p-3 rounded-xl border border-navy-700 w-full focus:border-primary-500 focus:outline-none transition"
+                placeholder="Seu usuário de acesso"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-gray-400 text-xs font-bold uppercase mb-2">Senha</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon name="lock" size={18} className="text-gray-500" />
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-navy-900 text-white pl-10 p-3 rounded-xl border border-navy-700 w-full focus:border-primary-500 focus:outline-none transition"
+                placeholder="Sua senha secreta"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold p-4 rounded-xl shadow-lg shadow-primary-600/20 transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+          >
+            {loading ? 'Entrando...' : 'Acessar Sistema'}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center space-y-4">
+          <p className="text-gray-500 text-xs">
+            Não tem acesso? Entre em contato com o administrador.
+          </p>
+
+          <a
+            href="https://wa.me/5522999837547?text=Olá! Gostaria de adquirir um acesso ao Monitor Pro."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-green-500/30 text-green-400 hover:bg-green-500/10 transition text-sm font-bold"
+          >
+            <Icon name="message-circle" size={18} />
+            Solicitar Acesso via WhatsApp
+          </a>
+
+
+        </div>
       </div>
     </div>
   );
