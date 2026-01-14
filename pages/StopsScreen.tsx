@@ -4,7 +4,7 @@ import { Route, Stop } from '../types';
 import { Icon } from '../components/Icon';
 import { Geolocation } from '@capacitor/geolocation';
 
-export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
+export const StopsScreen: React.FC<{ canUseGps: boolean }> = ({ canUseGps }) => {
   const [stops, setStops] = useState<Stop[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,7 +94,7 @@ export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
       // 2. Wait up to 30s for a valid reading
       // 3. If fails, fallback to any available cached location (if acceptable) or throw error
 
-      const getPosition = () => new Promise<GeolocationPosition>((resolve, reject) => {
+      const getPosition = () => new Promise<any>((resolve, reject) => {
         let id: string;
         const timeoutId = setTimeout(() => {
           Geolocation.clearWatch({ id });
@@ -261,7 +261,7 @@ export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {isPro && stop.latitude && stop.longitude && (
+                        {canUseGps && stop.latitude && stop.longitude && (
                           <button
                             onClick={() => openNavigation(stop.latitude!, stop.longitude!)}
                             className="p-2 text-blue-400 hover:text-blue-300 bg-blue-400/10 rounded-lg"
@@ -270,8 +270,8 @@ export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
                             <Icon name="road" size={16} />
                           </button>
                         )}
-                        {!isPro && (
-                          <button onClick={() => alert("Funcionalidade PRO. Assine para liberar navegação GPS.")} className="p-2 text-gray-600">
+                        {!canUseGps && (
+                          <button onClick={() => alert("Acesso ao GPS bloqueado. Entre em contato com o administrador.")} className="p-2 text-gray-600">
                             <Icon name="lock" size={16} />
                           </button>
                         )}
@@ -321,10 +321,10 @@ export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
               </div>
 
               {/* GPS Section */}
-              <div className={`bg-navy-900/50 p-4 rounded-lg border ${isPro ? 'border-navy-700' : 'border-red-900/50 opacity-50 pointer-events-none'}`}>
+              <div className={`bg-navy-900/50 p-4 rounded-lg border ${canUseGps ? 'border-navy-700' : 'border-red-900/50 opacity-50 pointer-events-none'}`}>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm text-gray-400 font-medium">Localização GPS (Opcional)</label>
-                  {!isPro && <span className="text-xs text-red-400 font-bold flex items-center gap-1"><Icon name="lock" size={10} /> PRO</span>}
+                  {!canUseGps && <span className="text-xs text-red-400 font-bold flex items-center gap-1"><Icon name="lock" size={10} /> BLOQUEADO</span>}
                 </div>
 
                 {/* Address Search */}
@@ -339,7 +339,7 @@ export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
                   <button
                     type="button"
                     onClick={searchAddress}
-                    disabled={isSearchingAddress || !isPro}
+                    disabled={isSearchingAddress || !canUseGps}
                     className="bg-navy-700 hover:bg-navy-600 text-white p-2 rounded-lg border border-navy-600"
                   >
                     {isSearchingAddress ? <Icon name="loader" className="animate-spin" size={18} /> : <Icon name="search" size={18} />}
@@ -352,7 +352,7 @@ export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
                   <button
                     type="button"
                     onClick={getCurrentLocation}
-                    disabled={isLoadingLocation || !isPro}
+                    disabled={isLoadingLocation || !canUseGps}
                     className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors disabled:opacity-50"
                   >
                     {isLoadingLocation ? (
@@ -376,7 +376,7 @@ export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
                       onChange={e => setLatitude(parseFloat(e.target.value))}
                       className="w-full bg-navy-900 border border-navy-700 text-white p-2 rounded text-sm"
                       placeholder="0.000000"
-                      disabled={!isPro}
+                      disabled={!canUseGps}
                     />
                   </div>
                   <div>
@@ -388,7 +388,7 @@ export const StopsScreen: React.FC<{ isPro: boolean }> = ({ isPro }) => {
                       onChange={e => setLongitude(parseFloat(e.target.value))}
                       className="w-full bg-navy-900 border border-navy-700 text-white p-2 rounded text-sm"
                       placeholder="0.000000"
-                      disabled={!isPro}
+                      disabled={!canUseGps}
                     />
                   </div>
                 </div>
