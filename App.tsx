@@ -137,7 +137,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
   return (
     <div className="flex flex-col h-screen bg-navy-900 text-gray-100 overflow-hidden">
       {/* Header */}
-      <header className="bg-navy-800 p-4 shadow-lg flex justify-between items-center z-10">
+      <header className="bg-navy-800 px-4 pb-4 shadow-lg flex justify-between items-center z-10" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-2">
           <Icon name="face" className="text-primary-500" size={28} />
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
@@ -165,8 +165,8 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
 
       {/* Settings Modal */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700 shadow-2xl">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700 shadow-2xl max-h-full overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-white">Configurações</h3>
               <button onClick={() => setIsSettingsOpen(false)} className="text-gray-400 hover:text-white">
@@ -293,8 +293,8 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
 
       {/* Edit Profile Modal */}
       {isEditProfileOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-          <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700 shadow-2xl overflow-y-auto max-h-full">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-white">Editar Meu Perfil</h3>
               <button onClick={() => setIsEditProfileOpen(false)} className="text-gray-400 hover:text-white">
@@ -383,7 +383,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
 
       {/* Edit Contract Template Modal */}
       {isEditContractOpen && (
-        <div className="fixed inset-0 bg-navy-900 z-[70] overflow-y-auto">
+        <div className="fixed inset-0 bg-navy-900 z-[70] overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <ContractTemplateScreen
             settings={settings}
             onSave={onSaveSettings}
@@ -398,7 +398,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
       </main>
 
       {/* Bottom Nav */}
-      <nav className="bg-navy-800 h-16 flex items-center justify-around shadow-inner border-t border-navy-700 z-20 shrink-0 pb-safe">
+      <nav className="bg-navy-800 min-h-16 h-auto py-2 flex items-center justify-around shadow-inner border-t border-navy-700 z-20 shrink-0 pb-safe">
         {tabs.map(tab => (
           <BottomNavItem
             key={tab.path}
