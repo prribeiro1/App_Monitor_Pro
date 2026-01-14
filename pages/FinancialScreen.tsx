@@ -75,7 +75,8 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
 
     const sendWhatsAppReminder = (student: Student, payment?: Payment) => {
-        const cleanPhone = student.contact?.replace(/\D/g, '');
+        const rawPhone = student.responsiblePhone || student.contact;
+        const cleanPhone = rawPhone?.replace(/\D/g, '');
         if (!cleanPhone) {
             alert("Aluno sem telefone cadastrado.");
             return;
