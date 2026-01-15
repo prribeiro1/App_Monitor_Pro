@@ -26,5 +26,12 @@ body {
 }
 
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+/* Fallback para dispositivos que não reportam safe area mas tem botões sobrepostos */
+@media (max-width: 768px) {
+  .pb-safe {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
 }

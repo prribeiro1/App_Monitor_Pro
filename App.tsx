@@ -398,7 +398,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
       </main>
 
       {/* Bottom Nav */}
-      <nav className="bg-navy-800 min-h-16 h-auto py-2 flex items-center justify-around shadow-inner border-t border-navy-700 z-20 shrink-0 pb-safe">
+      <nav className="bg-navy-800 h-auto pt-3 flex items-center justify-around shadow-inner border-t border-navy-700 z-20 shrink-0 pb-safe">
         {tabs.map(tab => (
           <BottomNavItem
             key={tab.path}
@@ -413,7 +413,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
   );
 };
 
-const APP_VERSION = '1.2.7';
+const APP_VERSION = '1.2.8';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
