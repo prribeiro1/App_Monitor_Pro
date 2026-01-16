@@ -19,7 +19,6 @@ export interface Student {
   id: string;
   stopId: string;
   name: string;
-  // photoUrl removed for Local-First privacy
   active: boolean;
   guardianName?: string; // Nome do Responsável
   contact?: string; // Telefone/Contato
@@ -28,6 +27,10 @@ export interface Student {
   order?: number;
   monthlyFees?: number; // Valor da Mensalidade
   dueDay?: number; // Dia de Vencimento
+  birthDate?: string; // Data de nascimento
+  school?: string; // Escola
+  shift?: 'integral' | 'manha' | 'tarde' | 'noite'; // Turno
+  observation?: string; // Observações (alergias, condições, etc.)
 }
 
 export enum AttendanceStatus {

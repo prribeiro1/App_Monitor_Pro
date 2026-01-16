@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type IconName = 'bus' | 'map-pin' | 'users' | 'user' | 'clipboard' | 'alert-triangle' | 'bar-chart' | 'plus' | 'trash' | 'edit' | 'edit-3' | 'check' | 'x' | 'log-out' | 'menu' | 'google' | 'save' | 'cloud-upload' | 'road' | 'pencil' | 'face' | 'phone' | 'download' | 'map' | 'chevron-up' | 'chevron-down' | 'dollar-sign' | 'lock' | 'message-circle' | 'settings' | 'tool' | 'check-circle' | 'file-text' | 'arrow-left' | 'smartphone' | 'share-2' | 'info' | 'refresh-cw' | 'book' | 'file-minus' | 'shield-off';
+export type IconName = 'bus' | 'map-pin' | 'users' | 'user' | 'clipboard' | 'alert-triangle' | 'bar-chart' | 'plus' | 'trash' | 'edit' | 'edit-3' | 'check' | 'x' | 'log-out' | 'menu' | 'google' | 'save' | 'cloud-upload' | 'road' | 'pencil' | 'face' | 'phone' | 'download' | 'map' | 'chevron-up' | 'chevron-down' | 'dollar-sign' | 'lock' | 'message-circle' | 'settings' | 'tool' | 'check-circle' | 'file-text' | 'arrow-left' | 'smartphone' | 'share-2' | 'info' | 'refresh-cw' | 'book' | 'file-minus' | 'shield-off' | 'home' | 'search' | 'bell' | 'upload-cloud' | 'download-cloud' | 'alert-circle' | 'cloud' | 'chevron-right' | 'loader';
 
 interface IconProps {
   name: IconName;
@@ -50,7 +50,16 @@ const icons: Record<IconName, React.ReactNode> = {
   user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
   book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></>,
   'file-minus': <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="9" y1="15" x2="15" y2="15" /></>,
-  'shield-off': <><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18" /><path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38" /><line x1="1" y1="1" x2="23" y2="23" /></>
+  'shield-off': <><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18" /><path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38" /><line x1="1" y1="1" x2="23" y2="23" /></>,
+  home: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10" />,
+  search: <><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>,
+  bell: <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0" />,
+  'upload-cloud': <path d="M16 16l-4-4-4 4 M12 12v9 M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />,
+  'download-cloud': <path d="M8 17l4 4 4-4 M12 12v9 M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />,
+  'alert-circle': <><circle cx="12" cy="12" r="10" /><path d="M12 8v4 M12 16h.01" /></>,
+  cloud: <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />,
+  'chevron-right': <path d="M9 18l6-6-6-6" />,
+  loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />
 
 };
 

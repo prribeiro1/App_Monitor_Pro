@@ -48,6 +48,29 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         return payments.find(p => p.studentId === studentId && p.month === month && p.year === year);
     };
 
+    const getDueDateStatus = (student: Student) => {
+        if (!student.dueDay) return null;
+        
+        const today = new Date();
+        const currentDay = today.getDate();
+        const currentMonth = today.getMonth() + 1;
+        const currentYear = today.getFullYear();
+        
+        // Só mostra status se estiver olhando o mês atual
+        if (month !== currentMonth || year !== currentYear) {
+            return { text: `Vence dia ${student.dueDay}`, color: 'text-gray-400', isLate: false };
+        }
+        
+        if (currentDay > student.dueDay) {
+            const daysLate = currentDay - student.dueDay;
+            return { text: `Atrasado ${daysLate} dia${daysLate > 1 ? 's' : ''}`, color: 'text-red-400', isLate: true };
+        } else if (currentDay === student.dueDay) {
+            return { text: 'Vence hoje!', color: 'text-orange-400', isLate: false };
+        } else {
+            return { text: `Vence dia ${student.dueDay}`, color: 'text-gray-400', isLate: false };
+        }
+    };
+
     const togglePayment = async (student: Student) => {
         const existing = getPaymentForStudent(student.id);
 
@@ -70,6 +93,26 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                 await dbService.savePayment(newPayment);
             }
         }
+        fetchData();
+    };
+
+    const quickPay = async (student: Student) => {
+        const amount = student.monthlyFees || 0;
+        if (amount <= 0) {
+            alert(`${student.name} não tem mensalidade cadastrada. Edite o aluno para definir o valor.`);
+            return;
+        }
+        
+        const newPayment: Payment = {
+            id: crypto.randomUUID(),
+            studentId: student.id,
+            month,
+            year,
+            amount,
+            paidAt: new Date().toISOString(),
+            timestamp: Date.now()
+        };
+        await dbService.savePayment(newPayment);
         fetchData();
     };
 
@@ -258,24 +301,53 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                                             return route && stop ? `${route.name} - ${stop.name}` : 'Sem rota definida';
                                         })()}
                                     </p>
-                                    {payment && <p className="text-xs text-green-400">Pago em {new Date(payment.paidAt).toLocaleDateString()}</p>}
+                                    {payment ? (
+                                        <p className="text-xs text-green-400">Pago em {new Date(payment.paidAt).toLocaleDateString()}</p>
+                                    ) : (
+                                        (() => {
+                                            const dueStatus = getDueDateStatus(student);
+                                            return dueStatus ? (
+                                                <p className={`text-xs ${dueStatus.color}`}>{dueStatus.text}</p>
+                                            ) : null;
+                                        })()
+                                    )}
                                 </div>
                             </div>
                             <div className="text-right flex flex-col items-end gap-1">
                                 {payment ? (
-                                    <span className="text-green-400 font-bold">R$ {payment.amount.toFixed(2)}</span>
+                                    <>
+                                        <span className="text-green-400 font-bold">R$ {payment.amount.toFixed(2)}</span>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); sendWhatsAppReminder(student, payment); }}
+                                            className="text-[10px] flex items-center gap-1 bg-green-600/20 text-green-400 px-2 py-1 rounded-full hover:bg-green-600/30"
+                                        >
+                                            <Icon name="message-circle" size={12} />
+                                            Recibo
+                                        </button>
+                                    </>
                                 ) : (
-                                    <span className="text-red-400 text-sm font-bold">
-                                        {student.monthlyFees ? `R$ ${student.monthlyFees.toFixed(2)}` : 'Pendente'}
-                                    </span>
+                                    <>
+                                        <span className="text-red-400 text-sm font-bold">
+                                            {student.monthlyFees ? `R$ ${student.monthlyFees.toFixed(2)}` : 'Pendente'}
+                                        </span>
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); quickPay(student); }}
+                                                className="text-[10px] flex items-center gap-1 bg-primary-600/20 text-primary-400 px-2 py-1 rounded-full hover:bg-primary-600/30"
+                                            >
+                                                <Icon name="check" size={12} />
+                                                Pagou
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); sendWhatsAppReminder(student, undefined); }}
+                                                className="text-[10px] flex items-center gap-1 bg-orange-600/20 text-orange-400 px-2 py-1 rounded-full hover:bg-orange-600/30"
+                                            >
+                                                <Icon name="message-circle" size={12} />
+                                                Cobrar
+                                            </button>
+                                        </div>
+                                    </>
                                 )}
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); sendWhatsAppReminder(student, payment); }}
-                                    className="text-[10px] flex items-center gap-1 bg-green-600/20 text-green-400 px-2 py-1 rounded-full hover:bg-green-600/30"
-                                >
-                                    <Icon name="message-circle" size={12} />
-                                    {payment ? 'Recibo' : 'Cobrar'}
-                                </button>
                             </div>
                         </div>
                     );

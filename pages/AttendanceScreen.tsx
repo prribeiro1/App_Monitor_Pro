@@ -29,6 +29,14 @@ export const AttendanceScreen: React.FC = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
+  // Verifica se é aniversário do aluno
+  const isBirthday = (student: Student) => {
+    if (!student.birthDate) return false;
+    const todayDate = new Date();
+    const [year, month, day] = student.birthDate.split('-').map(Number);
+    return todayDate.getDate() === day && (todayDate.getMonth() + 1) === month;
+  };
+
   const loadData = async () => {
     const [allStudents, allStops, allRoutes, allAttendance] = await Promise.all([
       dbService.getStudents(),
@@ -166,6 +174,11 @@ export const AttendanceScreen: React.FC = () => {
                           <InitialsAvatar name={student.name} />
                           <div className="truncate">
                             <h3 className="text-white font-bold text-base truncate">{student.name}</h3>
+                            {isBirthday(student) && (
+                              <p className="text-[10px] text-pink-400 flex items-center gap-1">
+                                🎂 Aniversário Hoje
+                              </p>
+                            )}
                             <p className="text-[10px] text-gray-400 flex items-center gap-1">
                               <Icon name="map-pin" size={8} /> {stopName}
                             </p>

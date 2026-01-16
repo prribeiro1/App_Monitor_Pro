@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { dbService } from '../services/db';
 import { Stop, Student, Route } from '../types';
 import { Icon } from '../components/Icon';
@@ -32,7 +33,15 @@ const InitialsAvatar: React.FC<{ name: string }> = ({ name }) => {
   );
 };
 
+const shiftLabels: Record<string, string> = {
+  integral: 'Integral',
+  manha: 'Manhã',
+  tarde: 'Tarde',
+  noite: 'Noite'
+};
+
 export const StudentsScreen: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [students, setStudents] = useState<Student[]>([]);
   const [stops, setStops] = useState<Stop[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -40,15 +49,21 @@ export const StudentsScreen: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
   const [expandedStops, setExpandedStops] = useState<Record<string, boolean>>({});
+  
+  // Modal de detalhes do aluno
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   // Form State
-  const [namesInput, setNamesInput] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [school, setSchool] = useState('');
+  const [shift, setShift] = useState<'integral' | 'manha' | 'tarde' | 'noite'>('manha');
   const [stopId, setStopId] = useState('');
   const [selectedRouteId, setSelectedRouteId] = useState('');
   const [guardianName, setGuardianName] = useState('');
-  const [contact, setContact] = useState('');
   const [responsibleCpf, setResponsibleCpf] = useState('');
   const [responsiblePhone, setResponsiblePhone] = useState('');
+  const [observation, setObservation] = useState('');
   const [monthlyFees, setMonthlyFees] = useState('');
   const [dueDay, setDueDay] = useState('');
 
@@ -59,7 +74,6 @@ export const StudentsScreen: React.FC = () => {
       dbService.getRoutes()
     ]);
 
-    // Sort everything
     st.sort((a, b) => (a.order || 0) - (b.order || 0));
     sp.sort((a, b) => a.order - b.order);
 
@@ -74,6 +88,19 @@ export const StudentsScreen: React.FC = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  // Abrir aluno via URL (busca global)
+  useEffect(() => {
+    const openId = searchParams.get('open');
+    if (openId && students.length > 0) {
+      const student = students.find(s => s.id === openId);
+      if (student) {
+        setSelectedStudent(student);
+        // Limpar o parâmetro da URL
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, students]);
+
   const toggleRoute = (id: string) => {
     setExpandedRoutes(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -83,26 +110,21 @@ export const StudentsScreen: React.FC = () => {
   };
 
   const moveStudent = async (student: Student, direction: 'up' | 'down') => {
-    // Find students in the same stop
     const siblings = students.filter(s => s.stopId === student.stopId);
     const index = siblings.findIndex(s => s.id === student.id);
 
     if (direction === 'up' && index > 0) {
       const prev = siblings[index - 1];
-      // Swap orders
       const tempOrder = student.order || 0;
       student.order = prev.order || 0;
       prev.order = tempOrder;
-
       await Promise.all([dbService.saveStudent(student), dbService.saveStudent(prev)]);
       fetchData();
     } else if (direction === 'down' && index < siblings.length - 1) {
       const next = siblings[index + 1];
-      // Swap orders
       const tempOrder = student.order || 0;
       student.order = next.order || 0;
       next.order = tempOrder;
-
       await Promise.all([dbService.saveStudent(student), dbService.saveStudent(next)]);
       fetchData();
     }
@@ -111,60 +133,40 @@ export const StudentsScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editingId) {
-      // Edit Single
-      const existing = students.find(s => s.id === editingId);
-      const student: Student = {
-        id: editingId,
-        stopId,
-        name: namesInput,
-        active: true,
-        guardianName,
-        contact,
-        responsibleCpf,
-        responsiblePhone,
-        monthlyFees: monthlyFees ? parseFloat(monthlyFees.replace(',', '.')) : 0,
-        dueDay: dueDay ? parseInt(dueDay) : 0,
-        order: existing?.order || Date.now()
-      };
-      await dbService.saveStudent(student);
-    } else {
-      // Bulk Add
-      const names = namesInput.split(/[\n,]+/)
-        .map(n => n.trim())
-        .filter(n => n.length > 0);
-
-      for (const name of names) {
-        const newStudent: Student = {
-          id: crypto.randomUUID(),
-          stopId,
-          name,
-          active: true,
-          guardianName: '',
-          contact: '',
-          responsibleCpf: '',
-          responsiblePhone: '',
-          monthlyFees: monthlyFees ? parseFloat(monthlyFees.replace(',', '.')) : 0,
-          dueDay: dueDay ? parseInt(dueDay) : 0,
-          order: Date.now() // Simple chronological order
-        };
-        await dbService.saveStudent(newStudent);
-        // Small delay to ensure unique timestamps if loop is too fast
-        await new Promise(r => setTimeout(r, 10));
-      }
-    }
-
+    const existing = editingId ? students.find(s => s.id === editingId) : null;
+    
+    const student: Student = {
+      id: editingId || crypto.randomUUID(),
+      stopId,
+      name: studentName,
+      active: true,
+      birthDate: birthDate || undefined,
+      school: school || undefined,
+      shift: shift || undefined,
+      guardianName: guardianName || undefined,
+      responsibleCpf: responsibleCpf || undefined,
+      responsiblePhone: responsiblePhone || undefined,
+      observation: observation || undefined,
+      monthlyFees: monthlyFees ? parseFloat(monthlyFees.replace(',', '.')) : 0,
+      dueDay: dueDay ? parseInt(dueDay) : 0,
+      order: existing?.order || Date.now()
+    };
+    
+    await dbService.saveStudent(student);
     setIsModalOpen(false);
     resetForm();
     fetchData();
   };
 
   const resetForm = () => {
-    setNamesInput('');
+    setStudentName('');
+    setBirthDate('');
+    setSchool('');
+    setShift('manha');
     setGuardianName('');
-    setContact('');
     setResponsibleCpf('');
     setResponsiblePhone('');
+    setObservation('');
     setMonthlyFees('');
     setDueDay('');
     setEditingId(null);
@@ -178,11 +180,14 @@ export const StudentsScreen: React.FC = () => {
   };
 
   const populateForm = (student: Student) => {
-    setNamesInput(student.name);
+    setStudentName(student.name);
+    setBirthDate(student.birthDate || '');
+    setSchool(student.school || '');
+    setShift(student.shift || 'manha');
     setGuardianName(student.guardianName || '');
-    setContact(student.contact || '');
     setResponsibleCpf(student.responsibleCpf || '');
     setResponsiblePhone(student.responsiblePhone || '');
+    setObservation(student.observation || '');
     setMonthlyFees(student.monthlyFees ? student.monthlyFees.toString() : '');
     setDueDay(student.dueDay ? student.dueDay.toString() : '');
     setEditingId(student.id);
@@ -193,6 +198,7 @@ export const StudentsScreen: React.FC = () => {
       setStopId(student.stopId);
     }
 
+    setSelectedStudent(null);
     setIsModalOpen(true);
   };
 
@@ -205,11 +211,38 @@ export const StudentsScreen: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (confirm('Remover aluno?')) {
       await dbService.deleteStudent(id);
+      setSelectedStudent(null);
       fetchData();
     }
   };
 
-  // Grouping: Route -> Stop -> Student
+  const openWhatsApp = (phone: string) => {
+    const cleanNumber = phone.replace(/\D/g, '');
+    if (cleanNumber) {
+      window.open(`https://wa.me/55${cleanNumber}`, '_blank');
+    } else {
+      alert('Número inválido para WhatsApp');
+    }
+  };
+
+  const getStopName = (stopId: string) => {
+    const stop = stops.find(s => s.id === stopId);
+    return stop?.name || '';
+  };
+
+  const getRouteName = (stopId: string) => {
+    const stop = stops.find(s => s.id === stopId);
+    if (!stop) return '';
+    const route = routes.find(r => r.id === stop.routeId);
+    return route?.name || '';
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const groupedData: RouteGroup[] = routes.map(route => {
     const routeStops = stops.filter(s => s.routeId === route.id);
     const stopGroups: StopGroup[] = routeStops.map(stop => ({
@@ -219,7 +252,6 @@ export const StudentsScreen: React.FC = () => {
     return { route, stops: stopGroups };
   });
 
-  // Filter stops for the form
   const filteredStops = stops.filter(s => s.routeId === selectedRouteId);
 
   return (
@@ -236,12 +268,11 @@ export const StudentsScreen: React.FC = () => {
 
       <div className="space-y-6">
         {groupedData.map(({ route, stops: routeStops }) => {
-          if (routeStops.every(g => g.students.length === 0)) return null; // Hide empty routes
+          if (routeStops.every(g => g.students.length === 0)) return null;
           const isRouteExpanded = expandedRoutes[route.id];
 
           return (
             <div key={route.id} className="border border-navy-700 rounded-xl overflow-hidden bg-navy-800/30">
-              {/* Route Header */}
               <div
                 onClick={() => toggleRoute(route.id)}
                 className="flex items-center justify-between bg-navy-700 p-3 cursor-pointer hover:bg-navy-600 transition-colors"
@@ -261,7 +292,6 @@ export const StudentsScreen: React.FC = () => {
 
                     return (
                       <div key={stop.id}>
-                        {/* Stop Header */}
                         <div
                           onClick={() => toggleStop(stop.id)}
                           className="flex items-center justify-between mb-2 cursor-pointer hover:opacity-80 transition-opacity pl-2 border-l-2 border-accent-500/30"
@@ -276,7 +306,11 @@ export const StudentsScreen: React.FC = () => {
                         {isStopExpanded && (
                           <div className="grid gap-2 pl-4">
                             {stopStudents.map((student, index) => (
-                              <div key={student.id} className="bg-navy-800 p-3 rounded-lg border border-navy-700 flex items-center justify-between group">
+                              <div 
+                                key={student.id} 
+                                onClick={() => setSelectedStudent(student)}
+                                className="bg-navy-800 p-3 rounded-lg border border-navy-700 flex items-center justify-between group cursor-pointer hover:bg-navy-700/50 transition-colors"
+                              >
                                 <div className="flex items-center gap-3">
                                   <div className="flex flex-col gap-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button onClick={(e) => { e.stopPropagation(); moveStudent(student, 'up'); }} disabled={index === 0} className="text-gray-500 hover:text-white disabled:opacity-30">
@@ -288,45 +322,18 @@ export const StudentsScreen: React.FC = () => {
                                   </div>
                                   <InitialsAvatar name={student.name} />
                                   <div>
-                                    <span className="text-white font-medium block">{student.name}</span>
-                                    {(student.guardianName || student.contact) && (
-                                      <span className="text-[10px] text-gray-400 block">
-                                        {student.guardianName} {student.contact && `• ${student.contact}`}
-                                      </span>
+                                    <span className="text-white font-medium flex items-center gap-1">
+                                      {student.observation && (
+                                        <span className="text-orange-400" title="Possui observação">⚠️</span>
+                                      )}
+                                      {student.name}
+                                    </span>
+                                    {student.school && (
+                                      <span className="text-xs text-gray-400 block">{student.school}</span>
                                     )}
                                   </div>
                                 </div>
-                                <div className="flex gap-1 items-center">
-                                  {(student.contact || student.responsiblePhone) && (
-                                    <>
-                                      <a href={`tel:${student.responsiblePhone || student.contact}`} className="p-2 bg-green-500/20 text-green-400 rounded-full hover:bg-green-500/40" title="Ligar">
-                                        <Icon name="phone" size={16} />
-                                      </a>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const phoneNumber = student.responsiblePhone || student.contact || '';
-                                          const cleanNumber = phoneNumber.replace(/\D/g, '');
-                                          if (cleanNumber) {
-                                            window.open(`https://wa.me/55${cleanNumber}`, '_blank');
-                                          } else {
-                                            alert('Número inválido para WhatsApp');
-                                          }
-                                        }}
-                                        className="p-2 bg-green-600/20 text-green-400 rounded-full mr-2 hover:bg-green-600/40"
-                                        title="WhatsApp"
-                                      >
-                                        <Icon name="message-circle" size={16} />
-                                      </button>
-                                    </>
-                                  )}
-                                  <button onClick={() => populateForm(student)} className="p-2 text-gray-400 hover:text-white">
-                                    <Icon name="edit" size={18} />
-                                  </button>
-                                  <button onClick={() => handleDelete(student.id)} className="p-2 text-red-400 hover:text-red-300">
-                                    <Icon name="trash" size={18} />
-                                  </button>
-                                </div>
+                                <Icon name="chevron-right" size={20} className="text-gray-500" />
                               </div>
                             ))}
                           </div>
@@ -342,47 +349,265 @@ export const StudentsScreen: React.FC = () => {
         {students.length === 0 && <p className="text-center text-gray-500 mt-10">Nenhum aluno cadastrado.</p>}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-md border border-navy-700 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-white mb-4">{editingId ? 'Editar Aluno' : 'Novos Alunos'}</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  {editingId ? 'Nome Completo *' : 'Nomes (Cole uma lista ou digite um por linha)'}
-                </label>
-                {editingId ? (
-                  <input type="text" value={namesInput} onChange={e => setNamesInput(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" required />
-                ) : (
-                  <textarea
-                    value={namesInput}
-                    onChange={e => setNamesInput(e.target.value)}
-                    placeholder="João Silva&#10;Maria Souza&#10;Pedro Santos"
-                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg h-32"
-                    required
-                  />
-                )}
+      {/* Modal de Detalhes do Aluno */}
+      {selectedStudent && (
+        <div className="fixed inset-0 bg-black/80 z-50" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="bg-navy-900 h-full flex flex-col">
+            {/* Header */}
+            <div className="bg-navy-800 px-4 py-4 flex items-center justify-between border-b border-navy-700">
+              <button onClick={() => setSelectedStudent(null)} className="p-2 text-gray-400 hover:text-white">
+                <Icon name="arrow-left" size={24} />
+              </button>
+              <h3 className="text-lg font-bold text-white">Aluno</h3>
+              <button onClick={() => populateForm(selectedStudent)} className="text-primary-400 font-bold">
+                Editar
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {/* Nome do Aluno */}
+              <div className="bg-navy-800 rounded-xl p-4 mb-4 border border-navy-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <InitialsAvatar name={selectedStudent.name} />
+                  <div>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      {selectedStudent.observation && <span className="text-orange-400">⚠️</span>}
+                      {selectedStudent.name}
+                    </h2>
+                    {selectedStudent.shift && (
+                      <span className="text-sm text-gray-400">{shiftLabels[selectedStudent.shift]}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Dados do Aluno */}
+                <div className="space-y-3">
+                  {selectedStudent.birthDate && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Data Nascimento</span>
+                      <span className="text-white">{formatDate(selectedStudent.birthDate)}</span>
+                    </div>
+                  )}
+                  {selectedStudent.school && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Escola</span>
+                      <span className="text-white">{selectedStudent.school}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Rota</span>
+                    <span className="text-white">{getRouteName(selectedStudent.stopId)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Ponto</span>
+                    <span className="text-white">{getStopName(selectedStudent.stopId)}</span>
+                  </div>
+                  {selectedStudent.monthlyFees && selectedStudent.monthlyFees > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Mensalidade</span>
+                      <span className="text-green-400">R$ {selectedStudent.monthlyFees.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {selectedStudent.dueDay && selectedStudent.dueDay > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Vencimento</span>
+                      <span className="text-white">Dia {selectedStudent.dueDay}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {editingId && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Nome do Responsável</label>
-                    <input type="text" value={guardianName} onChange={e => setGuardianName(e.target.value)} placeholder="Ex: Maria Souza" className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1">CPF do Responsável</label>
-                      <input type="text" value={responsibleCpf} onChange={e => setResponsibleCpf(e.target.value)} placeholder="000.000.000-00" className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1">WhatsApp/Tel</label>
-                      <input type="text" value={responsiblePhone} onChange={e => setResponsiblePhone(e.target.value)} placeholder="(00) 00000-0000" className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" />
-                    </div>
-                  </div>
+              {/* Observação */}
+              {selectedStudent.observation && (
+                <div className="bg-orange-500/10 rounded-xl p-4 mb-4 border border-orange-500/30">
+                  <h4 className="text-orange-400 text-xs font-bold uppercase mb-2 flex items-center gap-2">
+                    <Icon name="alert-triangle" size={14} />
+                    Observação Importante
+                  </h4>
+                  <p className="text-white">{selectedStudent.observation}</p>
                 </div>
               )}
 
+              {/* Responsável */}
+              {(selectedStudent.guardianName || selectedStudent.responsiblePhone) && (
+                <div className="bg-navy-800 rounded-xl p-4 mb-4 border border-navy-700">
+                  <h4 className="text-gray-400 text-xs font-bold uppercase mb-3">Responsável</h4>
+                  
+                  {selectedStudent.guardianName && (
+                    <p className="text-white font-medium mb-1">{selectedStudent.guardianName}</p>
+                  )}
+                  
+                  {selectedStudent.responsibleCpf && (
+                    <p className="text-gray-400 text-sm mb-2">CPF: {selectedStudent.responsibleCpf}</p>
+                  )}
+
+                  {selectedStudent.responsiblePhone && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-gray-400 text-sm">{selectedStudent.responsiblePhone}</p>
+                      
+                      <div className="flex gap-3 mt-3">
+                        <a 
+                          href={`tel:${selectedStudent.responsiblePhone}`}
+                          className="flex-1 bg-blue-500/20 text-blue-400 py-3 rounded-xl font-bold text-center hover:bg-blue-500/30 transition"
+                        >
+                          Ligar
+                        </a>
+                        <button
+                          onClick={() => openWhatsApp(selectedStudent.responsiblePhone || '')}
+                          className="flex-1 bg-green-500/20 text-green-400 py-3 rounded-xl font-bold hover:bg-green-500/30 transition"
+                        >
+                          WhatsApp
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Botão Excluir */}
+              <button
+                onClick={() => handleDelete(selectedStudent.id)}
+                className="w-full bg-red-500/10 text-red-400 py-3 rounded-xl font-bold border border-red-500/20 hover:bg-red-500/20 transition mt-4"
+              >
+                Excluir Aluno
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição/Cadastro */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-md border border-navy-700 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-white mb-4">{editingId ? 'Editar Aluno' : 'Novo Aluno'}</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              
+              {/* Nome do Aluno */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Nome do Aluno *</label>
+                <input 
+                  type="text" 
+                  value={studentName} 
+                  onChange={e => setStudentName(e.target.value)} 
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" 
+                  placeholder="Nome completo"
+                  required 
+                />
+              </div>
+
+              {/* Data de Nascimento */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Data de Nascimento</label>
+                <input 
+                  type="date" 
+                  value={birthDate} 
+                  onChange={e => setBirthDate(e.target.value)} 
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                />
+              </div>
+
+              {/* Escola e Turno */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Escola</label>
+                  <input 
+                    type="text" 
+                    value={school} 
+                    onChange={e => setSchool(e.target.value)} 
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                    placeholder="Nome da escola"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Turno</label>
+                  <select 
+                    value={shift} 
+                    onChange={e => setShift(e.target.value as any)} 
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                  >
+                    <option value="integral">Integral</option>
+                    <option value="manha">Manhã</option>
+                    <option value="tarde">Tarde</option>
+                    <option value="noite">Noite</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Rota e Ponto */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Rota *</label>
+                <select value={selectedRouteId} onChange={e => handleRouteChange(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mb-3">
+                  {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+
+                <label className="block text-sm text-gray-400 mb-1">Ponto de Embarque *</label>
+                <select value={stopId} onChange={e => setStopId(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" disabled={filteredStops.length === 0}>
+                  {filteredStops.length === 0 && <option value="">Nenhum ponto nesta rota</option>}
+                  {filteredStops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+
+              <hr className="border-navy-700" />
+
+              {/* Responsável */}
+              <h4 className="text-gray-400 text-xs font-bold uppercase">Dados do Responsável</h4>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Nome do Responsável</label>
+                <input 
+                  type="text" 
+                  value={guardianName} 
+                  onChange={e => setGuardianName(e.target.value)} 
+                  placeholder="Ex: Maria Souza" 
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">CPF</label>
+                  <input 
+                    type="text" 
+                    value={responsibleCpf} 
+                    onChange={e => setResponsibleCpf(e.target.value)} 
+                    placeholder="000.000.000-00" 
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">WhatsApp/Tel</label>
+                  <input 
+                    type="text" 
+                    value={responsiblePhone} 
+                    onChange={e => setResponsiblePhone(e.target.value)} 
+                    placeholder="(00) 00000-0000" 
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" 
+                  />
+                </div>
+              </div>
+
+              <hr className="border-navy-700" />
+
+              {/* Observação */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Observação <span className="text-orange-400">(alergias, condições, etc.)</span>
+                </label>
+                <textarea 
+                  value={observation} 
+                  onChange={e => setObservation(e.target.value)} 
+                  placeholder="Ex: Alergia a amendoim, usa óculos, precisa de adaptação..."
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg h-20"
+                />
+              </div>
+
+              <hr className="border-navy-700" />
+
+              {/* Financeiro */}
+              <h4 className="text-gray-400 text-xs font-bold uppercase">Financeiro</h4>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Mensalidade (R$)</label>
@@ -409,18 +634,6 @@ export const StudentsScreen: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Rota *</label>
-                <select value={selectedRouteId} onChange={e => handleRouteChange(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mb-3">
-                  {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
-
-                <label className="block text-sm text-gray-400 mb-1">Ponto de Embarque *</label>
-                <select value={stopId} onChange={e => setStopId(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" disabled={filteredStops.length === 0}>
-                  {filteredStops.length === 0 && <option value="">Nenhum ponto nesta rota</option>}
-                  {filteredStops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-gray-300">Cancelar</button>
                 <button type="submit" className="px-6 py-2 bg-primary-600 text-white rounded-lg">Salvar</button>
