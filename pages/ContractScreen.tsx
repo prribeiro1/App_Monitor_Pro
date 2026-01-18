@@ -154,12 +154,22 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
                 link = `${PRODUCTION_URL}/#/sign-contract/${data.id}`;
             }
 
-            await Share.share({
-                title: `Assinatura de Contrato - ${student.name}`,
-                text: `Olá! Segue o link para visualizar e assinar o contrato de transporte escolar do(a) ${student.name}:\n\n${link}`,
-                url: link,
-                dialogTitle: 'Enviar Link de Assinatura'
-            });
+            // Enviar direto para WhatsApp do responsável se tiver telefone cadastrado
+            const responsiblePhone = student.responsiblePhone?.replace(/\D/g, '');
+            const message = `Olá! Segue o link para visualizar e assinar o contrato de transporte escolar do(a) ${student.name}:\n\n${link}`;
+            
+            if (responsiblePhone && responsiblePhone.length >= 10) {
+                // Abrir WhatsApp direto para o número do responsável
+                window.open(`https://wa.me/55${responsiblePhone}?text=${encodeURIComponent(message)}`, '_blank');
+            } else {
+                // Se não tiver telefone, usar Share normal
+                await Share.share({
+                    title: `Assinatura de Contrato - ${student.name}`,
+                    text: message,
+                    url: link,
+                    dialogTitle: 'Enviar Link de Assinatura'
+                });
+            }
 
         } catch (e: any) {
             console.error(e);
@@ -324,20 +334,20 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
             const signatureWidth = 50;
             const signatureHeight = 15;
 
-            // 1. Parent Signature
+            // 1. Parent Signature - posicionada mais à direita para não sobrepor texto
             if (parentSignature) {
-                doc.addImage(parentSignature, 'PNG', margin + 65, y - 10, signatureWidth, signatureHeight);
+                doc.addImage(parentSignature, 'PNG', margin + 80, y - 10, signatureWidth, signatureHeight);
             }
-            dottedLine(margin + 65, y - 1, 105);
+            dottedLine(margin + 80, y - 1, 90);
             doc.setFontSize(10);
             doc.text("Assinatura do(a) CONTRATANTE (Responsável):", margin, y);
             y += 15;
 
-            // 2. Driver Signature
+            // 2. Driver Signature - posicionada mais à direita
             if (settings?.driverSignature) {
-                doc.addImage(settings.driverSignature, 'PNG', margin + 65, y - 10, signatureWidth, signatureHeight);
+                doc.addImage(settings.driverSignature, 'PNG', margin + 80, y - 10, signatureWidth, signatureHeight);
             }
-            dottedLine(margin + 65, y - 1, 105);
+            dottedLine(margin + 80, y - 1, 90);
             doc.text("Assinatura do CONTRATADO (Monitor):", margin, y);
 
             const today = new Date();

@@ -75,13 +75,21 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
   const [searchResults, setSearchResults] = useState<Student[]>([]);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
 
+  const loadStudentsForSearch = async () => {
+    const students = await dbService.getStudents();
+    setAllStudents(students.filter(s => s.active));
+  };
+
   useEffect(() => {
-    const loadStudents = async () => {
-      const students = await dbService.getStudents();
-      setAllStudents(students.filter(s => s.active));
-    };
-    loadStudents();
+    loadStudentsForSearch();
   }, []);
+
+  // Recarregar alunos quando abre a busca
+  useEffect(() => {
+    if (isSearchOpen) {
+      loadStudentsForSearch();
+    }
+  }, [isSearchOpen]);
 
   useEffect(() => {
     if (searchTerm.length >= 2) {
@@ -294,7 +302,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
       <main className="flex-1 overflow-y-auto bg-navy-900 relative">{children}</main>
 
       {/* Bottom Nav */}
-      <nav className="bg-navy-800 h-auto pt-3 flex items-center justify-around shadow-inner border-t border-navy-700 z-20 shrink-0 pb-safe">
+      <nav className="bg-navy-800 h-14 flex items-center justify-around shadow-inner border-t border-navy-700 z-20 shrink-0" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {tabs.map(tab => (<BottomNavItem key={tab.path} to={tab.path} icon={tab.icon} label={tab.label} active={location.pathname === tab.path} />))}
       </nav>
     </div>
@@ -399,7 +407,8 @@ export default function App() {
   const role = metadata.role || 'monitor';
   const permissions = metadata.permissions || {};
   const currentUsername = authService.getUsernameFromEmail(session.user.email);
-  const isSuperUser = role === 'admin' || currentUsername === 'teste' || currentUsername === 'google_test';
+  // Trocar 'seuemail' pelo username do seu email (parte antes do @)
+  const isSuperUser = role === 'admin' || currentUsername === 'seuemail';
 
   const checkPermission = (feature: string, defaultAccess = true) => {
     if (isSuperUser) return true;

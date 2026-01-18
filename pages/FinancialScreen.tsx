@@ -40,7 +40,39 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
     const filteredStudents = students
         .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .sort((a, b) => {
+            const today = new Date();
+            const currentDay = today.getDate();
+            const currentMonth = today.getMonth() + 1;
+            const currentYear = today.getFullYear();
+            
+            // Verificar se já pagou
+            const aPaid = payments.some(p => p.studentId === a.id && p.month === month && p.year === year);
+            const bPaid = payments.some(p => p.studentId === b.id && p.month === month && p.year === year);
+            
+            // Pagos vão para o final
+            if (aPaid && !bPaid) return 1;
+            if (!aPaid && bPaid) return -1;
+            if (aPaid && bPaid) return a.name.localeCompare(b.name);
+            
+            // Para não pagos, ordenar por vencimento
+            const aDue = a.dueDay || 31;
+            const bDue = b.dueDay || 31;
+            
+            // Se estamos no mês atual, calcular dias restantes
+            if (month === currentMonth && year === currentYear) {
+                const aDaysLeft = aDue - currentDay;
+                const bDaysLeft = bDue - currentDay;
+                
+                if (aDaysLeft !== bDaysLeft) return aDaysLeft - bDaysLeft;
+            } else {
+                // Mês diferente, ordenar só pelo dia
+                if (aDue !== bDue) return aDue - bDue;
+            }
+            
+            // Mesmo vencimento, ordem alfabética
+            return a.name.localeCompare(b.name);
+        });
 
     useEffect(() => { fetchData(); }, []);
 
@@ -155,6 +187,9 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
     const totalReceived = payments
         .filter(p => p.month === month && p.year === year)
         .reduce((sum, p) => sum + p.amount, 0);
+    const totalPending = students
+        .filter(s => !getPaymentForStudent(s.id))
+        .reduce((sum, s) => sum + (s.monthlyFees || 0), 0);
 
     const months = [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -169,13 +204,15 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
             doc.setFontSize(10);
             doc.text(`Total Recebido: R$ ${totalReceived.toFixed(2)}`, 14, 30);
-            doc.text(`Pagantes: ${paidCount} / ${totalStudents}`, 14, 35);
+            doc.text(`Total Pendente: R$ ${totalPending.toFixed(2)}`, 14, 35);
+            doc.text(`Pagantes: ${paidCount} / ${totalStudents}`, 14, 40);
 
             const bodyData = students.map(student => {
                 const payment = getPaymentForStudent(student.id);
+                const valor = payment ? payment.amount : (student.monthlyFees || 0);
                 return [
                     student.name,
-                    payment ? `R$ ${payment.amount.toFixed(2)}` : 'Pendente',
+                    `R$ ${valor.toFixed(2)}`,
                     payment ? new Date(payment.paidAt).toLocaleDateString() : '-',
                     payment ? 'PAGO' : 'PENDENTE'
                 ];
@@ -184,7 +221,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             autoTable(doc, {
                 head: [['Aluno', 'Valor', 'Data Pagto.', 'Status']],
                 body: bodyData,
-                startY: 45,
+                startY: 50,
                 theme: 'grid',
                 styles: { fontSize: 10 },
                 headStyles: { fillColor: [22, 163, 74] }, // Green header
@@ -295,11 +332,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                                 <div>
                                     <p className="text-white font-medium">{student.name}</p>
                                     <p className="text-[10px] text-gray-400">
-                                        {(() => {
-                                            const stop = stops.find(s => s.id === student.stopId);
-                                            const route = routes.find(r => r.id === stop?.routeId);
-                                            return route && stop ? `${route.name} - ${stop.name}` : 'Sem rota definida';
-                                        })()}
+                                        {student.guardianName || 'Responsável não cadastrado'}
                                     </p>
                                     {payment ? (
                                         <p className="text-xs text-green-400">Pago em {new Date(payment.paidAt).toLocaleDateString()}</p>
@@ -358,7 +391,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             {/* Floating Action Button for PDF */}
             <button
                 onClick={exportPDF}
-                className="fixed bottom-20 right-4 bg-primary-600 hover:bg-primary-500 text-white p-4 rounded-full shadow-xl shadow-primary-600/30 flex items-center justify-center z-30"
+                className="fixed bottom-24 right-4 bg-primary-600 hover:bg-primary-500 text-white p-4 rounded-full shadow-xl shadow-primary-600/30 flex items-center justify-center z-30"
                 title="Baixar Relatório Financeiro"
             >
                 <Icon name="save" size={24} />

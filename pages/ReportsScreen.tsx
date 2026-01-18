@@ -121,6 +121,11 @@ export const ReportsScreen: React.FC = () => {
             });
         });
 
+        // Ordenar alunos alfabeticamente dentro de cada rota
+        Object.values(grouped).forEach(group => {
+            group.students.sort((a, b) => a.student.name.localeCompare(b.student.name));
+        });
+
         setReportData(grouped);
 
         // Auto expand logic (optional)
@@ -203,13 +208,25 @@ export const ReportsScreen: React.FC = () => {
                 });
             }
 
-            // Incidents Summary
-            const monthIncidents = incidents.filter(i => i.date.startsWith(month));
-            if (monthIncidents.length > 0) {
-                doc.addPage();
-                doc.text("Detalhamento de Ocorrências", 14, 20);
+            // Incidents Summary - logo abaixo da tabela
+            const periodIncidents = reportType === 'monthly' 
+                ? incidents.filter(i => i.date.startsWith(month))
+                : incidents.filter(i => i.date === date);
+                
+            if (periodIncidents.length > 0) {
+                const lastY = (doc as any).lastAutoTable?.finalY || 100;
+                
+                // Verificar se precisa de nova página
+                if (lastY > 220) {
+                    doc.addPage();
+                    doc.setFontSize(12);
+                    doc.text("Detalhamento de Ocorrências", 14, 20);
+                } else {
+                    doc.setFontSize(12);
+                    doc.text("Detalhamento de Ocorrências", 14, lastY + 15);
+                }
 
-                const incidentBody = monthIncidents.map(inc => {
+                const incidentBody = periodIncidents.map(inc => {
                     let sName = "Desconhecido";
                     Object.values(reportData).forEach((gItem) => {
                         const g = gItem as RouteReportGroup;
@@ -217,37 +234,44 @@ export const ReportsScreen: React.FC = () => {
                         if (s) sName = s.student.name;
                     });
 
+                    // Formatar data corretamente (pode vir como ISO ou YYYY-MM-DD)
+                    let incDate = '-';
+                    if (inc.date) {
+                        const dateOnly = inc.date.split('T')[0]; // Remove hora se tiver
+                        const parts = dateOnly.split('-');
+                        if (parts.length === 3) {
+                            incDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
+                        }
+                    }
+
                     return [
-                        new Date(inc.timestamp).toLocaleDateString(),
+                        incDate,
                         sName,
                         inc.type,
-                        inc.observation
+                        inc.observation || '-'
                     ];
                 });
 
                 autoTable(doc, {
                     head: [['Data', 'Aluno', 'Tipo', 'Observação']],
                     body: incidentBody,
-                    startY: 30,
+                    startY: lastY > 220 ? 30 : lastY + 20,
                     styles: { fontSize: 8 },
-                    columnStyles: { 3: { cellWidth: 80 } } // Wrap observation
+                    headStyles: { fillColor: [239, 68, 68] },
+                    columnStyles: { 3: { cellWidth: 70 } }
                 });
             }
 
             // Save and Share Logic
-            alert("PDF Gerado em memória. Preparando para salvar..."); // DEBUG
             const base64 = doc.output('datauristring').split(',')[1];
             const fileName = `relatorio_${month}.pdf`;
 
             if (Capacitor.isNativePlatform()) {
-                alert("Ambiente Nativo detectado. Salvando..."); // DEBUG
-
                 const result = await Filesystem.writeFile({
                     path: fileName,
                     data: base64,
                     directory: Directory.Cache
                 });
-                alert(`Arquivo salvo em: ${result.uri}`); // DEBUG
 
                 await Share.share({
                     title: `Relatório ${month}`,
@@ -402,7 +426,7 @@ export const ReportsScreen: React.FC = () => {
             {/* Floating Action Button for PDF */}
             <button
                 onClick={exportPDF}
-                className="fixed bottom-20 right-4 bg-primary-600 hover:bg-primary-500 text-white p-4 rounded-full shadow-xl shadow-primary-600/30 flex items-center justify-center z-30"
+                className="fixed bottom-24 right-4 bg-primary-600 hover:bg-primary-500 text-white p-4 rounded-full shadow-xl shadow-primary-600/30 flex items-center justify-center z-30"
             >
                 <Icon name="save" size={24} />
             </button>

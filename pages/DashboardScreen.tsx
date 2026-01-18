@@ -61,22 +61,46 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
     return !isPaid && currentDay > s.dueDay;
   });
 
-  // Próxima manutenção
+  // Próxima manutenção - calcular baseado no km atual
+  const [currentKm, setCurrentKm] = useState(0);
+
+  useEffect(() => {
+    const loadKm = async () => {
+      const settings = await dbService.getUserSettings();
+      setCurrentKm(settings.currentKm || 0);
+    };
+    loadKm();
+  }, []);
+
   const getNextMaintenance = () => {
-    if (maintenanceItems.length === 0) return null;
+    if (maintenanceItems.length === 0 || currentKm === 0) return null;
     
-    const itemsWithNextDate = maintenanceItems.filter(m => m.nextDate || m.nextKm);
-    if (itemsWithNextDate.length === 0) return null;
+    // Calcular quanto falta para cada item
+    const itemsWithRemaining = maintenanceItems
+      .filter(m => m.intervalKm > 0 && m.lastKm > 0)
+      .map(m => {
+        const nextKm = m.lastKm + m.intervalKm;
+        const remaining = nextKm - currentKm;
+        return { ...m, remaining, nextKm };
+      })
+      .filter(m => m.remaining > 0) // Apenas os que ainda não venceram
+      .sort((a, b) => a.remaining - b.remaining);
 
-    // Ordenar por data mais próxima
-    const sorted = itemsWithNextDate.sort((a, b) => {
-      if (a.nextDate && b.nextDate) {
-        return new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime();
-      }
-      return (a.nextKm || 0) - (b.nextKm || 0);
-    });
+    if (itemsWithRemaining.length === 0) {
+      // Se todos venceram, mostrar o mais urgente (mais negativo)
+      const overdueItems = maintenanceItems
+        .filter(m => m.intervalKm > 0 && m.lastKm > 0)
+        .map(m => {
+          const nextKm = m.lastKm + m.intervalKm;
+          const remaining = nextKm - currentKm;
+          return { ...m, remaining, nextKm };
+        })
+        .sort((a, b) => a.remaining - b.remaining);
+      
+      return overdueItems[0] || null;
+    }
 
-    return sorted[0];
+    return itemsWithRemaining[0];
   };
 
   const nextMaintenance = getNextMaintenance();
@@ -169,8 +193,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
           </h3>
           <p className="text-white font-medium">{nextMaintenance.name}</p>
           <p className="text-xs text-gray-400">
-            {nextMaintenance.nextDate && `Prevista: ${new Date(nextMaintenance.nextDate).toLocaleDateString('pt-BR')}`}
-            {nextMaintenance.nextKm && ` • ${nextMaintenance.nextKm.toLocaleString()} km`}
+            {nextMaintenance.remaining > 0 
+              ? `Faltam ${nextMaintenance.remaining.toLocaleString()} km`
+              : `Vencido há ${Math.abs(nextMaintenance.remaining).toLocaleString()} km`
+            }
+            {nextMaintenance.nextKm && ` (próx: ${nextMaintenance.nextKm.toLocaleString()} km)`}
           </p>
         </div>
       )}
