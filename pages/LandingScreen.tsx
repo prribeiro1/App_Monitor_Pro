@@ -341,7 +341,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Básico</h3>
                         <div className="mb-6">
                             <span className="text-3xl font-extrabold text-blue-400">
-                                R$ {planPeriod === '1month' ? '6,90' : planPeriod === '2months' ? '9,90' : '89,00'}
+                                R$ {planPeriod === '1month' ? '6,90' : planPeriod === '2months' ? '9,90' : '69,90'}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === '1month' ? 'mês' : planPeriod === '2months' ? '2 meses' : 'ano'}
@@ -375,7 +375,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Pro Solo</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-blue-500">
-                                R$ {planPeriod === '1month' ? '12,90' : planPeriod === '2months' ? '19,90' : '169,00'}
+                                R$ {planPeriod === '1month' ? '12,90' : planPeriod === '2months' ? '19,90' : '139,90'}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === '1month' ? 'mês' : planPeriod === '2months' ? '2 meses' : 'ano'}
@@ -411,7 +411,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Pro Duo</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-purple-400">
-                                R$ {planPeriod === '1month' ? '19,90' : planPeriod === '2months' ? '33,90' : '279,00'}
+                                R$ {planPeriod === '1month' ? '19,90' : planPeriod === '2months' ? '33,90' : '249,90'}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === '1month' ? 'mês' : planPeriod === '2months' ? '2 meses' : 'ano'}
@@ -444,7 +444,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Equipe</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-green-400">
-                                R$ {planPeriod === '1month' ? '32,90' : planPeriod === '2months' ? '59,90' : '599,00'}
+                                R$ {planPeriod === '1month' ? '32,90' : planPeriod === '2months' ? '59,90' : '399,90'}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === '1month' ? 'mês' : planPeriod === '2months' ? '2 meses' : 'ano'}
