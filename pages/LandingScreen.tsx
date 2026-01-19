@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Icon } from '../components/Icon';
 
 export const LandingScreen: React.FC = () => {
-    const [planPeriod, setPlanPeriod] = React.useState<'1month' | '2months'>('1month');
+    const [planPeriod, setPlanPeriod] = React.useState<'1month' | '2months' | 'annual'>('1month');
     
     useEffect(() => {
         // Load fonts and scripts if needed
@@ -299,8 +299,8 @@ export const LandingScreen: React.FC = () => {
                     <p className="text-gray-400">Escolha o plano ideal para você ou sua equipe.</p>
                 </div>
 
-                {/* Toggle 1 mês / 2 meses */}
-                <div className="max-w-md mx-auto mb-12 flex bg-[#1e293b] rounded-full p-1 border border-white/10">
+                {/* Toggle 1 mês / 2 meses / Anual */}
+                <div className="max-w-2xl mx-auto mb-12 flex bg-[#1e293b] rounded-full p-1 border border-white/10">
                     <button 
                         onClick={() => setPlanPeriod('1month')}
                         className={`flex-1 py-3 rounded-full font-bold transition-all ${planPeriod === '1month' ? 'bg-blue-500 text-white' : 'text-gray-400'}`}
@@ -313,6 +313,12 @@ export const LandingScreen: React.FC = () => {
                     >
                         2 Meses 🔥
                     </button>
+                    <button 
+                        onClick={() => setPlanPeriod('annual')}
+                        className={`flex-1 py-3 rounded-full font-bold transition-all ${planPeriod === 'annual' ? 'bg-purple-500 text-white' : 'text-gray-400'}`}
+                    >
+                        Anual 💎
+                    </button>
                 </div>
 
                 {planPeriod === '2months' && (
@@ -322,16 +328,23 @@ export const LandingScreen: React.FC = () => {
                     </div>
                 )}
 
+                {planPeriod === 'annual' && (
+                    <div className="max-w-5xl mx-auto mb-12 bg-gradient-to-r from-purple-500 to-pink-600 p-6 rounded-xl text-center text-white">
+                        <h3 className="text-xl font-bold mb-2">💎 MÁXIMA ECONOMIA — Plano Anual</h3>
+                        <p>Pague 1 ano e economize até 50%! Melhor custo-benefício.</p>
+                    </div>
+                )}
+
                 <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-6">
                     {/* PLANO BÁSICO */}
                     <div className="bg-[#1e293b] p-6 rounded-3xl border border-white/5 text-center flex flex-col">
                         <h3 className="text-xl font-bold mb-4">Básico</h3>
                         <div className="mb-6">
                             <span className="text-3xl font-extrabold text-blue-400">
-                                R$ {planPeriod === '1month' ? '6,90' : '9,90'}
+                                R$ {planPeriod === '1month' ? '6,90' : planPeriod === '2months' ? '9,90' : '89,00'}
                             </span>
                             <span className="text-gray-500 text-sm">
-                                /{planPeriod === '1month' ? 'mês' : '2 meses'}
+                                /{planPeriod === '1month' ? 'mês' : planPeriod === '2months' ? '2 meses' : 'ano'}
                             </span>
                         </div>
                         <ul className="text-left space-y-3 mb-6 text-gray-400 flex-1 text-sm">
@@ -345,7 +358,9 @@ export const LandingScreen: React.FC = () => {
                         <a 
                             href={planPeriod === '1month' 
                                 ? 'https://www.asaas.com/c/3smmkesyfaijj04d' 
-                                : 'https://www.asaas.com/c/t97resq2oi6pxo79'
+                                : planPeriod === '2months'
+                                ? 'https://www.asaas.com/c/t97resq2oi6pxo79'
+                                : 'https://www.asaas.com/c/bnp1okpk38wjm4n2'
                             } 
                             target="_blank"
                             className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition"
@@ -360,10 +375,10 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Pro Solo</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-blue-500">
-                                R$ {planPeriod === '1month' ? '12,90' : '19,90'}
+                                R$ {planPeriod === '1month' ? '12,90' : planPeriod === '2months' ? '19,90' : '169,00'}
                             </span>
                             <span className="text-gray-500 text-sm">
-                                /{planPeriod === '1month' ? 'mês' : '2 meses'}
+                                /{planPeriod === '1month' ? 'mês' : planPeriod === '2months' ? '2 meses' : 'ano'}
                             </span>
                         </div>
                         <p className="text-xs text-gray-400 mb-6">1 pessoa</p>
@@ -380,7 +395,9 @@ export const LandingScreen: React.FC = () => {
                         <a 
                             href={planPeriod === '1month' 
                                 ? 'https://www.asaas.com/c/h6xsvjbh4nyt6ksm' 
-                                : 'https://www.asaas.com/c/rrt48s4pufgttn9b'
+                                : planPeriod === '2months'
+                                ? 'https://www.asaas.com/c/rrt48s4pufgttn9b'
+                                : 'https://www.asaas.com/c/36jim4vwarekmjia'
                             } 
                             target="_blank"
                             className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 rounded-xl transition"
@@ -394,10 +411,10 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Pro Duo</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-purple-400">
-                                R$ {planPeriod === '1month' ? '19,90' : '33,90'}
+                                R$ {planPeriod === '1month' ? '19,90' : planPeriod === '2months' ? '33,90' : '279,00'}
                             </span>
                             <span className="text-gray-500 text-sm">
-                                /{planPeriod === '1month' ? 'mês' : '2 meses'}
+                                /{planPeriod === '1month' ? 'mês' : planPeriod === '2months' ? '2 meses' : 'ano'}
                             </span>
                         </div>
                         <p className="text-xs text-gray-400 mb-6">2 pessoas</p>
@@ -411,7 +428,9 @@ export const LandingScreen: React.FC = () => {
                         <a 
                             href={planPeriod === '1month' 
                                 ? 'https://www.asaas.com/c/9l0f5jv7soevywwe' 
-                                : 'https://www.asaas.com/c/zzijfvihayzxw3n5'
+                                : planPeriod === '2months'
+                                ? 'https://www.asaas.com/c/zzijfvihayzxw3n5'
+                                : 'https://www.asaas.com/c/29lzynzu95y8a6t7'
                             } 
                             target="_blank"
                             className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl transition"
@@ -425,10 +444,10 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Equipe</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-green-400">
-                                R$ {planPeriod === '1month' ? '32,90' : '59,90'}
+                                R$ {planPeriod === '1month' ? '32,90' : planPeriod === '2months' ? '59,90' : '599,00'}
                             </span>
                             <span className="text-gray-500 text-sm">
-                                /{planPeriod === '1month' ? 'mês' : '2 meses'}
+                                /{planPeriod === '1month' ? 'mês' : planPeriod === '2months' ? '2 meses' : 'ano'}
                             </span>
                         </div>
                         <p className="text-xs text-gray-400 mb-6">3 a 5 pessoas</p>
@@ -442,7 +461,9 @@ export const LandingScreen: React.FC = () => {
                         <a 
                             href={planPeriod === '1month' 
                                 ? 'https://www.asaas.com/c/zoncahpoy4it8r45' 
-                                : 'https://www.asaas.com/c/fvmlt9vlqbb4ukhp'
+                                : planPeriod === '2months'
+                                ? 'https://www.asaas.com/c/fvmlt9vlqbb4ukhp'
+                                : 'https://www.asaas.com/c/l9zlw3gsbehwj1k8'
                             } 
                             target="_blank"
                             className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition"
