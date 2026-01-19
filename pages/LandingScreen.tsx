@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { Icon } from '../components/Icon';
 
 export const LandingScreen: React.FC = () => {
+    const [planPeriod, setPlanPeriod] = React.useState<'1month' | '2months'>('1month');
+    
     useEffect(() => {
         // Load fonts and scripts if needed
         const link = document.createElement('link');
@@ -294,78 +296,163 @@ export const LandingScreen: React.FC = () => {
             <section id="planos" className="py-20 px-4 bg-[#0b1120]">
                 <div className="max-w-7xl mx-auto text-center mb-16">
                     <h2 className="text-4xl font-bold mb-4">Planos que cabem no seu bolso</h2>
-                    <p className="text-gray-400">Menos que um lanche por mês pra organizar todo seu negócio.</p>
+                    <p className="text-gray-400">Escolha o plano ideal para você ou sua equipe.</p>
                 </div>
 
-                <div className="max-w-5xl mx-auto mb-12 bg-gradient-to-r from-yellow-500 to-orange-600 p-6 rounded-xl text-center text-white">
-                    <h3 className="text-xl font-bold mb-2">🎁 LANÇAMENTO ESPECIAL — SÓ ATÉ 26/01</h3>
-                    <p>Garanta o desconto de lançamento antes que acabe!</p>
+                {/* Toggle 1 mês / 2 meses */}
+                <div className="max-w-md mx-auto mb-12 flex bg-[#1e293b] rounded-full p-1 border border-white/10">
+                    <button 
+                        onClick={() => setPlanPeriod('1month')}
+                        className={`flex-1 py-3 rounded-full font-bold transition-all ${planPeriod === '1month' ? 'bg-blue-500 text-white' : 'text-gray-400'}`}
+                    >
+                        1 Mês
+                    </button>
+                    <button 
+                        onClick={() => setPlanPeriod('2months')}
+                        className={`flex-1 py-3 rounded-full font-bold transition-all ${planPeriod === '2months' ? 'bg-green-500 text-white' : 'text-gray-400'}`}
+                    >
+                        2 Meses 🔥
+                    </button>
                 </div>
 
-                <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+                {planPeriod === '2months' && (
+                    <div className="max-w-5xl mx-auto mb-12 bg-gradient-to-r from-green-500 to-emerald-600 p-6 rounded-xl text-center text-white">
+                        <h3 className="text-xl font-bold mb-2">💰 ECONOMIZE MAIS — Plano de 2 Meses</h3>
+                        <p>Pague 2 meses e garanta desconto especial!</p>
+                    </div>
+                )}
+
+                <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-6">
                     {/* PLANO BÁSICO */}
-                    <div className="bg-[#1e293b] p-8 rounded-3xl border border-white/5 text-center flex flex-col">
-                        <h3 className="text-2xl font-bold mb-4">Básico</h3>
+                    <div className="bg-[#1e293b] p-6 rounded-3xl border border-white/5 text-center flex flex-col">
+                        <h3 className="text-xl font-bold mb-4">Básico</h3>
                         <div className="mb-6">
-                            <span className="text-gray-500 line-through">De R$ 9,90</span><br />
-                            <span className="text-4xl font-extrabold text-blue-400">R$ 7,90</span><span className="text-gray-500">/mês</span>
-                            <p className="text-xs text-green-400 mt-2 font-bold">Pelos primeiros 2 meses</p>
+                            <span className="text-3xl font-extrabold text-blue-400">
+                                R$ {planPeriod === '1month' ? '6,90' : '9,90'}
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                                /{planPeriod === '1month' ? 'mês' : '2 meses'}
+                            </span>
                         </div>
-                        <ul className="text-left space-y-4 mb-8 text-gray-400 flex-1">
+                        <ul className="text-left space-y-3 mb-6 text-gray-400 flex-1 text-sm">
                             <li>✓ Cadastro de alunos</li>
                             <li>✓ Chamada digital</li>
                             <li>✓ Relatórios básicos</li>
                             <li>✓ Funciona offline</li>
                             <li>✓ Backup seguro</li>
                         </ul>
-                        <p className="text-sm text-gray-500 italic mb-6">Ideal pra quem tá começando</p>
-                        <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20o%20plano%20Básico" className="btn btn-outline w-full justify-center py-3">Quero o Básico</a>
+                        <p className="text-xs text-gray-500 italic mb-4">Ideal pra começar</p>
+                        <a 
+                            href={planPeriod === '1month' 
+                                ? 'https://www.asaas.com/c/3smmkesyfaijj04d' 
+                                : 'https://www.asaas.com/c/t97resq2oi6pxo79'
+                            } 
+                            target="_blank"
+                            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition"
+                        >
+                            Assinar Básico
+                        </a>
                     </div>
 
-                    {/* PLANO PRO */}
-                    <div className="bg-[#1e293b] p-8 rounded-3xl border-2 border-blue-500 text-center relative transform md:scale-105 shadow-2xl flex flex-col">
-                        <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-4 py-1 rounded-full text-xs font-bold">⭐ MAIS POPULAR</span>
-                        <h3 className="text-2xl font-bold mb-4">Pro</h3>
-                        <div className="mb-6">
-                            <span className="text-gray-500 line-through">De R$ 19,90</span><br />
-                            <span className="text-4xl font-extrabold text-blue-500">R$ 9,90</span><span className="text-gray-500">/mês</span>
-                            <p className="text-xs text-green-400 mt-2 font-bold">Pelos primeiros 2 meses</p>
+                    {/* PLANO PRO SOLO */}
+                    <div className="bg-[#1e293b] p-6 rounded-3xl border-2 border-blue-500 text-center relative transform md:scale-105 shadow-2xl flex flex-col">
+                        <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-4 py-1 rounded-full text-xs font-bold">⭐ POPULAR</span>
+                        <h3 className="text-xl font-bold mb-4">Pro Solo</h3>
+                        <div className="mb-2">
+                            <span className="text-3xl font-extrabold text-blue-500">
+                                R$ {planPeriod === '1month' ? '12,90' : '19,90'}
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                                /{planPeriod === '1month' ? 'mês' : '2 meses'}
+                            </span>
                         </div>
-                        <ul className="text-left space-y-4 mb-8 text-gray-400 flex-1">
+                        <p className="text-xs text-gray-400 mb-6">1 pessoa</p>
+                        <ul className="text-left space-y-3 mb-6 text-gray-400 flex-1 text-sm">
                             <li>✓ <strong className="text-blue-400">TUDO do Básico</strong></li>
                             <li>✓ Rotas com GPS</li>
-                            <li>✓ Controle financeiro completo</li>
+                            <li>✓ Controle financeiro</li>
                             <li>✓ Manutenção por km</li>
-                            <li>✓ Geração de contratos</li>
-                            <li>✓ Registro de ocorrências</li>
-                            <li>✓ Relatórios avançados em PDF</li>
-                            <li>✓ Suporte prioritário 7 dias</li>
+                            <li>✓ Contratos digitais</li>
+                            <li>✓ Ocorrências</li>
+                            <li>✓ PDFs avançados</li>
                         </ul>
-                        <p className="text-sm text-gray-500 italic mb-6">Gestão completa da sua van</p>
-                        <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20o%20plano%20Pro" className="btn btn-primary w-full justify-center py-4 text-lg">Quero o Pro</a>
+                        <p className="text-xs text-gray-500 italic mb-4">Gestão completa</p>
+                        <a 
+                            href={planPeriod === '1month' 
+                                ? 'https://www.asaas.com/c/h6xsvjbh4nyt6ksm' 
+                                : 'https://www.asaas.com/c/rrt48s4pufgttn9b'
+                            } 
+                            target="_blank"
+                            className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 rounded-xl transition"
+                        >
+                            Assinar Pro Solo
+                        </a>
                     </div>
 
-                    {/* PLANO ANUAL */}
-                    <div className="bg-[#1e293b] p-8 rounded-3xl border border-white/5 text-center flex flex-col">
-                        <h3 className="text-2xl font-bold mb-4">Anual</h3>
+                    {/* PLANO PRO DUO */}
+                    <div className="bg-[#1e293b] p-6 rounded-3xl border border-purple-500/50 text-center flex flex-col">
+                        <h3 className="text-xl font-bold mb-4">Pro Duo</h3>
                         <div className="mb-2">
-                            <span className="text-4xl font-extrabold text-blue-400">R$ 149,90</span><span className="text-gray-500">/ano</span>
+                            <span className="text-3xl font-extrabold text-purple-400">
+                                R$ {planPeriod === '1month' ? '19,90' : '33,90'}
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                                /{planPeriod === '1month' ? 'mês' : '2 meses'}
+                            </span>
                         </div>
-                        <p className="text-sm text-green-500 font-bold mb-6">≈ R$ 12,49/mês — Economia de R$ 88,90</p>
-
-                        <ul className="text-left space-y-4 mb-8 text-gray-400 flex-1">
-                            <li>✓ <strong className="text-green-400">TUDO do Pro</strong></li>
-                            <li>✓ Pague uma vez, use o ano todo</li>
-                            <li>✓ Maior economia</li>
-                            <li>✓ Suporte prioritário</li>
-                            <li>✓ Atualizações inclusas</li>
+                        <p className="text-xs text-gray-400 mb-6">2 pessoas</p>
+                        <ul className="text-left space-y-3 mb-6 text-gray-400 flex-1 text-sm">
+                            <li>✓ <strong className="text-purple-400">TUDO do Pro</strong></li>
+                            <li>✓ 2 contas simultâneas</li>
+                            <li>✓ Ideal para duplas</li>
+                            <li>✓ Monitor + Motorista</li>
                         </ul>
-                        <p className="text-sm text-gray-500 italic mb-6">Pra quem quer economizar</p>
-                        <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20o%20plano%20Anual" className="btn btn-outline w-full justify-center py-3">Quero o Anual</a>
+                        <p className="text-xs text-gray-500 italic mb-4">Para duplas</p>
+                        <a 
+                            href={planPeriod === '1month' 
+                                ? 'https://www.asaas.com/c/9l0f5jv7soevywwe' 
+                                : 'https://www.asaas.com/c/zzijfvihayzxw3n5'
+                            } 
+                            target="_blank"
+                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl transition"
+                        >
+                            Assinar Pro Duo
+                        </a>
+                    </div>
+
+                    {/* PLANO EQUIPE */}
+                    <div className="bg-[#1e293b] p-6 rounded-3xl border border-green-500/50 text-center flex flex-col">
+                        <h3 className="text-xl font-bold mb-4">Equipe</h3>
+                        <div className="mb-2">
+                            <span className="text-3xl font-extrabold text-green-400">
+                                R$ {planPeriod === '1month' ? '32,90' : '59,90'}
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                                /{planPeriod === '1month' ? 'mês' : '2 meses'}
+                            </span>
+                        </div>
+                        <p className="text-xs text-gray-400 mb-6">3 a 5 pessoas</p>
+                        <ul className="text-left space-y-3 mb-6 text-gray-400 flex-1 text-sm">
+                            <li>✓ <strong className="text-green-400">TUDO do Pro</strong></li>
+                            <li>✓ Até 5 contas</li>
+                            <li>✓ Gestão de equipe</li>
+                            <li>✓ Permissões por usuário</li>
+                        </ul>
+                        <p className="text-xs text-gray-500 italic mb-4">Para empresas</p>
+                        <a 
+                            href={planPeriod === '1month' 
+                                ? 'https://www.asaas.com/c/zoncahpoy4it8r45' 
+                                : 'https://www.asaas.com/c/fvmlt9vlqbb4ukhp'
+                            } 
+                            target="_blank"
+                            className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition"
+                        >
+                            Assinar Equipe
+                        </a>
                     </div>
                 </div>
                 <div className="text-center mt-12 text-gray-500 text-sm">
-                    💳 Pagamento seguro • Acesso imediato • Suporte incluso
+                    💳 Pagamento via Pix ou Boleto • Acesso imediato • Suporte incluso
                 </div>
             </section>
 
