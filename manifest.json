@@ -1,21 +1,27 @@
 {
-  "name": "Monitor Escolar",
-  "short_name": "Monitor",
-  "start_url": ".",
+  "name": "Monitor Pro",
+  "short_name": "Monitor Pro",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#111225",
   "theme_color": "#1a1c35",
-  "description": "Gestão de Transporte Escolar Offline-First",
+  "description": "Gestão Completa de Transporte Escolar",
+  "orientation": "portrait",
+  "scope": "/",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3066/3066259.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3066/3066259.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["education", "productivity", "business"],
+  "screenshots": []
 }
