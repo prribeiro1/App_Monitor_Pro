@@ -313,7 +313,7 @@ export const LandingScreen: React.FC = () => {
                 {planPeriod === 'annual' && (
                     <div className="max-w-5xl mx-auto mb-12 bg-gradient-to-r from-purple-500 to-pink-600 p-6 rounded-xl text-center text-white">
                         <h3 className="text-xl font-bold mb-2">💎 MÁXIMA ECONOMIA — Plano Anual</h3>
-                        <p>Pague 1 ano e economize até 50%! Melhor custo-benefício.</p>
+                        <p>Pague 1 ano e economize de 2 a 4 meses! Melhor custo-benefício.</p>
                     </div>
                 )}
 
@@ -400,7 +400,6 @@ export const LandingScreen: React.FC = () => {
                             <li>✓ <strong className="text-purple-400">TUDO do Pro</strong></li>
                             <li>✓ 2 contas simultâneas</li>
                             <li>✓ Ideal para duplas</li>
-                            <li>✓ Monitor + Motorista</li>
                         </ul>
                         <p className="text-xs text-gray-500 italic mb-4">Para duplas</p>
                         <a 
