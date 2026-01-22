@@ -8,18 +8,36 @@ export const AutomaticBillingScreen: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingStudent, setProcessingStudent] = useState<string | null>(null);
+  const [walletId, setWalletId] = useState<string | null>(null);
+  const [hasAsaasConfig, setHasAsaasConfig] = useState(false);
 
   useEffect(() => {
-    loadStudents();
+    loadData();
   }, []);
 
-  const loadStudents = async () => {
+  const loadData = async () => {
     const allStudents = await dbService.getStudents();
     setStudents(allStudents.filter(s => s.active));
+    
+    // Carregar configurações do usuário
+    const settings = await dbService.getUserSettings();
+    setWalletId(settings?.asaasWalletId || null);
+    setHasAsaasConfig(!!settings?.asaasConfig?.apiKey);
+    
     setLoading(false);
   };
 
   const handleActivateAutoBilling = async (student: Student) => {
+    if (!hasAsaasConfig) {
+      alert('❌ Configure o Asaas primeiro nas configurações.');
+      return;
+    }
+
+    if (!walletId) {
+      alert('❌ Configure seus dados bancários primeiro.\n\nVá em Configurações → Dados Bancários.');
+      return;
+    }
+
     if (!student.responsibleCpf) {
       alert('❌ CPF do responsável não cadastrado. Edite o aluno e adicione o CPF.');
       return;
@@ -54,7 +72,7 @@ export const AutomaticBillingScreen: React.FC = () => {
         });
       }
 
-      // 2. Criar assinatura recorrente
+      // 2. Criar assinatura recorrente COM SPLIT
       const nextDueDate = new Date();
       nextDueDate.setDate(student.dueDay);
       if (nextDueDate < new Date()) {
@@ -69,10 +87,10 @@ export const AutomaticBillingScreen: React.FC = () => {
         cycle: 'MONTHLY',
         description: `Mensalidade - ${student.name}`,
         externalReference: student.id
-      });
+      }, walletId); // ← Passa o walletId para criar split automático
 
       if (subscription.id) {
-        alert(`✅ Cobrança automática ativada!\n\nAssinatura ID: ${subscription.id}\nPróximo vencimento: ${nextDueDate.toLocaleDateString()}`);
+        alert(`✅ Cobrança automática ativada!\n\nAssinatura ID: ${subscription.id}\nPróximo vencimento: ${nextDueDate.toLocaleDateString()}\n\n💰 Split configurado:\n99% para você\n1% para Monitor Pro`);
         // Aqui você salvaria o subscription.id no banco de dados local
       } else {
         alert('❌ Erro ao criar assinatura: ' + (subscription.errors?.[0]?.description || 'Erro desconhecido'));
@@ -146,17 +164,40 @@ A API Key está configurada corretamente!`);
       </div>
 
       {/* Card de Aviso - Configuração */}
-      <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-4">
-        <div className="flex items-start gap-3">
-          <Icon name="alert-triangle" className="text-yellow-400 mt-1" size={20} />
-          <div className="text-sm text-gray-300">
-            <p className="font-semibold text-yellow-400 mb-1">Configure o Asaas primeiro</p>
-            <p className="text-xs">
-              Antes de ativar cobranças, configure sua API Key do Asaas nas configurações.
-            </p>
+      {!hasAsaasConfig && (
+        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <Icon name="alert-triangle" className="text-yellow-400 mt-1" size={20} />
+            <div className="text-sm text-gray-300">
+              <p className="font-semibold text-yellow-400 mb-1">Configure o Asaas primeiro</p>
+              <p className="text-xs">
+                Antes de ativar cobranças, configure sua API Key do Asaas nas configurações.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Card de Aviso - Dados Bancários */}
+      {hasAsaasConfig && !walletId && (
+        <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <Icon name="alert-circle" className="text-orange-400 mt-1" size={20} />
+            <div className="text-sm text-gray-300">
+              <p className="font-semibold text-orange-400 mb-1">Configure seus dados bancários</p>
+              <p className="text-xs mb-2">
+                Para receber os pagamentos automaticamente, você precisa configurar seus dados bancários.
+              </p>
+              <button
+                onClick={() => alert('Funcionalidade em desenvolvimento. Configure via Configurações → Dados Bancários')}
+                className="text-xs font-semibold text-orange-300 hover:text-orange-200"
+              >
+                Configurar agora →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Card de Aviso - CORS */}
       <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
