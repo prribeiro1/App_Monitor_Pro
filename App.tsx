@@ -17,6 +17,8 @@ import { ContractScreen } from './pages/ContractScreen';
 import { ContractTemplateScreen } from './pages/ContractTemplateScreen';
 import { LandingScreen } from './pages/LandingScreen';
 import { LoginScreen } from './pages/LoginScreen';
+import { AsaasConfigScreen } from './pages/AsaasConfigScreen';
+import { AutomaticBillingScreen } from './pages/AutomaticBillingScreen';
 import { PublicSignaturePage } from './pages/PublicSignaturePage';
 import { dbService } from './services/db';
 import { UserSettings, Student } from './types';
@@ -458,6 +460,8 @@ export default function App() {
           {checkPermission('maintenance') && <Route path="/maintenance" element={<MaintenanceScreen />} />}
           {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
           {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} />} />}
+          {canViewFinancial && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={(config) => console.log('Config saved:', config)} initialConfig={settings.asaasConfig} />} />}
+          {canViewFinancial && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
           {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
           <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
