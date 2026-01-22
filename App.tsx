@@ -19,7 +19,7 @@ import { LandingScreen } from './pages/LandingScreen';
 import { LoginScreen } from './pages/LoginScreen';
 import { AsaasConfigScreen } from './pages/AsaasConfigScreen';
 import { AutomaticBillingScreen } from './pages/AutomaticBillingScreen';
-import { OnboardingBankScreen } from './pages/OnboardingBankScreen';
+// import { OnboardingBankScreen } from './pages/OnboardingBankScreen';
 import { PublicSignaturePage } from './pages/PublicSignaturePage';
 import { dbService } from './services/db';
 import { UserSettings, Student } from './types';
@@ -463,7 +463,7 @@ export default function App() {
           {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} />} />}
           {canViewFinancial && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={(config) => console.log('Config saved:', config)} initialConfig={settings?.asaasConfig} />} />}
           {canViewFinancial && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
-          {canViewFinancial && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => { fetchSettings(); window.location.hash = '/automatic-billing'; }} onSkip={() => window.location.hash = '/dashboard'} />} />}
+          {/* {canViewFinancial && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => { fetchSettings(); window.location.hash = '/automatic-billing'; }} onSkip={() => window.location.hash = '/dashboard'} />} />} */}
           {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
           <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
