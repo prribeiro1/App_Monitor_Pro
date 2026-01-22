@@ -9,7 +9,6 @@ export const AutomaticBillingScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [processingStudent, setProcessingStudent] = useState<string | null>(null);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [hasAsaasConfig, setHasAsaasConfig] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -22,7 +21,6 @@ export const AutomaticBillingScreen: React.FC = () => {
     // Carregar configurações do usuário
     const settings = await dbService.getUserSettings();
     setWalletId(settings?.asaasWalletId || null);
-    setHasAsaasConfig(!!settings?.asaasConfig?.apiKey);
     
     setLoading(false);
   };
@@ -30,14 +28,8 @@ export const AutomaticBillingScreen: React.FC = () => {
   const handleActivateAutoBilling = async (student: Student) => {
     console.log('=== INICIANDO COBRANÇA AUTOMÁTICA ===');
     console.log('Aluno:', student.name);
-    console.log('Has Asaas Config:', hasAsaasConfig);
     console.log('Wallet ID:', walletId);
     
-    if (!hasAsaasConfig) {
-      alert('❌ Configure o Asaas primeiro nas configurações.');
-      return;
-    }
-
     if (!walletId) {
       alert('❌ Configure seus dados bancários primeiro.\n\nVá em Configurações → Mudar Plano → Pro+ → Configure dados bancários');
       return;
@@ -183,30 +175,15 @@ A API Key está configurada corretamente!`);
         </p>
       </div>
 
-      {/* Card de Aviso - Configuração */}
-      {!hasAsaasConfig && (
-        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-4">
-          <div className="flex items-start gap-3">
-            <Icon name="alert-triangle" className="text-yellow-400 mt-1" size={20} />
-            <div className="text-sm text-gray-300">
-              <p className="font-semibold text-yellow-400 mb-1">Configure o Asaas primeiro</p>
-              <p className="text-xs">
-                Antes de ativar cobranças, configure sua API Key do Asaas nas configurações.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Card de Aviso - Dados Bancários */}
-      {hasAsaasConfig && !walletId && (
-        <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-4 mb-4">
+      {!walletId && (
+        <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-4 mb-6">
           <div className="flex items-start gap-3">
             <Icon name="alert-circle" className="text-orange-400 mt-1" size={20} />
             <div className="text-sm text-gray-300 flex-1">
               <p className="font-semibold text-orange-400 mb-1">Configure seus dados bancários</p>
               <p className="text-xs mb-3">
-                Para receber os pagamentos automaticamente, você precisa configurar seus dados bancários.
+                Para receber os pagamentos automaticamente (99% direto na sua conta), você precisa configurar seus dados bancários.
               </p>
               <button
                 onClick={() => window.location.hash = '/onboarding-bank'}

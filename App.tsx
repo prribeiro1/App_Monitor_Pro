@@ -487,7 +487,7 @@ export default function App() {
           {checkPermission('maintenance') && <Route path="/maintenance" element={<MaintenanceScreen />} />}
           {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
           {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} />} />}
-          {canViewFinancial && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => { 
+          {isSuperUser && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => { 
             const updated: UserSettings = { ...settings!, asaasConfig: config };
             await dbService.saveUserSettings(updated);
             fetchSettings();
