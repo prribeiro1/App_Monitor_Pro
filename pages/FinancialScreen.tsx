@@ -311,29 +311,21 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                 </div>
             </div>
 
-            {/* Asaas Quick Access */}
-            <div className="mb-6 grid grid-cols-2 gap-3">
-                <a
-                    href="#/asaas-config"
-                    className="bg-gradient-to-r from-blue-600 to-blue-500 p-4 rounded-xl flex items-center gap-3 hover:from-blue-500 hover:to-blue-400 transition"
-                >
-                    <Icon name="settings" size={24} className="text-white" />
-                    <div>
-                        <p className="text-white font-bold text-sm">Configurar Asaas</p>
-                        <p className="text-blue-100 text-xs">API Key e Ambiente</p>
-                    </div>
-                </a>
-                <a
-                    href="#/automatic-billing"
-                    className="bg-gradient-to-r from-green-600 to-green-500 p-4 rounded-xl flex items-center gap-3 hover:from-green-500 hover:to-green-400 transition"
-                >
-                    <Icon name="zap" size={24} className="text-white" />
-                    <div>
-                        <p className="text-white font-bold text-sm">Cobrança Automática</p>
-                        <p className="text-green-100 text-xs">Ativar por aluno</p>
-                    </div>
-                </a>
-            </div>
+            {/* Asaas Quick Access - Apenas para Pro+ */}
+            {settings?.subscriptionTier === 'pro_plus' && (
+                <div className="mb-6">
+                    <a
+                        href="#/automatic-billing"
+                        className="bg-gradient-to-r from-green-600 to-green-500 p-4 rounded-xl flex items-center gap-3 hover:from-green-500 hover:to-green-400 transition"
+                    >
+                        <Icon name="zap" size={24} className="text-white" />
+                        <div>
+                            <p className="text-white font-bold text-sm">Cobrança Automática</p>
+                            <p className="text-green-100 text-xs">Ativar por aluno</p>
+                        </div>
+                    </a>
+                </div>
+            )}
 
             {/* Search Bar */}
             <div className="mb-6">
