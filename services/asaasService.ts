@@ -4,7 +4,7 @@
 interface AsaasConfig {
     apiKey: string;
     environment: 'sandbox' | 'production';
-    splitPercentage: number; // Percentual que fica com você (ex: 3 = 3%)
+    splitPercentage: number; // Percentual que fica com você (ex: 1 = 1%)
 }
 
 interface AsaasCustomer {
@@ -95,7 +95,7 @@ class AsaasService {
         this.config = {
             apiKey: '', // Será configurado pelo admin (você)
             environment: 'sandbox',
-            splitPercentage: 3 // 3% fica com você
+            splitPercentage: 1 // 1% fica com você (Monitor Pro)
         };
         this.baseUrl = this.config.environment === 'production' 
             ? 'https://api.asaas.com/v3'
@@ -103,7 +103,7 @@ class AsaasService {
     }
 
     // Configura a API Key Master (sua)
-    setApiKey(apiKey: string, environment: 'sandbox' | 'production' = 'production', splitPercentage: number = 3) {
+    setApiKey(apiKey: string, environment: 'sandbox' | 'production' = 'production', splitPercentage: number = 1) {
         this.config.apiKey = apiKey;
         this.config.environment = environment;
         this.config.splitPercentage = splitPercentage;

@@ -110,8 +110,8 @@ const subscription = await asaasService.createSubscription({
 }, conductorWalletId); // ← Passa o walletId do condutor
 
 // Split automático:
-// 97% (R$ 242,50) → Condutor
-// 3% (R$ 7,50) → Você
+// 99% (R$ 247,50) → Condutor
+// 1% (R$ 2,50) → Você
 ```
 
 ---
@@ -124,13 +124,13 @@ const subscription = await asaasService.createSubscription({
 3. Deve aparecer: "Mensalidade - João Silva"
 4. Clique para ver detalhes
 5. Veja a seção **"Split de Pagamento"**:
-   - 97% → Condutor Teste
-   - 3% → Você (fica na conta master)
+   - 99% → Condutor Teste
+   - 1% → Você (fica na conta master)
 
 **Conta B (Condutor):**
 1. Acesse: https://sandbox.asaas.com (conta do condutor)
 2. Vá em: **Cobranças** ou **Extrato**
-3. Deve aparecer: R$ 242,50 (97% de R$ 250)
+3. Deve aparecer: R$ 247,50 (99% de R$ 250)
 
 ---
 
@@ -142,8 +142,8 @@ const subscription = await asaasService.createSubscription({
 
 **O que acontece:**
 - Asaas simula que o responsável pagou
-- R$ 242,50 vai para conta do Condutor
-- R$ 7,50 fica na sua conta (Monitor Pro)
+- R$ 247,50 vai para conta do Condutor
+- R$ 2,50 fica na sua conta (Monitor Pro)
 - Tudo automático!
 
 ---
@@ -153,25 +153,25 @@ const subscription = await asaasService.createSubscription({
 - [ ] API Key da Conta A configurada no app
 - [ ] Subconta criada para o condutor (walletId salvo)
 - [ ] Assinatura criada com split configurado
-- [ ] Split aparece no painel Asaas (97% / 3%)
+- [ ] Split aparece no painel Asaas (99% / 1%)
 - [ ] Pagamento simulado dividiu corretamente
-- [ ] Condutor recebeu 97% na conta dele
-- [ ] Você recebeu 3% na conta master
+- [ ] Condutor recebeu 99% na conta dele
+- [ ] Você recebeu 1% na conta master
 
 ---
 
 ## 💰 **Cálculo do Split**
 
-| Valor Mensalidade | Condutor (97%) | Você (3%) | Taxa Asaas (~1%) | Condutor Líquido |
+| Valor Mensalidade | Condutor (99%) | Você (1%) | Taxa Asaas (~1%) | Condutor Líquido |
 |-------------------|----------------|-----------|------------------|------------------|
-| R$ 100,00 | R$ 97,00 | R$ 3,00 | R$ 1,00 | R$ 96,00 |
-| R$ 250,00 | R$ 242,50 | R$ 7,50 | R$ 2,50 | R$ 240,00 |
-| R$ 500,00 | R$ 485,00 | R$ 15,00 | R$ 5,00 | R$ 480,00 |
+| R$ 100,00 | R$ 99,00 | R$ 1,00 | R$ 1,00 | R$ 98,00 |
+| R$ 250,00 | R$ 247,50 | R$ 2,50 | R$ 2,50 | R$ 245,00 |
+| R$ 500,00 | R$ 495,00 | R$ 5,00 | R$ 5,00 | R$ 490,00 |
 
 **Seu lucro mensal:**
 - 1 condutor com 30 alunos × R$ 250 = R$ 7.500
-- Seu split (3%) = **R$ 225/mês**
-- 100 condutores = **R$ 22.500/mês** 🚀
+- Seu split (1%) = **R$ 75/mês**
+- 100 condutores = **R$ 7.500/mês** �
 
 ---
 

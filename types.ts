@@ -97,6 +97,9 @@ export interface MaintenanceLog {
   notes?: string;
 }
 
+// Tipos de planos disponíveis
+export type SubscriptionTier = 'basic' | 'pro' | 'pro_plus';
+
 export interface UserSettings {
   id: string;
   currentKm: number;
@@ -108,6 +111,9 @@ export interface UserSettings {
   driverAddress?: string;
   driverSignature?: string;
   contractClauses?: { title: string; content: string }[];
+  subscriptionTier?: SubscriptionTier; // Plano do usuário
+  asaasConfig?: AsaasConfig; // Configuração do Asaas (só Pro+)
+  asaasWalletId?: string; // ID da subconta do condutor no Asaas (só Pro+)
 }
 
 // Configuração do Asaas

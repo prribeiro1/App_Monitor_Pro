@@ -409,8 +409,8 @@ export default function App() {
   const role = metadata.role || 'monitor';
   const permissions = metadata.permissions || {};
   const currentUsername = authService.getUsernameFromEmail(session.user.email);
-  // Trocar 'seuemail' pelo username do seu email (parte antes do @)
-  const isSuperUser = role === 'admin' || currentUsername === 'seuemail';
+  // SuperUsers: apenas 'teste' e 'google_test'
+  const isSuperUser = role === 'admin' || currentUsername === 'teste' || currentUsername === 'google_test';
 
   const checkPermission = (feature: string, defaultAccess = true) => {
     if (isSuperUser) return true;
