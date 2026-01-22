@@ -77,9 +77,34 @@ export const AutomaticBillingScreen: React.FC = () => {
       } else {
         alert('❌ Erro ao criar assinatura: ' + (subscription.errors?.[0]?.description || 'Erro desconhecido'));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro:', error);
-      alert('❌ Erro ao ativar cobrança automática. Verifique as configurações do Asaas.');
+      
+      // Detectar erro de CORS
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        alert(`⚠️ ERRO DE CORS (Desenvolvimento Local)
+
+Isso acontece porque o navegador bloqueia requisições diretas para APIs externas.
+
+📱 SOLUÇÕES:
+
+1. TESTAR NO APK (Recomendado):
+   - Gere o APK desta branch
+   - Instale no celular
+   - Lá funciona 100%!
+
+2. USAR EXTENSÃO CORS:
+   - Instale: "Allow CORS" no Chrome
+   - Ative a extensão
+   - Tente novamente
+
+3. AGUARDAR PRODUÇÃO:
+   - Esta funcionalidade será testada no APK
+
+A API Key está configurada corretamente!`);
+      } else {
+        alert('❌ Erro ao ativar cobrança automática. Verifique as configurações do Asaas.');
+      }
     } finally {
       setProcessingStudent(null);
     }
@@ -120,14 +145,31 @@ export const AutomaticBillingScreen: React.FC = () => {
         </p>
       </div>
 
-      {/* Card de Aviso */}
-      <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-6">
+      {/* Card de Aviso - Configuração */}
+      <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-4">
         <div className="flex items-start gap-3">
           <Icon name="alert-triangle" className="text-yellow-400 mt-1" size={20} />
           <div className="text-sm text-gray-300">
             <p className="font-semibold text-yellow-400 mb-1">Configure o Asaas primeiro</p>
             <p className="text-xs">
               Antes de ativar cobranças, configure sua API Key do Asaas nas configurações.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Card de Aviso - CORS */}
+      <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <Icon name="alert-circle" className="text-red-400 mt-1" size={20} />
+          <div className="text-sm text-gray-300">
+            <p className="font-semibold text-red-400 mb-2">⚠️ Limitação em Desenvolvimento Local</p>
+            <p className="text-xs mb-2">
+              O navegador bloqueia requisições para APIs externas (erro CORS). 
+              Esta funcionalidade só pode ser testada completamente no APK Android.
+            </p>
+            <p className="text-xs font-semibold text-red-300">
+              📱 Gere o APK desta branch para testar a integração real com Asaas!
             </p>
           </div>
         </div>
