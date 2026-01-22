@@ -28,13 +28,18 @@ export const AutomaticBillingScreen: React.FC = () => {
   };
 
   const handleActivateAutoBilling = async (student: Student) => {
+    console.log('=== INICIANDO COBRANÇA AUTOMÁTICA ===');
+    console.log('Aluno:', student.name);
+    console.log('Has Asaas Config:', hasAsaasConfig);
+    console.log('Wallet ID:', walletId);
+    
     if (!hasAsaasConfig) {
       alert('❌ Configure o Asaas primeiro nas configurações.');
       return;
     }
 
     if (!walletId) {
-      alert('❌ Configure seus dados bancários primeiro.\n\nVá em Configurações → Dados Bancários.');
+      alert('❌ Configure seus dados bancários primeiro.\n\nVá em Configurações → Mudar Plano → Pro+ → Configure dados bancários');
       return;
     }
 
@@ -56,20 +61,25 @@ export const AutomaticBillingScreen: React.FC = () => {
     setProcessingStudent(student.id);
 
     try {
+      console.log('1. Buscando/criando cliente no Asaas...');
       // 1. Criar/buscar cliente no Asaas
       let asaasCustomer;
       const existingCustomer = await asaasService.getCustomerByCpf(student.responsibleCpf);
+      console.log('Resposta busca cliente:', existingCustomer);
       
       if (existingCustomer.data && existingCustomer.data.length > 0) {
         asaasCustomer = existingCustomer.data[0];
+        console.log('Cliente existente encontrado:', asaasCustomer.id);
       } else {
         // Criar novo cliente
+        console.log('Criando novo cliente...');
         asaasCustomer = await asaasService.createCustomer({
           name: student.guardianName || 'Responsável',
           cpfCnpj: student.responsibleCpf,
           email: '', // Pode adicionar campo de email no cadastro
           mobilePhone: student.responsiblePhone || student.contact || ''
         });
+        console.log('Cliente criado:', asaasCustomer);
       }
 
       // 2. Criar assinatura recorrente COM SPLIT
@@ -78,6 +88,12 @@ export const AutomaticBillingScreen: React.FC = () => {
       if (nextDueDate < new Date()) {
         nextDueDate.setMonth(nextDueDate.getMonth() + 1);
       }
+
+      console.log('2. Criando assinatura com split...');
+      console.log('Customer ID:', asaasCustomer.id);
+      console.log('Wallet ID:', walletId);
+      console.log('Valor:', student.monthlyFees);
+      console.log('Vencimento:', nextDueDate.toISOString().split('T')[0]);
 
       const subscription = await asaasService.createSubscription({
         customer: asaasCustomer.id,
@@ -89,14 +105,18 @@ export const AutomaticBillingScreen: React.FC = () => {
         externalReference: student.id
       }, walletId); // ← Passa o walletId para criar split automático
 
+      console.log('Resposta assinatura:', subscription);
+
       if (subscription.id) {
         alert(`✅ Cobrança automática ativada!\n\nAssinatura ID: ${subscription.id}\nPróximo vencimento: ${nextDueDate.toLocaleDateString()}\n\n💰 Split configurado:\n99% para você\n1% para Monitor Pro`);
         // Aqui você salvaria o subscription.id no banco de dados local
       } else {
-        alert('❌ Erro ao criar assinatura: ' + (subscription.errors?.[0]?.description || 'Erro desconhecido'));
+        console.error('Erro na resposta:', subscription);
+        alert('❌ Erro ao criar assinatura: ' + (subscription.errors?.[0]?.description || JSON.stringify(subscription)));
       }
     } catch (error: any) {
-      console.error('Erro:', error);
+      console.error('❌ Erro completo:', error);
+      console.error('Stack:', error.stack);
       
       // Detectar erro de CORS
       if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
@@ -121,7 +141,7 @@ Isso acontece porque o navegador bloqueia requisições diretas para APIs extern
 
 A API Key está configurada corretamente!`);
       } else {
-        alert('❌ Erro ao ativar cobrança automática. Verifique as configurações do Asaas.');
+        alert('❌ Erro ao ativar cobrança automática:\n\n' + error.message + '\n\nVeja o console para mais detalhes.');
       }
     } finally {
       setProcessingStudent(null);

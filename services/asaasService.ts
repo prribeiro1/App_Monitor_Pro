@@ -92,12 +92,13 @@ class AsaasService {
 
     constructor() {
         // Configuração inicial (será carregada das configurações do usuário)
+        // Hardcoded para testes com APK
         this.config = {
-            apiKey: '', // Será configurado pelo admin (você)
+            apiKey: '$aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OmJlYTg2MGU2LWZhOWItNGJkMi1hYjg1LTVhYmZiMmU0OGY0OTo6JGFhY2hfY2I3MGRhYTItZGJiOS00NzZiLWFkZWEtNGM1MjJjNWRlY2Y4',
             environment: 'sandbox',
             splitPercentage: 1 // 1% fica com você (Monitor Pro)
         };
-        this.baseUrl = this.config.environment === 'production' 
+        this.baseUrl = this.config.environment === 'production'
             ? 'https://api.asaas.com/v3'
             : 'https://sandbox.asaas.com/api/v3';
     }
@@ -107,7 +108,7 @@ class AsaasService {
         this.config.apiKey = apiKey;
         this.config.environment = environment;
         this.config.splitPercentage = splitPercentage;
-        this.baseUrl = environment === 'production' 
+        this.baseUrl = environment === 'production'
             ? 'https://api.asaas.com/v3'
             : 'https://sandbox.asaas.com/api/v3';
     }
@@ -217,7 +218,7 @@ class AsaasService {
     async createPayment(payment: AsaasPayment, conductorWalletId?: string): Promise<any> {
         try {
             const paymentData = { ...payment };
-            
+
             // Adiciona split se tiver walletId do condutor
             if (conductorWalletId) {
                 paymentData.split = this.calculateSplit(payment.value, conductorWalletId);
@@ -270,7 +271,7 @@ class AsaasService {
     async createSubscription(subscription: AsaasSubscription, conductorWalletId?: string): Promise<any> {
         try {
             const subscriptionData = { ...subscription };
-            
+
             // Adiciona split se tiver walletId do condutor
             if (conductorWalletId) {
                 subscriptionData.split = this.calculateSplit(subscription.value, conductorWalletId);

@@ -245,6 +245,9 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
                       <Icon name="tool" size={24} className="mb-1" /><span className="text-xs font-bold">Manutenção</span>
                     </button>
                   )}
+                  <button onClick={() => { setIsSettingsOpen(false); setShowWelcome(true); }} className="flex flex-col items-center justify-center p-3 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition col-span-2">
+                    <Icon name="zap" size={24} className="mb-1" /><span className="text-xs font-bold">Mudar Plano</span>
+                  </button>
                   <button onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center p-3 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition">
                     <Icon name="download" size={24} className="mb-1" /><span className="text-xs font-bold">Importar</span>
                   </button>
@@ -484,7 +487,11 @@ export default function App() {
           {checkPermission('maintenance') && <Route path="/maintenance" element={<MaintenanceScreen />} />}
           {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
           {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} />} />}
-          {canViewFinancial && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={(config) => console.log('Config saved:', config)} initialConfig={settings?.asaasConfig} />} />}
+          {canViewFinancial && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => { 
+            const updated: UserSettings = { ...settings!, asaasConfig: config };
+            await dbService.saveUserSettings(updated);
+            fetchSettings();
+          }} initialConfig={settings?.asaasConfig} />} />}
           {isProPlus && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
           {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => { fetchSettings(); window.location.hash = '/automatic-billing'; }} onSkip={() => window.location.hash = '/dashboard'} />} />}
           {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
