@@ -109,3 +109,24 @@ export interface UserSettings {
   driverSignature?: string;
   contractClauses?: { title: string; content: string }[];
 }
+
+// Configuração do Asaas
+export interface AsaasConfig {
+  apiKey: string;
+  environment: 'sandbox' | 'production';
+  enabled: boolean;
+  autoNegativationDays?: number; // Dias de atraso para negativação automática
+}
+
+// Cobrança Asaas vinculada a um aluno
+export interface StudentPayment {
+  id: string;
+  studentId: string;
+  asaasCustomerId?: string; // ID do cliente no Asaas
+  asaasSubscriptionId?: string; // ID da assinatura recorrente
+  asaasPaymentId?: string; // ID da última cobrança
+  status: 'active' | 'pending' | 'overdue' | 'cancelled';
+  lastPaymentDate?: string;
+  nextDueDate?: string;
+  amount: number;
+}

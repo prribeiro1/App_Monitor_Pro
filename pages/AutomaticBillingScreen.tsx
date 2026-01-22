@@ -1,0 +1,235 @@
+import React, { useState, useEffect } from 'react';
+import { Icon } from '../components/Icon';
+import { dbService } from '../services/db';
+import { asaasService } from '../services/asaasService';
+import { Student } from '../types';
+
+export const AutomaticBillingScreen: React.FC = () => {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingStudent, setProcessingStudent] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadStudents();
+  }, []);
+
+  const loadStudents = async () => {
+    const allStudents = await dbService.getStudents();
+    setStudents(allStudents.filter(s => s.active));
+    setLoading(false);
+  };
+
+  const handleActivateAutoBilling = async (student: Student) => {
+    if (!student.responsibleCpf) {
+      alert('❌ CPF do responsável não cadastrado. Edite o aluno e adicione o CPF.');
+      return;
+    }
+
+    if (!student.monthlyFees || student.monthlyFees <= 0) {
+      alert('❌ Valor da mensalidade não cadastrado. Edite o aluno e adicione o valor.');
+      return;
+    }
+
+    if (!student.dueDay) {
+      alert('❌ Dia de vencimento não cadastrado. Edite o aluno e adicione o dia.');
+      return;
+    }
+
+    setProcessingStudent(student.id);
+
+    try {
+      // 1. Criar/buscar cliente no Asaas
+      let asaasCustomer;
+      const existingCustomer = await asaasService.getCustomerByCpf(student.responsibleCpf);
+      
+      if (existingCustomer.data && existingCustomer.data.length > 0) {
+        asaasCustomer = existingCustomer.data[0];
+      } else {
+        // Criar novo cliente
+        asaasCustomer = await asaasService.createCustomer({
+          name: student.guardianName || 'Responsável',
+          cpfCnpj: student.responsibleCpf,
+          email: '', // Pode adicionar campo de email no cadastro
+          mobilePhone: student.responsiblePhone || student.contact || ''
+        });
+      }
+
+      // 2. Criar assinatura recorrente
+      const nextDueDate = new Date();
+      nextDueDate.setDate(student.dueDay);
+      if (nextDueDate < new Date()) {
+        nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+      }
+
+      const subscription = await asaasService.createSubscription({
+        customer: asaasCustomer.id,
+        billingType: 'PIX', // Pode ser configurável
+        value: student.monthlyFees,
+        nextDueDate: nextDueDate.toISOString().split('T')[0],
+        cycle: 'MONTHLY',
+        description: `Mensalidade - ${student.name}`,
+        externalReference: student.id
+      });
+
+      if (subscription.id) {
+        alert(`✅ Cobrança automática ativada!\n\nAssinatura ID: ${subscription.id}\nPróximo vencimento: ${nextDueDate.toLocaleDateString()}`);
+        // Aqui você salvaria o subscription.id no banco de dados local
+      } else {
+        alert('❌ Erro ao criar assinatura: ' + (subscription.errors?.[0]?.description || 'Erro desconhecido'));
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('❌ Erro ao ativar cobrança automática. Verifique as configurações do Asaas.');
+    } finally {
+      setProcessingStudent(null);
+    }
+  };
+
+  const handleNegativate = async (student: Student) => {
+    if (!confirm(`⚠️ Confirma negativação de ${student.name}?\n\nIsso enviará o nome do responsável para Serasa/SPC.`)) {
+      return;
+    }
+
+    setProcessingStudent(student.id);
+
+    try {
+      // Aqui você buscaria o paymentId da última cobrança em atraso
+      // Por enquanto, vou simular
+      alert('🔄 Funcionalidade em desenvolvimento.\n\nEm produção, isso enviaria para negativação no Serasa/SPC.');
+    } catch (error) {
+      alert('❌ Erro ao negativar.');
+    } finally {
+      setProcessingStudent(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Icon name="loader" className="animate-spin text-primary-500" size={32} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 pb-24">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">Cobrança Automática</h2>
+        <p className="text-gray-400 text-sm">
+          Gerencie cobranças recorrentes e negativações via Asaas
+        </p>
+      </div>
+
+      {/* Card de Aviso */}
+      <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <Icon name="alert-triangle" className="text-yellow-400 mt-1" size={20} />
+          <div className="text-sm text-gray-300">
+            <p className="font-semibold text-yellow-400 mb-1">Configure o Asaas primeiro</p>
+            <p className="text-xs">
+              Antes de ativar cobranças, configure sua API Key do Asaas nas configurações.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista de Alunos */}
+      {students.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <Icon name="users" size={48} className="mx-auto mb-4 opacity-50" />
+          <p>Nenhum aluno cadastrado</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {students.map((student) => {
+            const hasRequiredData = student.responsibleCpf && student.monthlyFees && student.dueDay;
+            const isProcessing = processingStudent === student.id;
+
+            return (
+              <div
+                key={student.id}
+                className="bg-navy-800 rounded-xl p-4 border border-navy-700"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold">{student.name}</h3>
+                    <p className="text-gray-400 text-sm">
+                      {student.guardianName || 'Responsável não cadastrado'}
+                    </p>
+                    {student.responsibleCpf && (
+                      <p className="text-gray-500 text-xs mt-1">
+                        CPF: {student.responsibleCpf}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {hasRequiredData ? (
+                    <span className="bg-green-900/30 text-green-400 px-3 py-1 rounded-full text-xs font-medium">
+                      ✓ Pronto
+                    </span>
+                  ) : (
+                    <span className="bg-red-900/30 text-red-400 px-3 py-1 rounded-full text-xs font-medium">
+                      ⚠ Incompleto
+                    </span>
+                  )}
+                </div>
+
+                {/* Informações */}
+                <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
+                  <div>
+                    <p className="text-gray-500 text-xs">Mensalidade</p>
+                    <p className="text-white font-semibold">
+                      {student.monthlyFees ? `R$ ${student.monthlyFees.toFixed(2)}` : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs">Vencimento</p>
+                    <p className="text-white font-semibold">
+                      {student.dueDay ? `Dia ${student.dueDay}` : '-'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Ações */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleActivateAutoBilling(student)}
+                    disabled={!hasRequiredData || isProcessing}
+                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-medium flex items-center justify-center gap-2 transition text-sm"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Icon name="loader" className="animate-spin" size={16} />
+                        Processando...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="zap" size={16} />
+                        Ativar Cobrança
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => handleNegativate(student)}
+                    disabled={isProcessing}
+                    className="px-4 py-2.5 bg-red-600 hover:bg-red-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-medium flex items-center justify-center gap-2 transition"
+                    title="Negativar (Serasa/SPC)"
+                  >
+                    <Icon name="alert-triangle" size={16} />
+                  </button>
+                </div>
+
+                {!hasRequiredData && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    ⚠ Complete: {!student.responsibleCpf && 'CPF'} {!student.monthlyFees && 'Valor'} {!student.dueDay && 'Vencimento'}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
