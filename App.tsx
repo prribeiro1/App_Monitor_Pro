@@ -436,20 +436,8 @@ export default function App() {
   const canViewContracts = checkPermission('contracts', isPro);
   const canViewGps = checkPermission('gps', isPro);
 
-  // Mostrar Welcome Screen se necessário
-  if (showWelcome && settings) {
-    return (
-      <HashRouter>
-        <WelcomeScreen
-          settings={settings}
-          onComplete={() => {
-            setShowWelcome(false);
-            fetchSettings();
-          }}
-        />
-      </HashRouter>
-    );
-  }
+  // Mostrar Welcome Screen se necessário (dentro do HashRouter)
+  const shouldShowWelcome = showWelcome && settings;
 
   return (
     <HashRouter>
@@ -499,6 +487,19 @@ export default function App() {
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Layout>
+
+      {/* Welcome Screen Modal */}
+      {shouldShowWelcome && (
+        <div className="fixed inset-0 bg-navy-900 z-[100]">
+          <WelcomeScreen
+            settings={settings!}
+            onComplete={() => {
+              setShowWelcome(false);
+              fetchSettings();
+            }}
+          />
+        </div>
+      )}
 
       {isUpdateRequired && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 text-center">
