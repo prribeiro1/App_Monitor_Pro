@@ -1,9 +1,10 @@
-// Serviço de integração com Asaas API
+// Serviço de integração com Asaas API - Modelo Split de Pagamento
 // Documentação: https://docs.asaas.com
 
 interface AsaasConfig {
     apiKey: string;
     environment: 'sandbox' | 'production';
+    splitPercentage: number; // Percentual que fica com você (ex: 3 = 3%)
 }
 
 interface AsaasCustomer {
@@ -20,6 +21,33 @@ interface AsaasCustomer {
     postalCode?: string;
 }
 
+// Subconta (Wallet) para o condutor
+interface AsaasAccount {
+    id?: string;
+    name: string;
+    email: string;
+    cpfCnpj: string;
+    companyType?: 'MEI' | 'LIMITED' | 'INDIVIDUAL' | 'ASSOCIATION';
+    phone?: string;
+    mobilePhone?: string;
+    address?: string;
+    addressNumber?: string;
+    complement?: string;
+    province?: string;
+    postalCode?: string;
+    bankAccount?: {
+        bank: string;
+        accountName: string;
+        ownerName: string;
+        ownerBirthDate: string;
+        cpfCnpj: string;
+        agency: string;
+        account: string;
+        accountDigit: string;
+        bankAccountType: 'CONTA_CORRENTE' | 'CONTA_POUPANCA';
+    };
+}
+
 interface AsaasPayment {
     id?: string;
     customer: string; // ID do cliente
@@ -30,6 +58,14 @@ interface AsaasPayment {
     externalReference?: string; // ID do aluno no seu sistema
     installmentCount?: number;
     installmentValue?: number;
+    split?: AsaasSplit[]; // Split de pagamento
+}
+
+interface AsaasSplit {
+    walletId: string; // ID da subconta do condutor
+    fixedValue?: number;
+    percentualValue?: number;
+    totalValue?: number;
 }
 
 interface AsaasSubscription {
@@ -41,6 +77,7 @@ interface AsaasSubscription {
     cycle: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'YEARLY';
     description?: string;
     externalReference?: string;
+    split?: AsaasSplit[]; // Split de pagamento
 }
 
 interface AsaasNegativation {
@@ -56,18 +93,20 @@ class AsaasService {
     constructor() {
         // Configuração inicial (será carregada das configurações do usuário)
         this.config = {
-            apiKey: '', // Será configurado pelo usuário
-            environment: 'sandbox'
+            apiKey: '', // Será configurado pelo admin (você)
+            environment: 'sandbox',
+            splitPercentage: 3 // 3% fica com você
         };
         this.baseUrl = this.config.environment === 'production' 
             ? 'https://api.asaas.com/v3'
             : 'https://sandbox.asaas.com/api/v3';
     }
 
-    // Configura a API Key
-    setApiKey(apiKey: string, environment: 'sandbox' | 'production' = 'production') {
+    // Configura a API Key Master (sua)
+    setApiKey(apiKey: string, environment: 'sandbox' | 'production' = 'production', splitPercentage: number = 3) {
         this.config.apiKey = apiKey;
         this.config.environment = environment;
+        this.config.splitPercentage = splitPercentage;
         this.baseUrl = environment === 'production' 
             ? 'https://api.asaas.com/v3'
             : 'https://sandbox.asaas.com/api/v3';
@@ -79,6 +118,66 @@ class AsaasService {
             'Content-Type': 'application/json',
             'access_token': this.config.apiKey
         };
+    }
+
+    // Calcula split de pagamento
+    private calculateSplit(value: number, conductorWalletId: string): AsaasSplit[] {
+        const yourPercentage = this.config.splitPercentage;
+        const conductorPercentage = 100 - yourPercentage;
+
+        return [
+            {
+                walletId: conductorWalletId,
+                percentualValue: conductorPercentage
+            }
+            // Seu percentual fica automaticamente na conta master
+        ];
+    }
+
+    // ========== SUBCONTAS (CONDUTORES) ==========
+
+    // Criar subconta para condutor
+    async createAccount(account: AsaasAccount): Promise<any> {
+        try {
+            const response = await fetch(`${this.baseUrl}/accounts`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(account)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao criar subconta:', error);
+            throw error;
+        }
+    }
+
+    // Buscar subconta por CPF
+    async getAccountByCpf(cpfCnpj: string): Promise<any> {
+        try {
+            const response = await fetch(`${this.baseUrl}/accounts?cpfCnpj=${cpfCnpj}`, {
+                method: 'GET',
+                headers: this.getHeaders()
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao buscar subconta:', error);
+            throw error;
+        }
+    }
+
+    // Atualizar dados bancários da subconta
+    async updateAccountBankInfo(accountId: string, bankAccount: any): Promise<any> {
+        try {
+            const response = await fetch(`${this.baseUrl}/accounts/${accountId}/bankAccount`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(bankAccount)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao atualizar dados bancários:', error);
+            throw error;
+        }
     }
 
     // ========== CLIENTES ==========
@@ -112,15 +211,22 @@ class AsaasService {
         }
     }
 
-    // ========== COBRANÇAS ==========
+    // ========== COBRANÇAS COM SPLIT ==========
 
-    // Criar cobrança única
-    async createPayment(payment: AsaasPayment): Promise<any> {
+    // Criar cobrança única com split
+    async createPayment(payment: AsaasPayment, conductorWalletId?: string): Promise<any> {
         try {
+            const paymentData = { ...payment };
+            
+            // Adiciona split se tiver walletId do condutor
+            if (conductorWalletId) {
+                paymentData.split = this.calculateSplit(payment.value, conductorWalletId);
+            }
+
             const response = await fetch(`${this.baseUrl}/payments`, {
                 method: 'POST',
                 headers: this.getHeaders(),
-                body: JSON.stringify(payment)
+                body: JSON.stringify(paymentData)
             });
             return await response.json();
         } catch (error) {
@@ -158,15 +264,22 @@ class AsaasService {
         }
     }
 
-    // ========== ASSINATURAS (COBRANÇA RECORRENTE) ==========
+    // ========== ASSINATURAS COM SPLIT (COBRANÇA RECORRENTE) ==========
 
-    // Criar assinatura recorrente
-    async createSubscription(subscription: AsaasSubscription): Promise<any> {
+    // Criar assinatura recorrente com split
+    async createSubscription(subscription: AsaasSubscription, conductorWalletId?: string): Promise<any> {
         try {
+            const subscriptionData = { ...subscription };
+            
+            // Adiciona split se tiver walletId do condutor
+            if (conductorWalletId) {
+                subscriptionData.split = this.calculateSplit(subscription.value, conductorWalletId);
+            }
+
             const response = await fetch(`${this.baseUrl}/subscriptions`, {
                 method: 'POST',
                 headers: this.getHeaders(),
-                body: JSON.stringify(subscription)
+                body: JSON.stringify(subscriptionData)
             });
             return await response.json();
         } catch (error) {
@@ -290,4 +403,4 @@ class AsaasService {
 }
 
 export const asaasService = new AsaasService();
-export type { AsaasCustomer, AsaasPayment, AsaasSubscription, AsaasNegativation };
+export type { AsaasCustomer, AsaasPayment, AsaasSubscription, AsaasNegativation, AsaasAccount, AsaasSplit };
