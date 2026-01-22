@@ -263,6 +263,32 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
     return (
         <div className="p-4 pb-20">
+            {/* Upgrade Card Pro+ */}
+            {settings?.subscriptionTier !== 'pro_plus' && (
+                <div className="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 border border-yellow-500/30 rounded-xl p-5 mb-6">
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <Icon name="zap" size={24} className="text-white" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-bold text-white mb-1">
+                                ⚡ Cobrança Automática Disponível!
+                            </h3>
+                            <p className="text-sm text-gray-300 mb-3">
+                                Receba automaticamente com PIX, Boleto e Cartão. Split de 99% para você, 1% para o app.
+                            </p>
+                            <button
+                                onClick={() => window.location.hash = '/welcome'}
+                                className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white font-bold py-2 px-4 rounded-lg text-sm transition flex items-center gap-2"
+                            >
+                                Fazer Upgrade para Pro+
+                                <Icon name="arrow-right" size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white">Financeiro</h2>
                 <div className="flex gap-2">

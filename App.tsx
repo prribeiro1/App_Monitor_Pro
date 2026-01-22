@@ -19,7 +19,8 @@ import { LandingScreen } from './pages/LandingScreen';
 import { LoginScreen } from './pages/LoginScreen';
 import { AsaasConfigScreen } from './pages/AsaasConfigScreen';
 import { AutomaticBillingScreen } from './pages/AutomaticBillingScreen';
-// import { OnboardingBankScreen } from './pages/OnboardingBankScreen';
+import { OnboardingBankScreen } from './pages/OnboardingBankScreen';
+import { WelcomeScreen } from './pages/WelcomeScreen';
 import { PublicSignaturePage } from './pages/PublicSignaturePage';
 import { dbService } from './services/db';
 import { UserSettings, Student } from './types';
@@ -325,10 +326,16 @@ export default function App() {
   const [backupLoading, setBackupLoading] = useState(false);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [isUpdateRequired, setIsUpdateRequired] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const fetchSettings = async () => {
     const s = await dbService.getUserSettings();
     setSettings(s);
+    
+    // Verificar se precisa mostrar welcome (primeiro acesso sem plano)
+    if (s && !s.subscriptionTier) {
+      setShowWelcome(true);
+    }
   };
 
   const checkAppVersion = async () => {
@@ -420,10 +427,26 @@ export default function App() {
   };
 
   const isPro = metadata.subscription_tier !== 'basic' || isSuperUser;
+  const isProPlus = metadata.subscription_tier === 'pro_plus' || settings?.subscriptionTier === 'pro_plus' || isSuperUser;
   const canViewFinancial = checkPermission('financial', isPro);
   const canViewMaintenance = checkPermission('maintenance', isPro);
   const canViewContracts = checkPermission('contracts', isPro);
   const canViewGps = checkPermission('gps', isPro);
+
+  // Mostrar Welcome Screen se necessário
+  if (showWelcome && settings) {
+    return (
+      <HashRouter>
+        <WelcomeScreen
+          settings={settings}
+          onComplete={() => {
+            setShowWelcome(false);
+            fetchSettings();
+          }}
+        />
+      </HashRouter>
+    );
+  }
 
   return (
     <HashRouter>
@@ -462,8 +485,8 @@ export default function App() {
           {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
           {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} />} />}
           {canViewFinancial && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={(config) => console.log('Config saved:', config)} initialConfig={settings?.asaasConfig} />} />}
-          {canViewFinancial && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
-          {/* {canViewFinancial && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => { fetchSettings(); window.location.hash = '/automatic-billing'; }} onSkip={() => window.location.hash = '/dashboard'} />} />} */}
+          {isProPlus && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
+          {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => { fetchSettings(); window.location.hash = '/automatic-billing'; }} onSkip={() => window.location.hash = '/dashboard'} />} />}
           {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
           <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />

@@ -183,16 +183,17 @@ A API Key está configurada corretamente!`);
         <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-4 mb-4">
           <div className="flex items-start gap-3">
             <Icon name="alert-circle" className="text-orange-400 mt-1" size={20} />
-            <div className="text-sm text-gray-300">
+            <div className="text-sm text-gray-300 flex-1">
               <p className="font-semibold text-orange-400 mb-1">Configure seus dados bancários</p>
-              <p className="text-xs mb-2">
+              <p className="text-xs mb-3">
                 Para receber os pagamentos automaticamente, você precisa configurar seus dados bancários.
               </p>
               <button
-                onClick={() => alert('Funcionalidade em desenvolvimento. Configure via Configurações → Dados Bancários')}
-                className="text-xs font-semibold text-orange-300 hover:text-orange-200"
+                onClick={() => window.location.hash = '/onboarding-bank'}
+                className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded-lg text-xs transition flex items-center gap-2"
               >
-                Configurar agora →
+                <Icon name="settings" size={16} />
+                Configurar Agora
               </button>
             </div>
           </div>
