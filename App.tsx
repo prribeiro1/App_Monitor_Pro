@@ -245,7 +245,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
                       <Icon name="tool" size={24} className="mb-1" /><span className="text-xs font-bold">Manutenção</span>
                     </button>
                   )}
-                  <button onClick={() => { setIsSettingsOpen(false); setShowWelcome(true); }} className="flex flex-col items-center justify-center p-3 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition col-span-2">
+                  <button onClick={() => { setIsSettingsOpen(false); window.location.hash = '/change-plan'; }} className="flex flex-col items-center justify-center p-3 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition col-span-2">
                     <Icon name="zap" size={24} className="mb-1" /><span className="text-xs font-bold">Mudar Plano</span>
                   </button>
                   <button onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center p-3 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition">
@@ -329,7 +329,6 @@ export default function App() {
   const [backupLoading, setBackupLoading] = useState(false);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [isUpdateRequired, setIsUpdateRequired] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
 
   const fetchSettings = async () => {
     const s = await dbService.getUserSettings();
@@ -337,7 +336,7 @@ export default function App() {
     
     // Verificar se precisa mostrar welcome (primeiro acesso sem plano)
     if (s && !s.subscriptionTier) {
-      setShowWelcome(true);
+      window.location.hash = '/change-plan';
     }
   };
 
@@ -436,9 +435,6 @@ export default function App() {
   const canViewContracts = checkPermission('contracts', isPro);
   const canViewGps = checkPermission('gps', isPro);
 
-  // Mostrar Welcome Screen se necessário (dentro do HashRouter)
-  const shouldShowWelcome = showWelcome && settings;
-
   return (
     <HashRouter>
       <Layout
@@ -483,23 +479,21 @@ export default function App() {
           {isProPlus && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
           {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => { fetchSettings(); window.location.hash = '/automatic-billing'; }} onSkip={() => window.location.hash = '/dashboard'} />} />}
           {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
+          <Route path="/change-plan" element={
+            <div className="fixed inset-0 bg-navy-900 z-50" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              <WelcomeScreen
+                settings={settings}
+                onComplete={() => {
+                  fetchSettings();
+                  window.location.hash = '/dashboard';
+                }}
+              />
+            </div>
+          } />
           <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Layout>
-
-      {/* Welcome Screen Modal */}
-      {shouldShowWelcome && (
-        <div className="fixed inset-0 bg-navy-900 z-[100]">
-          <WelcomeScreen
-            settings={settings!}
-            onComplete={() => {
-              setShowWelcome(false);
-              fetchSettings();
-            }}
-          />
-        </div>
-      )}
 
       {isUpdateRequired && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 text-center">
