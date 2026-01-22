@@ -480,7 +480,7 @@ export default function App() {
           {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => { fetchSettings(); window.location.hash = '/automatic-billing'; }} onSkip={() => window.location.hash = '/dashboard'} />} />}
           {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
           <Route path="/change-plan" element={
-            <div className="fixed inset-0 bg-navy-900 z-50" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <div className="fixed inset-0 bg-navy-900 z-50 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
               <WelcomeScreen
                 settings={settings}
                 onComplete={() => {
