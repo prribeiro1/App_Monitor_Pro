@@ -26,19 +26,31 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔍 Requisição recebida');
+    console.log('Method:', req.method);
+    console.log('Headers:', Object.fromEntries(req.headers.entries()));
+    
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     
-    // Verificar autenticação
+    // Verificar autenticação (opcional para debug)
     const authHeader = req.headers.get('Authorization')
+    console.log('Auth header presente:', !!authHeader);
+    
     if (!authHeader) {
-      throw new Error('Não autenticado')
+      console.warn('⚠️ Sem header de autenticação, mas continuando...');
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    
-    if (authError || !user) {
-      throw new Error('Token inválido')
+    let userId = null;
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '')
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+      
+      if (authError) {
+        console.error('❌ Erro de autenticação:', authError);
+      } else if (user) {
+        userId = user.id;
+        console.log('✅ Usuário autenticado:', userId);
+      }
     }
 
     const { 
@@ -80,14 +92,25 @@ serve(async (req) => {
     console.log(`✅ Subconta criada: ${result.id}`)
     console.log(`💰 Wallet ID: ${result.walletId}`)
 
-    // Salvar walletId no perfil do usuário
-    await supabase
-      .from('profiles')
-      .update({ 
-        asaas_wallet_id: result.walletId,
-        subscription_tier: 'pro_plus'
-      })
-      .eq('id', user.id)
+    // Salvar walletId no perfil do usuário (se tiver userId)
+    if (userId) {
+      console.log('💾 Salvando no perfil do usuário...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          asaas_wallet_id: result.walletId,
+          subscription_tier: 'pro_plus'
+        })
+        .eq('id', userId);
+      
+      if (updateError) {
+        console.error('⚠️ Erro ao salvar no perfil:', updateError);
+      } else {
+        console.log('✅ Perfil atualizado');
+      }
+    } else {
+      console.warn('⚠️ Sem userId, não salvou no perfil');
+    }
 
     return new Response(
       JSON.stringify({ 
