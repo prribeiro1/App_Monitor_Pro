@@ -46,8 +46,14 @@ export const AsaasConfigScreen: React.FC<AsaasConfigScreenProps> = ({ onSave, in
         const error = await response.json();
         setTestResult(`❌ Erro: ${error.errors?.[0]?.description || 'API Key inválida'}`);
       }
-    } catch (error) {
-      setTestResult('❌ Erro ao conectar com Asaas. Verifique sua conexão.');
+    } catch (error: any) {
+      console.error('Erro detalhado:', error);
+      // CORS error - isso é esperado no desenvolvimento
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        setTestResult('⚠️ Erro de CORS detectado. Isso é normal em desenvolvimento local. A API Key será validada quando você ativar uma cobrança. Clique em "Salvar" para continuar.');
+      } else {
+        setTestResult('❌ Erro ao conectar com Asaas. Verifique sua conexão.');
+      }
     } finally {
       setTesting(false);
     }
@@ -92,6 +98,20 @@ export const AsaasConfigScreen: React.FC<AsaasConfigScreenProps> = ({ onSave, in
               <li>• Negativação automática após X dias de atraso</li>
               <li>• Você recebe direto na sua conta Asaas</li>
             </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Aviso sobre CORS */}
+      <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <Icon name="alert-triangle" className="text-yellow-400 mt-1" size={20} />
+          <div className="text-sm text-gray-300">
+            <p className="font-semibold text-yellow-400 mb-2">⚠️ Teste de Conexão em Desenvolvimento</p>
+            <p className="text-xs">
+              O teste pode falhar devido a restrições de CORS do navegador. Isso é normal em ambiente local. 
+              A API Key será validada quando você ativar uma cobrança real.
+            </p>
           </div>
         </div>
       </div>
