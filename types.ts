@@ -114,6 +114,18 @@ export interface UserSettings {
   subscriptionTier?: SubscriptionTier; // Plano do usuário
   asaasConfig?: AsaasConfig; // Configuração do Asaas (só Pro+)
   asaasWalletId?: string; // ID da subconta do condutor no Asaas (só Pro+)
+  bankData?: BankData; // Dados bancários salvos localmente
+}
+
+// Dados bancários
+export interface BankData {
+  email: string;
+  bank: string;
+  bankName: string;
+  agency: string;
+  account: string;
+  accountDigit: string;
+  accountType: string;
 }
 
 // Configuração do Asaas
