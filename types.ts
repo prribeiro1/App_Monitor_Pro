@@ -23,6 +23,7 @@ export interface Student {
   guardianName?: string; // Nome do Responsável
   contact?: string; // Telefone/Contato
   responsibleCpf?: string;
+  responsibleEmail?: string;
   responsiblePhone?: string;
   order?: number;
   monthlyFees?: number; // Valor da Mensalidade
@@ -31,6 +32,8 @@ export interface Student {
   school?: string; // Escola
   shift?: 'integral' | 'manha' | 'tarde' | 'noite'; // Turno
   observation?: string; // Observações (alergias, condições, etc.)
+  asaasSubscriptionId?: string;
+  asaasCustomerId?: string;
 }
 
 export enum AttendanceStatus {
@@ -108,6 +111,7 @@ export interface UserSettings {
   driverNickname?: string;
   driverCpf?: string;
   driverPhone?: string;
+  driverEmail?: string;
   driverAddress?: string;
   driverSignature?: string;
   contractClauses?: { title: string; content: string }[];

@@ -93,21 +93,28 @@ export const LoginScreen: React.FC = () => {
         </form>
 
         <div className="mt-8 text-center space-y-4">
-          <p className="text-gray-500 text-xs">
-            Não tem acesso? Entre em contato com o administrador.
-          </p>
+          <div className="pt-4 border-t border-navy-700/50">
+            <p className="text-gray-400 text-sm mb-4">Novo por aqui?</p>
+            <button
+              onClick={() => window.location.hash = '/register'}
+              className="w-full bg-navy-700 hover:bg-navy-600 text-white font-bold p-4 rounded-xl transition flex items-center justify-center gap-2 border border-navy-600"
+            >
+              <Icon name="user-plus" size={20} />
+              Criar Conta Grátis (7 dias)
+            </button>
+          </div>
+
+          <p className="text-gray-500 text-[10px] mt-4 uppercase font-bold tracking-widest">Ou se preferir</p>
 
           <a
             href="https://wa.me/5522999837547?text=Olá! Gostaria de adquirir um acesso ao Monitor Pro."
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-green-500/30 text-green-400 hover:bg-green-500/10 transition text-sm font-bold"
+            className="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-green-500/20 text-green-500 hover:bg-green-500/5 transition text-xs font-medium"
           >
             <Icon name="message-circle" size={18} />
-            Solicitar Acesso via WhatsApp
+            Solicitar via WhatsApp
           </a>
-
-
         </div>
       </div>
     </div>

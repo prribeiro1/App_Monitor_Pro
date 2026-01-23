@@ -17,11 +17,11 @@ export const AutomaticBillingScreen: React.FC = () => {
   const loadData = async () => {
     const allStudents = await dbService.getStudents();
     setStudents(allStudents.filter(s => s.active));
-    
+
     // Carregar configurações do usuário
     const settings = await dbService.getUserSettings();
     setWalletId(settings?.asaasWalletId || null);
-    
+
     setLoading(false);
   };
 
@@ -29,7 +29,7 @@ export const AutomaticBillingScreen: React.FC = () => {
     console.log('=== INICIANDO COBRANÇA AUTOMÁTICA ===');
     console.log('Aluno:', student.name);
     console.log('Wallet ID:', walletId);
-    
+
     if (!walletId) {
       alert('❌ Configure seus dados bancários primeiro.\n\nVá em Configurações → Mudar Plano → Pro+ → Configure dados bancários');
       return;
@@ -58,7 +58,7 @@ export const AutomaticBillingScreen: React.FC = () => {
       let asaasCustomer;
       const existingCustomer = await asaasService.getCustomerByCpf(student.responsibleCpf);
       console.log('Resposta busca cliente:', existingCustomer);
-      
+
       if (existingCustomer.data && existingCustomer.data.length > 0) {
         asaasCustomer = existingCustomer.data[0];
         console.log('Cliente existente encontrado:', asaasCustomer.id);
@@ -68,7 +68,7 @@ export const AutomaticBillingScreen: React.FC = () => {
         asaasCustomer = await asaasService.createCustomer({
           name: student.guardianName || 'Responsável',
           cpfCnpj: student.responsibleCpf,
-          email: '', // Pode adicionar campo de email no cadastro
+          email: student.responsibleEmail || '',
           mobilePhone: student.responsiblePhone || student.contact || ''
         });
         console.log('Cliente criado:', asaasCustomer);
@@ -89,59 +89,70 @@ export const AutomaticBillingScreen: React.FC = () => {
 
       const subscription = await asaasService.createSubscription({
         customer: asaasCustomer.id,
-        billingType: 'PIX', // Pode ser configurável
+        billingType: 'BOLETO', // BOLETO já inclui PIX e é aceito para recorrência
         value: student.monthlyFees,
         nextDueDate: nextDueDate.toISOString().split('T')[0],
         cycle: 'MONTHLY',
         description: `Mensalidade - ${student.name}`,
-        externalReference: student.id
+        externalReference: `student:${student.id}`
       }, walletId); // ← Passa o walletId para criar split automático
 
       console.log('Resposta assinatura:', subscription);
 
       if (subscription.id) {
+        // Salvar no banco local para controle
+        await dbService.saveStudent({
+          ...student,
+          asaasSubscriptionId: subscription.id,
+          asaasCustomerId: asaasCustomer.id
+        });
+
+        loadData(); // Recarrega lista
         alert(`✅ Cobrança automática ativada!\n\nAssinatura ID: ${subscription.id}\nPróximo vencimento: ${nextDueDate.toLocaleDateString()}\n\n💰 Split configurado:\n99% para você\n1% para Monitor Pro`);
-        // Aqui você salvaria o subscription.id no banco de dados local
       } else {
-        console.error('Erro na resposta:', subscription);
+        console.error('Erro na resposta do Asaas:', subscription);
         alert('❌ Erro ao criar assinatura: ' + (subscription.errors?.[0]?.description || JSON.stringify(subscription)));
       }
     } catch (error: any) {
       console.error('❌ Erro completo:', error);
-      console.error('Stack:', error.stack);
-      
-      // Detectar erro de CORS
-      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
-        alert(`⚠️ ERRO DE CORS (Desenvolvimento Local)
+      alert(`❌ Erro ao ativar cobrança automática:\n\n${error.message || 'Erro desconhecido'}`);
+    } finally {
+      setProcessingStudent(null);
+    }
+  };
 
-Isso acontece porque o navegador bloqueia requisições diretas para APIs externas.
+  const handleCancelAutoBilling = async (student: Student) => {
+    if (!student.asaasSubscriptionId) return;
 
-📱 SOLUÇÕES:
+    if (!confirm(`Deseja realmente cancelar a cobrança automática de ${student.name}?\n\nNovos boletos não serão gerados.`)) {
+      return;
+    }
 
-1. TESTAR NO APK (Recomendado):
-   - Gere o APK desta branch
-   - Instale no celular
-   - Lá funciona 100%!
+    setProcessingStudent(student.id);
 
-2. USAR EXTENSÃO CORS:
-   - Instale: "Allow CORS" no Chrome
-   - Ative a extensão
-   - Tente novamente
+    try {
+      const result = await asaasService.cancelSubscription(student.asaasSubscriptionId);
 
-3. AGUARDAR PRODUÇÃO:
-   - Esta funcionalidade será testada no APK
-
-A API Key está configurada corretamente!`);
+      if (result.deleted) {
+        await dbService.saveStudent({
+          ...student,
+          asaasSubscriptionId: undefined
+        });
+        loadData();
+        alert('✅ Cobrança automática cancelada com sucesso.');
       } else {
-        alert('❌ Erro ao ativar cobrança automática:\n\n' + error.message + '\n\nVeja o console para mais detalhes.');
+        throw new Error(result.errors?.[0]?.description || 'Erro ao cancelar');
       }
+    } catch (error: any) {
+      alert(`❌ Erro ao cancelar:\n\n${error.message}`);
     } finally {
       setProcessingStudent(null);
     }
   };
 
   const handleNegativate = async (student: Student) => {
-    if (!confirm(`⚠️ Confirma negativação de ${student.name}?\n\nIsso enviará o nome do responsável para Serasa/SPC.`)) {
+    const responsibleName = student.guardianName || 'Responsável não cadastrado';
+    if (!confirm(`⚠️ Confirma negativação de ${responsibleName}?\n\nCUIDADO: Isso enviará o CPF ${student.responsibleCpf || 'NÃO CADASTRADO'} para os órgãos de proteção ao crédito (Serasa/SPC). Esta ação é séria e irreversível através do app.`)) {
       return;
     }
 
@@ -197,22 +208,7 @@ A API Key está configurada corretamente!`);
         </div>
       )}
 
-      {/* Card de Aviso - CORS */}
-      <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <Icon name="alert-circle" className="text-red-400 mt-1" size={20} />
-          <div className="text-sm text-gray-300">
-            <p className="font-semibold text-red-400 mb-2">⚠️ Limitação em Desenvolvimento Local</p>
-            <p className="text-xs mb-2">
-              O navegador bloqueia requisições para APIs externas (erro CORS). 
-              Esta funcionalidade só pode ser testada completamente no APK Android.
-            </p>
-            <p className="text-xs font-semibold text-red-300">
-              📱 Gere o APK desta branch para testar a integração real com Asaas!
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Card de Aviso - CORS (Removido) */}
 
       {/* Lista de Alunos */}
       {students.length === 0 ? (
@@ -243,8 +239,13 @@ A API Key está configurada corretamente!`);
                       </p>
                     )}
                   </div>
-                  
-                  {hasRequiredData ? (
+
+                  {student.asaasSubscriptionId ? (
+                    <span className="bg-blue-900/40 text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-blue-500/30 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                      Automação Ativa
+                    </span>
+                  ) : hasRequiredData ? (
                     <span className="bg-green-900/30 text-green-400 px-3 py-1 rounded-full text-xs font-medium">
                       ✓ Pronto
                     </span>
@@ -273,28 +274,45 @@ A API Key está configurada corretamente!`);
 
                 {/* Ações */}
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => handleActivateAutoBilling(student)}
-                    disabled={!hasRequiredData || isProcessing}
-                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-medium flex items-center justify-center gap-2 transition text-sm"
-                  >
-                    {isProcessing ? (
-                      <>
+                  {student.asaasSubscriptionId ? (
+                    <button
+                      onClick={() => handleCancelAutoBilling(student)}
+                      disabled={isProcessing}
+                      className="flex-1 py-2.5 bg-navy-700 hover:bg-red-900/30 text-gray-300 hover:text-red-400 border border-navy-600 rounded-lg font-medium flex items-center justify-center gap-2 transition text-sm"
+                    >
+                      {isProcessing ? (
                         <Icon name="loader" className="animate-spin" size={16} />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="zap" size={16} />
-                        Ativar Cobrança
-                      </>
-                    )}
-                  </button>
+                      ) : (
+                        <>
+                          <Icon name="x-circle" size={16} />
+                          Desativar Automação
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleActivateAutoBilling(student)}
+                      disabled={!hasRequiredData || isProcessing}
+                      className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-medium flex items-center justify-center gap-2 transition text-sm"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Icon name="loader" className="animate-spin" size={16} />
+                          Processando...
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="zap" size={16} />
+                          Ativar Cobrança
+                        </>
+                      )}
+                    </button>
+                  )}
 
                   <button
                     onClick={() => handleNegativate(student)}
                     disabled={isProcessing}
-                    className="px-4 py-2.5 bg-red-600 hover:bg-red-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-medium flex items-center justify-center gap-2 transition"
+                    className="px-4 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-600/20 rounded-lg font-medium flex items-center justify-center transition"
                     title="Negativar (Serasa/SPC)"
                   >
                     <Icon name="alert-triangle" size={16} />

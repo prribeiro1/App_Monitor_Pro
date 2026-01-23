@@ -1,5 +1,6 @@
 // Serviço de integração com Asaas API - Modelo Split de Pagamento
 // Documentação: https://docs.asaas.com
+import { supabase } from './auth';
 
 interface AsaasConfig {
     apiKey: string;
@@ -71,7 +72,7 @@ interface AsaasSplit {
 interface AsaasSubscription {
     id?: string;
     customer: string;
-    billingType: 'BOLETO' | 'CREDIT_CARD' | 'PIX';
+    billingType: 'BOLETO' | 'CREDIT_CARD' | 'PIX' | 'UNDEFINED';
     value: number;
     nextDueDate: string;
     cycle: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'YEARLY';
@@ -137,15 +138,33 @@ class AsaasService {
 
     // ========== SUBCONTAS (CONDUTORES) ==========
 
-    // Criar subconta para condutor
+    // Criar subconta para condutor (Via Edge Function para evitar CORS e proteger API Key)
     async createAccount(account: AsaasAccount): Promise<any> {
         try {
-            const response = await fetch(`${this.baseUrl}/accounts`, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify(account)
+            console.log('🚀 Iniciando criação de conta via Edge Function...');
+            const { data, error } = await supabase.functions.invoke('create-asaas-account', {
+                body: account
             });
-            return await response.json();
+
+            if (error) {
+                console.error('❌ Erro na Edge Function:', error);
+                throw error;
+            }
+
+            if (!data || !data.success) {
+                throw new Error(data?.error || 'Erro desconhecido ao criar conta');
+            }
+
+            console.log('✅ Conta criada com sucesso via Edge Function!', data);
+
+            // Retorna formato compatível com o frontend
+            // O frontend espera 'id' para salvar como walletId. 
+            // A função retorna 'walletId' e 'accountId'.
+            return {
+                id: data.walletId, // Mapeando walletId para id para compatibilidade
+                accountId: data.accountId,
+                ...data
+            };
         } catch (error) {
             console.error('Erro ao criar subconta:', error);
             throw error;
@@ -183,57 +202,35 @@ class AsaasService {
 
     // ========== CLIENTES ==========
 
-    // Criar cliente no Asaas
+    // Criar cliente no Asaas (Via Proxy)
     async createCustomer(customer: AsaasCustomer): Promise<any> {
-        try {
-            const response = await fetch(`${this.baseUrl}/customers`, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify(customer)
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('Erro ao criar cliente:', error);
-            throw error;
-        }
+        const { data, error } = await supabase.functions.invoke('asaas-proxy', {
+            body: { action: 'create-customer', ...customer }
+        });
+        if (error) throw error;
+        if (data.error) throw new Error(data.error);
+        return data; // Retorna o objeto cliente direto
     }
 
-    // Buscar cliente por CPF
+    // Buscar cliente por CPF (Via Proxy)
     async getCustomerByCpf(cpfCnpj: string): Promise<any> {
-        try {
-            const response = await fetch(`${this.baseUrl}/customers?cpfCnpj=${cpfCnpj}`, {
-                method: 'GET',
-                headers: this.getHeaders()
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('Erro ao buscar cliente:', error);
-            throw error;
-        }
+        const { data, error } = await supabase.functions.invoke('asaas-proxy', {
+            body: { action: 'get-customer', cpfCnpj }
+        });
+        if (error) throw error;
+        return { data: data.data || [] }; // Mantém formato { data: [...] } pra compatibilidade
     }
 
     // ========== COBRANÇAS COM SPLIT ==========
 
-    // Criar cobrança única com split
+    // Criar cobrança única com split (Via Proxy)
     async createPayment(payment: AsaasPayment, conductorWalletId?: string): Promise<any> {
-        try {
-            const paymentData = { ...payment };
-
-            // Adiciona split se tiver walletId do condutor
-            if (conductorWalletId) {
-                paymentData.split = this.calculateSplit(payment.value, conductorWalletId);
-            }
-
-            const response = await fetch(`${this.baseUrl}/payments`, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify(paymentData)
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('Erro ao criar cobrança:', error);
-            throw error;
-        }
+        const { data, error } = await supabase.functions.invoke('asaas-proxy', {
+            body: { action: 'create-payment', ...payment, walletId: conductorWalletId }
+        });
+        if (error) throw error;
+        if (data.error) throw new Error(data.error);
+        return data;
     }
 
     // Listar cobranças
@@ -267,26 +264,14 @@ class AsaasService {
 
     // ========== ASSINATURAS COM SPLIT (COBRANÇA RECORRENTE) ==========
 
-    // Criar assinatura recorrente com split
+    // Criar assinatura recorrente com split (Via Proxy)
     async createSubscription(subscription: AsaasSubscription, conductorWalletId?: string): Promise<any> {
-        try {
-            const subscriptionData = { ...subscription };
-
-            // Adiciona split se tiver walletId do condutor
-            if (conductorWalletId) {
-                subscriptionData.split = this.calculateSplit(subscription.value, conductorWalletId);
-            }
-
-            const response = await fetch(`${this.baseUrl}/subscriptions`, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify(subscriptionData)
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('Erro ao criar assinatura:', error);
-            throw error;
-        }
+        const { data, error } = await supabase.functions.invoke('asaas-proxy', {
+            body: { action: 'create-subscription', ...subscription, walletId: conductorWalletId }
+        });
+        if (error) throw error;
+        if (data.error) throw new Error(data.error);
+        return data;
     }
 
     // Listar assinaturas

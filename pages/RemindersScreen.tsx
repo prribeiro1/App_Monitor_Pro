@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Icon } from '../components/Icon';
 import { Capacitor } from '@capacitor/core';
+import { dbService } from '../services/db';
 
 interface Reminder {
     id: number;
@@ -35,19 +36,15 @@ export const RemindersScreen: React.FC = () => {
     };
 
     const loadReminders = async () => {
-        if (!Capacitor.isNativePlatform()) return;
-
         try {
+            // Primeiro pegamos os agendados no sistema
             const pending = await LocalNotifications.getPending();
-            // Map pending notifications to our Reminder interface
-            // Note: We might want to store extra data in 'extra' field if needed, but for now simple mapping
-            const mapped: Reminder[] = pending.notifications.map(n => ({
-                id: n.id,
-                title: n.title,
-                body: n.body || '',
-                date: n.schedule?.at ? new Date(n.schedule.at).toISOString() : new Date().toISOString()
-            }));
-            setReminders(mapped);
+
+            // Depois pegamos o histórico no nosso banco (que sincroniza com a nuvem)
+            const localReminders = await dbService.getReminders();
+
+            // Unificamos ou priorizamos o banco local
+            setReminders(localReminders);
         } catch (e) {
             console.error(e);
         }
@@ -70,20 +67,32 @@ export const RemindersScreen: React.FC = () => {
         const id = Math.floor(Math.random() * 1000000);
 
         try {
-            await LocalNotifications.schedule({
-                notifications: [
-                    {
-                        title,
-                        body,
-                        id,
-                        schedule: { at: scheduledTime },
-                        sound: undefined,
-                        attachments: undefined,
-                        actionTypeId: "",
-                        extra: null
-                    }
-                ]
-            });
+            // 1. Salva no banco (Local + Nuvem)
+            const newReminder: Reminder = {
+                id,
+                title,
+                body,
+                date: scheduledTime.toISOString()
+            };
+            await dbService.saveReminder(newReminder);
+
+            // 2. Agenda no sistema do celular
+            if (Capacitor.isNativePlatform()) {
+                await LocalNotifications.schedule({
+                    notifications: [
+                        {
+                            title,
+                            body,
+                            id,
+                            schedule: { at: scheduledTime },
+                            sound: undefined,
+                            attachments: undefined,
+                            actionTypeId: "",
+                            extra: null
+                        }
+                    ]
+                });
+            }
 
             alert('Lembrete agendado!');
             setIsModalOpen(false);
@@ -95,8 +104,15 @@ export const RemindersScreen: React.FC = () => {
     };
 
     const cancelReminder = async (id: number) => {
+        if (!confirm("Deseja remover este lembrete?")) return;
         try {
-            await LocalNotifications.cancel({ notifications: [{ id }] });
+            // 1. Remove do banco
+            await dbService.deleteReminder(id);
+
+            // 2. Cancela no sistema
+            if (Capacitor.isNativePlatform()) {
+                await LocalNotifications.cancel({ notifications: [{ id }] });
+            }
             loadReminders();
         } catch (e) {
             console.error(e);

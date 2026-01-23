@@ -1,0 +1,321 @@
+import { supabase } from './auth';
+import { Route, Stop, Student, AttendanceRecord, Payment, MaintenanceItem, MaintenanceLog, UserSettings, Incident } from '../types';
+
+export const cloudSync = {
+    // Alunos
+    saveStudent: async (student: Student) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('students')
+            .upsert({
+                id: student.id,
+                user_id: user.id,
+                name: student.name,
+                active: student.active,
+                guardian_name: student.guardianName,
+                contact: student.contact,
+                responsible_cpf: student.responsibleCpf,
+                responsible_email: student.responsibleEmail,
+                responsible_phone: student.responsiblePhone,
+                school: student.school,
+                shift: student.shift,
+                due_day: student.dueDay,
+                monthly_fees: student.monthlyFees,
+                stop_id: student.stopId,
+                updated_at: new Date().toISOString()
+            });
+
+        if (error) {
+            console.error("Erro sync cloud (student):", error.message);
+            throw error;
+        }
+    },
+
+    deleteStudent: async (id: string) => {
+        const { error } = await supabase.from('students').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // Rotas
+    saveRoute: async (route: Route) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase.from('routes').upsert({
+            id: route.id,
+            user_id: user.id,
+            name: route.name,
+            description: route.description,
+            order: route.order,
+            updated_at: new Date().toISOString()
+        });
+        if (error) throw error;
+    },
+
+    deleteRoute: async (id: string) => {
+        const { error } = await supabase.from('routes').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // Pontos (Stops)
+    saveStop: async (stop: Stop) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase.from('stops').upsert({
+            id: stop.id,
+            user_id: user.id,
+            route_id: stop.routeId,
+            name: stop.name,
+            order: stop.order,
+            latitude: stop.latitude,
+            longitude: stop.longitude,
+            updated_at: new Date().toISOString()
+        });
+        if (error) {
+            console.error("Erro sync cloud (stop):", error.message);
+            throw error;
+        }
+    },
+
+    deleteStop: async (id: string) => {
+        const { error } = await supabase.from('stops').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // Chamada (Attendance)
+    saveAttendance: async (record: AttendanceRecord) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase.from('attendance').upsert({
+            id: record.id,
+            user_id: user.id,
+            student_id: record.studentId,
+            date: record.date,
+            status: record.status,
+            timestamp: record.timestamp
+        });
+        if (error) throw error;
+    },
+
+    // Pagamentos (Payments)
+    savePayment: async (payment: Payment) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase.from('payments').upsert({
+            id: payment.id,
+            user_id: user.id,
+            student_id: payment.studentId,
+            month: payment.month,
+            year: payment.year,
+            amount: payment.amount,
+            paid_at: payment.paidAt,
+            timestamp: payment.timestamp
+        });
+        if (error) throw error;
+    },
+
+    // Ocorrências (Incidents)
+    saveIncident: async (incident: Incident) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase.from('incidents').upsert({
+            id: incident.id,
+            user_id: user.id,
+            student_id: incident.studentId,
+            type: incident.type,
+            observation: incident.observation,
+            date: incident.date,
+            timestamp: incident.timestamp
+        });
+    },
+
+    // Manutenção
+    saveMaintenanceItem: async (item: MaintenanceItem) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase.from('maintenance_items').upsert({
+            id: item.id,
+            user_id: user.id,
+            name: item.name,
+            interval_km: item.intervalKm,
+            interval_months: item.intervalMonths,
+            last_km: item.lastKm,
+            last_date: item.lastDate,
+            next_km: item.nextKm,
+            next_date: item.nextDate
+        });
+    },
+
+    saveMaintenanceLog: async (log: MaintenanceLog) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase.from('maintenance_logs').upsert({
+            id: log.id,
+            user_id: user.id,
+            item_id: log.itemId,
+            date: log.date,
+            km: log.km,
+            cost: log.cost,
+            notes: log.notes
+        });
+    },
+
+    // Perfil e Contrato
+    saveUserSettings: async (settings: UserSettings) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        // Na nuvem a PK agora é o user_id para evitar conflitos!
+        await supabase.from('user_settings').upsert({
+            user_id: user.id,
+            id: 'settings',
+            current_km: settings.currentKm,
+            pix_key: settings.pixKey,
+            driver_name: settings.driverName,
+            driver_nickname: settings.driverNickname,
+            driver_cpf: settings.driverCpf,
+            driver_phone: settings.driverPhone,
+            driver_email: settings.driverEmail,
+            driver_address: settings.driverAddress,
+            driver_signature: settings.driverSignature,
+            contract_clauses: settings.contractClauses,
+            subscription_tier: settings.subscriptionTier
+        });
+    },
+
+    // Lembretes
+    saveReminder: async (reminder: any) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase.from('reminders').upsert({
+            id: reminder.id,
+            user_id: user.id,
+            title: reminder.title,
+            body: reminder.body,
+            date: reminder.date
+        });
+    },
+
+    deleteReminder: async (id: number) => {
+        await supabase.from('reminders').delete().eq('id', id);
+    },
+
+    // FUNÇÃO PRINCIPAL: Puxar tudo da nuvem para o celular
+    pullAllData: async (): Promise<any> => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return null;
+
+            console.log("Iniciando PULL de dados da nuvem para usuário:", user.id);
+
+            const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes] = await Promise.all([
+                supabase.from('students').select('*'),
+                supabase.from('routes').select('*').order('order'),
+                supabase.from('stops').select('*').order('order'),
+                supabase.from('attendance').select('*'),
+                supabase.from('payments').select('*'),
+                supabase.from('user_settings').select('*').eq('id', 'settings').single(),
+                supabase.from('maintenance_items').select('*'),
+                supabase.from('maintenance_logs').select('*'),
+                supabase.from('incidents').select('*'),
+                supabase.from('reminders').select('*')
+            ]);
+
+            return {
+                students: studentsRes.data?.map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    active: s.active,
+                    guardianName: s.guardian_name,
+                    contact: s.contact,
+                    responsibleCpf: s.responsible_cpf,
+                    responsibleEmail: s.responsible_email,
+                    responsiblePhone: s.responsible_phone,
+                    school: s.school,
+                    shift: s.shift,
+                    dueDay: s.due_day,
+                    monthlyFees: s.monthly_fees ? parseFloat(s.monthly_fees) : 0,
+                    stopId: s.stop_id
+                })) || [],
+                routes: routesRes.data || [],
+                stops: stopsRes.data?.map(s => ({
+                    id: s.id,
+                    routeId: s.route_id,
+                    name: s.name,
+                    order: s.order,
+                    latitude: s.latitude,
+                    longitude: s.longitude
+                })) || [],
+                attendance: attendanceRes.data?.map(a => ({
+                    id: a.id,
+                    studentId: a.student_id,
+                    date: a.date,
+                    status: a.status,
+                    timestamp: Number(a.timestamp)
+                })) || [],
+                payments: paymentsRes.data?.map(p => ({
+                    id: p.id,
+                    studentId: p.student_id,
+                    month: p.month,
+                    year: p.year,
+                    amount: parseFloat(p.amount),
+                    paidAt: p.paid_at,
+                    timestamp: Number(p.timestamp)
+                })) || [],
+                incidents: incidentRes.data?.map(i => ({
+                    id: i.id,
+                    studentId: i.student_id,
+                    type: i.type,
+                    observation: i.observation,
+                    date: i.date,
+                    timestamp: Number(i.timestamp)
+                })) || [],
+                maintenanceItems: maintRes.data?.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    intervalKm: m.interval_km,
+                    intervalMonths: m.interval_months,
+                    lastKm: m.last_km,
+                    lastDate: m.last_date,
+                    nextKm: m.next_km,
+                    nextDate: m.next_date
+                })) || [],
+                maintenanceLogs: logsRes.data?.map(l => ({
+                    id: l.id,
+                    itemId: l.item_id,
+                    date: l.date,
+                    km: l.km,
+                    cost: parseFloat(l.cost || 0),
+                    notes: l.notes
+                })) || [],
+                reminders: reminderRes.data?.map(r => ({
+                    id: r.id,
+                    title: r.title,
+                    body: r.body,
+                    date: r.date
+                })) || [],
+                userSettings: settingsRes.data ? {
+                    id: 'settings',
+                    currentKm: settingsRes.data.current_km,
+                    pixKey: settingsRes.data.pix_key,
+                    driverName: settingsRes.data.driver_name,
+                    driverNickname: settingsRes.data.driver_nickname,
+                    driverCpf: settingsRes.data.driver_cpf,
+                    driverPhone: settingsRes.data.driver_phone,
+                    driverEmail: settingsRes.data.driver_email,
+                    driverAddress: settingsRes.data.driver_address,
+                    driverSignature: settingsRes.data.driver_signature,
+                    contractClauses: settingsRes.data.contract_clauses,
+                    subscriptionTier: settingsRes.data.subscription_tier
+                } : null
+            };
+        } catch (error) {
+            console.error("Erro crítico ao puxar dados da nuvem:", error);
+            return null;
+        }
+    }
+};

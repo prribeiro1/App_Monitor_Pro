@@ -59,6 +59,35 @@ export const authService = {
         if (error) throw error;
     },
 
+    // Criar conta (Novo!)
+    signUp: async (username: string, password: string, name: string) => {
+        try {
+            const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const email = `${cleanUsername}${EMAIL_SUFFIX}`;
+            const deviceId = (await Device.getId()).identifier;
+
+            // 1. Criar usuário no Supabase
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: name,
+                        device_id: deviceId,
+                        subscription_tier: 'basic', // Começa no básico (ou trial)
+                        trial_started_at: new Date().toISOString()
+                    }
+                }
+            });
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Erro no cadastro:", error);
+            throw error;
+        }
+    },
+
     // Verificar usuário atual
     getCurrentUser: async (): Promise<User | null> => {
         const { data } = await supabase.auth.getUser();

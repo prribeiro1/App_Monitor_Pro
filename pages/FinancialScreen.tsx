@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
+import { supabase } from '../services/auth';
 import { Student, Payment, Stop, Route, UserSettings } from '../types';
 import { Icon } from '../components/Icon';
 import jsPDF from 'jspdf';
@@ -11,9 +12,11 @@ import { Capacitor } from '@capacitor/core';
 interface FinancialScreenProps {
     settings: UserSettings | null;
     onUpdateSettings: () => void;
+    isTrial?: boolean;
+    isAdmin?: boolean;
 }
 
-export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUpdateSettings }) => {
+export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUpdateSettings, isTrial, isAdmin }) => {
     const [students, setStudents] = useState<Student[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [stops, setStops] = useState<Stop[]>([]);
@@ -31,11 +34,83 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             dbService.getStops(),
             dbService.getRoutes()
         ]);
-        setStudents(s.filter(st => st.active)); // Only active students
-        setPayments(p);
+
+        // Sincronizar pagamentos do servidor baseado APENAS nos alunos deste usuário
+        if (s.length > 0) {
+            await syncPaymentsWithServer(s);
+            // Re-busca pagamentos localmente após o sync
+            const updatedPayments = await dbService.getPayments();
+            setPayments(updatedPayments);
+        } else {
+            setPayments(p);
+        }
+
+        setStudents(s.filter(student => student.active));
         setStops(st);
         setRoutes(r);
         setLoading(false);
+    };
+
+    const syncPaymentsWithServer = async (currentUserStudents: Student[]) => {
+        try {
+            const studentIds = currentUserStudents.map(s => `student:${s.id}`);
+            if (studentIds.length === 0) return;
+
+            // Busca logs de pagamento confirmado APENAS para os alunos do usuário Logado
+            const { data: logs, error } = await supabase
+                .from('webhook_logs')
+                .select('*')
+                .in('event', ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED'])
+                .in('external_reference', studentIds)
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            if (error) throw error;
+            if (!logs || logs.length === 0) return;
+
+            const localPayments = await dbService.getPayments();
+
+            for (const log of logs) {
+                const paymentData = log.raw_payload?.payment;
+                if (!paymentData || !paymentData.externalReference) continue;
+
+                const ref = paymentData.externalReference;
+                const studentId = ref.includes(':') ? ref.split(':')[1] : ref;
+
+                // Extrair mês e ano da data de pagamento do Asaas
+                const payDate = new Date(paymentData.paymentDate || log.created_at);
+                const pMonth = payDate.getMonth() + 1;
+                const pYear = payDate.getFullYear();
+
+                // Verificar se já existe localmente (evitar duplicados)
+                const exists = localPayments.some(lp =>
+                    lp.studentId === studentId &&
+                    lp.month === pMonth &&
+                    lp.year === pYear
+                );
+
+                if (!exists) {
+                    console.log(`📥 Sincronizando pagamento do Asaas: Aluno ${studentId}, R$ ${paymentData.value}`);
+
+                    // Calcular o valor líquido (99% do valor após taxa do Asaas)
+                    // No Sandbox a taxa é simulada, no Real o Asaas envia 'netValue' no log.
+                    const netValueFull = paymentData.netValue || (paymentData.value - 0.99); // Simula taxa boleto Asaas R$0,99
+                    const conductorNetValue = netValueFull * 0.99; // Tira o 1% do Monitor Pro
+
+                    await dbService.savePayment({
+                        id: `asaas_${paymentData.id}`,
+                        studentId,
+                        month: pMonth,
+                        year: pYear,
+                        amount: conductorNetValue, // Salva o valor real que cai na conta
+                        paidAt: payDate.toISOString(),
+                        timestamp: payDate.getTime()
+                    });
+                }
+            }
+        } catch (err) {
+            console.warn('⚠️ Não foi possível sincronizar pagamentos do Asaas:', err);
+        }
     };
 
     const filteredStudents = students
@@ -45,31 +120,31 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             const currentDay = today.getDate();
             const currentMonth = today.getMonth() + 1;
             const currentYear = today.getFullYear();
-            
+
             // Verificar se já pagou
             const aPaid = payments.some(p => p.studentId === a.id && p.month === month && p.year === year);
             const bPaid = payments.some(p => p.studentId === b.id && p.month === month && p.year === year);
-            
+
             // Pagos vão para o final
             if (aPaid && !bPaid) return 1;
             if (!aPaid && bPaid) return -1;
             if (aPaid && bPaid) return a.name.localeCompare(b.name);
-            
+
             // Para não pagos, ordenar por vencimento
             const aDue = a.dueDay || 31;
             const bDue = b.dueDay || 31;
-            
+
             // Se estamos no mês atual, calcular dias restantes
             if (month === currentMonth && year === currentYear) {
                 const aDaysLeft = aDue - currentDay;
                 const bDaysLeft = bDue - currentDay;
-                
+
                 if (aDaysLeft !== bDaysLeft) return aDaysLeft - bDaysLeft;
             } else {
                 // Mês diferente, ordenar só pelo dia
                 if (aDue !== bDue) return aDue - bDue;
             }
-            
+
             // Mesmo vencimento, ordem alfabética
             return a.name.localeCompare(b.name);
         });
@@ -82,17 +157,17 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
     const getDueDateStatus = (student: Student) => {
         if (!student.dueDay) return null;
-        
+
         const today = new Date();
         const currentDay = today.getDate();
         const currentMonth = today.getMonth() + 1;
         const currentYear = today.getFullYear();
-        
+
         // Só mostra status se estiver olhando o mês atual
         if (month !== currentMonth || year !== currentYear) {
             return { text: `Vence dia ${student.dueDay}`, color: 'text-gray-400', isLate: false };
         }
-        
+
         if (currentDay > student.dueDay) {
             const daysLate = currentDay - student.dueDay;
             return { text: `Atrasado ${daysLate} dia${daysLate > 1 ? 's' : ''}`, color: 'text-red-400', isLate: true };
@@ -134,7 +209,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             alert(`${student.name} não tem mensalidade cadastrada. Edite o aluno para definir o valor.`);
             return;
         }
-        
+
         const newPayment: Payment = {
             id: crypto.randomUUID(),
             studentId: student.id,
@@ -184,9 +259,12 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
     // Stats
     const totalStudents = students.length;
     const paidCount = students.filter(s => getPaymentForStudent(s.id)).length;
+
+    // Total recebido garante que soma apenas pagamentos vinculados a alunos locais deste usuário
     const totalReceived = payments
-        .filter(p => p.month === month && p.year === year)
+        .filter(p => p.month === month && p.year === year && students.some(s => s.id === p.studentId))
         .reduce((sum, p) => sum + p.amount, 0);
+
     const totalPending = students
         .filter(s => !getPaymentForStudent(s.id))
         .reduce((sum, s) => sum + (s.monthlyFees || 0), 0);
@@ -260,11 +338,12 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             alert(`Erro ao gerar PDF: ${e.message}`);
         }
     };
+    const userTier = settings?.subscriptionTier || (isTrial ? 'pro_plus' : 'basic');
 
     return (
         <div className="p-4 pb-20">
-            {/* Upgrade Card Pro+ */}
-            {settings?.subscriptionTier !== 'pro_plus' && (
+            {/* Upgrade Card Pro+ - Só mostra se for estritamente BASIC e não estiver em teste/admin */}
+            {userTier === 'basic' && !isTrial && !isAdmin && (
                 <div className="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 border border-yellow-500/30 rounded-xl p-5 mb-6">
                     <div className="flex items-start gap-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">

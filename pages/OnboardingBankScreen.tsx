@@ -15,11 +15,11 @@ export const OnboardingBankScreen: React.FC<OnboardingBankScreenProps> = ({ sett
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Etapa 1: Dados Pessoais
-  const [name, setName] = useState(settings?.monitorName || '');
-  const [cpf, setCpf] = useState(settings?.monitorCpf || '');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState(settings?.monitorPhone || '');
+  // Etapa 1: Dados Pessoais - Sincronizado com Perfil
+  const [name, setName] = useState(settings?.driverName || '');
+  const [cpf, setCpf] = useState(settings?.driverCpf || '');
+  const [email, setEmail] = useState(settings?.bankData?.email || '');
+  const [phone, setPhone] = useState(settings?.driverPhone || '');
 
   // Etapa 2: Dados Bancários
   const [bank, setBank] = useState('');
@@ -70,6 +70,8 @@ export const OnboardingBankScreen: React.FC<OnboardingBankScreenProps> = ({ sett
     setStep(2);
   };
 
+  const [onboardingUrl, setOnboardingUrl] = useState('');
+
   const handleSubmit = async () => {
     const err = validateStep2();
     if (err) {
@@ -105,17 +107,34 @@ export const OnboardingBankScreen: React.FC<OnboardingBankScreenProps> = ({ sett
       const result = await asaasService.createAccount(accountData);
 
       if (result?.id) {
-        // Salvar walletId nas configurações
+        // Salvar walletId e Sincronizar dados com o Perfil
         const updated = {
           ...settings,
-          monitorName: name,
-          monitorCpf: cpf,
-          monitorPhone: phone,
-          asaasWalletId: result.id
+          driverName: name,
+          driverCpf: cpf,
+          driverPhone: phone,
+          driverEmail: email,
+          asaasWalletId: result.id,
+          subscriptionTier: 'pro_plus',
+          bankData: {
+            email,
+            bank,
+            bankName: banks.find(b => b.code === bank)?.name || '',
+            agency,
+            account,
+            accountDigit,
+            accountType
+          }
         } as UserSettings;
 
         await dbService.saveUserSettings(updated);
-        onComplete();
+
+        if (result.onboardingUrl) {
+          setOnboardingUrl(result.onboardingUrl);
+          alert("Sua conta foi criada! Agora você precisa enviar seus documentos para ativar os recebimentos.");
+        } else {
+          onComplete();
+        }
       } else {
         throw new Error('Não foi possível criar a subconta');
       }
@@ -141,6 +160,41 @@ export const OnboardingBankScreen: React.FC<OnboardingBankScreenProps> = ({ sett
     { code: '212', name: 'Original' },
     { code: '422', name: 'Safra' },
   ];
+
+  if (onboardingUrl) {
+    return (
+      <div className="min-h-screen bg-navy-900 text-white p-6 flex flex-col items-center justify-center text-center">
+        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
+          <Icon name="check" size={40} className="text-green-500" />
+        </div>
+        <h2 className="text-2xl font-bold mb-4">Conta Criada com Sucesso!</h2>
+        <p className="text-gray-400 mb-8 max-w-xs">
+          Para começar a receber pagamentos dos pais, você precisa agora enviar seus documentos para validação do Asaas.
+        </p>
+
+        <div className="space-y-4 w-full max-w-xs">
+          <button
+            onClick={() => window.open(onboardingUrl, '_blank')}
+            className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2"
+          >
+            <Icon name="upload" size={20} />
+            Enviar Documentos
+          </button>
+
+          <button
+            onClick={onComplete}
+            className="w-full bg-navy-800 border border-navy-700 text-gray-400 py-3 rounded-xl transition"
+          >
+            Fazer isso depois
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-500 mt-8">
+          Você também receberá um link por SMS e Email do Asaas para finalizar este processo.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-navy-900 text-white p-6 pb-safe">

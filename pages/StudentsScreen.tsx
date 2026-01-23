@@ -49,7 +49,7 @@ export const StudentsScreen: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
   const [expandedStops, setExpandedStops] = useState<Record<string, boolean>>({});
-  
+
   // Modal de detalhes do aluno
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
@@ -62,6 +62,7 @@ export const StudentsScreen: React.FC = () => {
   const [selectedRouteId, setSelectedRouteId] = useState('');
   const [guardianName, setGuardianName] = useState('');
   const [responsibleCpf, setResponsibleCpf] = useState('');
+  const [responsibleEmail, setResponsibleEmail] = useState('');
   const [responsiblePhone, setResponsiblePhone] = useState('');
   const [observation, setObservation] = useState('');
   const [monthlyFees, setMonthlyFees] = useState('');
@@ -134,7 +135,7 @@ export const StudentsScreen: React.FC = () => {
     e.preventDefault();
 
     const existing = editingId ? students.find(s => s.id === editingId) : null;
-    
+
     const student: Student = {
       id: editingId || crypto.randomUUID(),
       stopId,
@@ -145,13 +146,14 @@ export const StudentsScreen: React.FC = () => {
       shift: shift || undefined,
       guardianName: guardianName || undefined,
       responsibleCpf: responsibleCpf || undefined,
+      responsibleEmail: responsibleEmail || undefined,
       responsiblePhone: responsiblePhone || undefined,
       observation: observation || undefined,
       monthlyFees: monthlyFees ? parseFloat(monthlyFees.replace(',', '.')) : 0,
       dueDay: dueDay ? parseInt(dueDay) : 0,
       order: existing?.order || Date.now()
     };
-    
+
     await dbService.saveStudent(student);
     setIsModalOpen(false);
     resetForm();
@@ -165,6 +167,7 @@ export const StudentsScreen: React.FC = () => {
     setShift('manha');
     setGuardianName('');
     setResponsibleCpf('');
+    setResponsibleEmail('');
     setResponsiblePhone('');
     setObservation('');
     setMonthlyFees('');
@@ -186,6 +189,7 @@ export const StudentsScreen: React.FC = () => {
     setShift(student.shift || 'manha');
     setGuardianName(student.guardianName || '');
     setResponsibleCpf(student.responsibleCpf || '');
+    setResponsibleEmail(student.responsibleEmail || '');
     setResponsiblePhone(student.responsiblePhone || '');
     setObservation(student.observation || '');
     setMonthlyFees(student.monthlyFees ? student.monthlyFees.toString() : '');
@@ -306,8 +310,8 @@ export const StudentsScreen: React.FC = () => {
                         {isStopExpanded && (
                           <div className="grid gap-2 pl-4">
                             {stopStudents.map((student, index) => (
-                              <div 
-                                key={student.id} 
+                              <div
+                                key={student.id}
                                 onClick={() => setSelectedStudent(student)}
                                 className="bg-navy-800 p-3 rounded-lg border border-navy-700 flex items-center justify-between group cursor-pointer hover:bg-navy-700/50 transition-colors"
                               >
@@ -433,21 +437,25 @@ export const StudentsScreen: React.FC = () => {
               {(selectedStudent.guardianName || selectedStudent.responsiblePhone) && (
                 <div className="bg-navy-800 rounded-xl p-4 mb-4 border border-navy-700">
                   <h4 className="text-gray-400 text-xs font-bold uppercase mb-3">Responsável</h4>
-                  
+
                   {selectedStudent.guardianName && (
                     <p className="text-white font-medium mb-1">{selectedStudent.guardianName}</p>
                   )}
-                  
+
                   {selectedStudent.responsibleCpf && (
-                    <p className="text-gray-400 text-sm mb-2">CPF: {selectedStudent.responsibleCpf}</p>
+                    <p className="text-gray-400 text-sm mb-1">CPF: {selectedStudent.responsibleCpf}</p>
+                  )}
+
+                  {selectedStudent.responsibleEmail && (
+                    <p className="text-gray-400 text-sm mb-2">Email: {selectedStudent.responsibleEmail}</p>
                   )}
 
                   {selectedStudent.responsiblePhone && (
                     <div className="mt-3 space-y-2">
                       <p className="text-gray-400 text-sm">{selectedStudent.responsiblePhone}</p>
-                      
+
                       <div className="flex gap-3 mt-3">
-                        <a 
+                        <a
                           href={`tel:${selectedStudent.responsiblePhone}`}
                           className="flex-1 bg-blue-500/20 text-blue-400 py-3 rounded-xl font-bold text-center hover:bg-blue-500/30 transition"
                         >
@@ -483,27 +491,27 @@ export const StudentsScreen: React.FC = () => {
           <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-md border border-navy-700 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-white mb-4">{editingId ? 'Editar Aluno' : 'Novo Aluno'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
-              
+
               {/* Nome do Aluno */}
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Nome do Aluno *</label>
-                <input 
-                  type="text" 
-                  value={studentName} 
-                  onChange={e => setStudentName(e.target.value)} 
-                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" 
+                <input
+                  type="text"
+                  value={studentName}
+                  onChange={e => setStudentName(e.target.value)}
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
                   placeholder="Nome completo"
-                  required 
+                  required
                 />
               </div>
 
               {/* Data de Nascimento */}
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Data de Nascimento</label>
-                <input 
-                  type="date" 
-                  value={birthDate} 
-                  onChange={e => setBirthDate(e.target.value)} 
+                <input
+                  type="date"
+                  value={birthDate}
+                  onChange={e => setBirthDate(e.target.value)}
                   className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
                 />
               </div>
@@ -512,19 +520,19 @@ export const StudentsScreen: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Escola</label>
-                  <input 
-                    type="text" 
-                    value={school} 
-                    onChange={e => setSchool(e.target.value)} 
+                  <input
+                    type="text"
+                    value={school}
+                    onChange={e => setSchool(e.target.value)}
                     className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
                     placeholder="Nome da escola"
                   />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Turno</label>
-                  <select 
-                    value={shift} 
-                    onChange={e => setShift(e.target.value as any)} 
+                  <select
+                    value={shift}
+                    onChange={e => setShift(e.target.value as any)}
                     className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
                   >
                     <option value="integral">Integral</option>
@@ -553,39 +561,50 @@ export const StudentsScreen: React.FC = () => {
 
               {/* Responsável */}
               <h4 className="text-gray-400 text-xs font-bold uppercase">Dados do Responsável</h4>
-              
+
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Nome do Responsável</label>
-                <input 
-                  type="text" 
-                  value={guardianName} 
-                  onChange={e => setGuardianName(e.target.value)} 
-                  placeholder="Ex: Maria Souza" 
-                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" 
+                <input
+                  type="text"
+                  value={guardianName}
+                  onChange={e => setGuardianName(e.target.value)}
+                  placeholder="Ex: Maria Souza"
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">CPF</label>
-                  <input 
-                    type="text" 
-                    value={responsibleCpf} 
-                    onChange={e => setResponsibleCpf(e.target.value)} 
-                    placeholder="000.000.000-00" 
-                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" 
+                  <input
+                    type="text"
+                    value={responsibleCpf}
+                    onChange={e => setResponsibleCpf(e.target.value)}
+                    placeholder="000.000.000-00"
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg text-sm"
                   />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">WhatsApp/Tel</label>
-                  <input 
-                    type="text" 
-                    value={responsiblePhone} 
-                    onChange={e => setResponsiblePhone(e.target.value)} 
-                    placeholder="(00) 00000-0000" 
-                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" 
+                  <input
+                    type="text"
+                    value={responsiblePhone}
+                    onChange={e => setResponsiblePhone(e.target.value)}
+                    placeholder="(00) 00000-0000"
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg text-sm"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Email do Responsável</label>
+                <input
+                  type="email"
+                  value={responsibleEmail}
+                  onChange={e => setResponsibleEmail(e.target.value)}
+                  placeholder="email@exemplo.com"
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg text-sm"
+                />
               </div>
 
               <hr className="border-navy-700" />
@@ -595,9 +614,9 @@ export const StudentsScreen: React.FC = () => {
                 <label className="block text-sm text-gray-400 mb-1">
                   Observação <span className="text-orange-400">(alergias, condições, etc.)</span>
                 </label>
-                <textarea 
-                  value={observation} 
-                  onChange={e => setObservation(e.target.value)} 
+                <textarea
+                  value={observation}
+                  onChange={e => setObservation(e.target.value)}
                   placeholder="Ex: Alergia a amendoim, usa óculos, precisa de adaptação..."
                   className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg h-20"
                 />
@@ -607,7 +626,7 @@ export const StudentsScreen: React.FC = () => {
 
               {/* Financeiro */}
               <h4 className="text-gray-400 text-xs font-bold uppercase">Financeiro</h4>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Mensalidade (R$)</label>

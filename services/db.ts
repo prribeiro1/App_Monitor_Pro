@@ -1,6 +1,7 @@
 
-
 import { Route, Stop, Student, AttendanceRecord, Incident, BackupData, Payment, MaintenanceItem, MaintenanceLog, UserSettings } from '../types';
+import { cloudSync } from './cloudSync';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const DB_NAME = 'SchoolMonitorDB';
 const DB_VERSION = 2; // Incremented for Migration
@@ -53,6 +54,9 @@ const openDB = (): Promise<IDBDatabase> => {
       }
       if (!db.objectStoreNames.contains('contract_signatures')) {
         db.createObjectStore('contract_signatures', { keyPath: 'studentId' });
+      }
+      if (!db.objectStoreNames.contains('reminders')) {
+        db.createObjectStore('reminders', { keyPath: 'id' });
       }
     };
 
@@ -113,51 +117,105 @@ const getItem = async <T>(storeName: string, id: string): Promise<T | undefined>
 export const dbService = {
   // Routes
   getRoutes: () => getAll<Route>('routes'),
-  saveRoute: (route: Route) => putItem('routes', route),
-  deleteRoute: (id: string) => deleteItem('routes', id),
+  saveRoute: async (route: Route) => {
+    await putItem('routes', route);
+    try { await cloudSync.saveRoute(route); } catch (e) {
+      console.error("Cloud Sync Rota falhou", e);
+    }
+  },
+  deleteRoute: async (id: string) => {
+    await deleteItem('routes', id);
+    try { await cloudSync.deleteRoute(id); } catch (e) { }
+  },
 
   // Stops
   getStops: () => getAll<Stop>('stops'),
-  saveStop: (stop: Stop) => putItem('stops', stop),
-  deleteStop: (id: string) => deleteItem('stops', id),
+  saveStop: async (stop: Stop) => {
+    await putItem('stops', stop);
+    try {
+      await cloudSync.saveStop(stop);
+    } catch (e: any) {
+      alert("Erro ao salvar Ponto na Nuvem. Verifique sua conexão. " + (e.message || ""));
+    }
+  },
+  deleteStop: async (id: string) => {
+    await deleteItem('stops', id);
+    try { await cloudSync.deleteStop(id); } catch (e) { }
+  },
 
   // Students
   getStudents: () => getAll<Student>('students'),
-  saveStudent: (student: Student) => putItem('students', student),
-  deleteStudent: (id: string) => deleteItem('students', id),
+  saveStudent: async (student: Student) => {
+    await putItem('students', student);
+    try {
+      await cloudSync.saveStudent(student);
+    } catch (e: any) {
+      alert("Erro ao salvar Aluno na Nuvem: " + (e.message || ""));
+    }
+  },
+  deleteStudent: async (id: string) => {
+    await deleteItem('students', id);
+    try { await cloudSync.deleteStudent(id); } catch (e) { }
+  },
 
   // Attendance
   getAttendance: () => getAll<AttendanceRecord>('attendance'),
-  saveAttendance: (record: AttendanceRecord) => putItem('attendance', record),
+  saveAttendance: async (record: AttendanceRecord) => {
+    await putItem('attendance', record);
+    try { await cloudSync.saveAttendance(record); } catch (e) { }
+  },
 
   // Incidents
   getIncidents: () => getAll<Incident>('incidents'),
-  saveIncident: (incident: Incident) => putItem('incidents', incident),
+  saveIncident: async (incident: Incident) => {
+    await putItem('incidents', incident);
+    try { await cloudSync.saveIncident(incident); } catch (e) { }
+  },
 
   // Payments
   getPayments: () => getAll<Payment>('payments'),
-  savePayment: (payment: Payment) => putItem('payments', payment),
+  savePayment: async (payment: Payment) => {
+    await putItem('payments', payment);
+    try { await cloudSync.savePayment(payment); } catch (e) { }
+  },
   deletePayment: (id: string) => deleteItem('payments', id),
 
   // Maintenance
   getMaintenanceItems: () => getAll<MaintenanceItem>('maintenance_items'),
-  saveMaintenanceItem: (item: MaintenanceItem) => putItem('maintenance_items', item),
+  saveMaintenanceItem: async (item: MaintenanceItem) => {
+    await putItem('maintenance_items', item);
+    try { await cloudSync.saveMaintenanceItem(item); } catch (e) { }
+  },
   deleteMaintenanceItem: (id: string) => deleteItem('maintenance_items', id),
 
   getMaintenanceLogs: () => getAll<MaintenanceLog>('maintenance_logs'),
-  saveMaintenanceLog: (log: MaintenanceLog) => putItem('maintenance_logs', log),
+  saveMaintenanceLog: async (log: MaintenanceLog) => {
+    await putItem('maintenance_logs', log);
+    try { await cloudSync.saveMaintenanceLog(log); } catch (e) { }
+  },
 
   // Settings (Single record with id 'settings')
   getUserSettings: async (): Promise<UserSettings> => {
     const s = await getItem<UserSettings>('user_settings', 'settings');
     return s || { id: 'settings', currentKm: 0 } as any;
   },
-  saveUserSettings: (settings: UserSettings) => putItem('user_settings', { ...settings, id: 'settings' }),
+  saveUserSettings: async (settings: UserSettings) => {
+    await putItem('user_settings', { ...settings, id: 'settings' });
+    try { await cloudSync.saveUserSettings(settings); } catch (e) { }
+  },
 
-  // Contract Signatures
-  getContractSignature: (studentId: string) => getItem<{ studentId: string, signature: string }>('contract_signatures', studentId),
-  saveContractSignature: (studentId: string, signature: string) => putItem('contract_signatures', { studentId, signature }),
   deleteContractSignature: (studentId: string) => deleteItem('contract_signatures', studentId),
+
+  // Reminders
+  getReminders: () => getAll<any>('reminders'),
+  saveReminder: async (reminder: any) => {
+    await putItem('reminders', reminder);
+    try { await cloudSync.saveReminder(reminder); } catch (e) { }
+  },
+  deleteReminder: async (id: number) => {
+    await deleteItem('reminders', id.toString());
+    try { await cloudSync.deleteReminder(id); } catch (e) { }
+  },
 
 
   // Full Backup Export
@@ -186,14 +244,37 @@ export const dbService = {
     } as any;
   },
 
-  // Clear DB (for restore)
+  // Clear DB (for restore or logout)
   clearDatabase: async (): Promise<void> => {
     const db = await openDB();
-    const stores = ['routes', 'stops', 'students', 'attendance', 'incidents', 'payments', 'maintenance_items', 'maintenance_logs', 'user_settings'];
-    const tx = db.transaction(stores, 'readwrite');
-    stores.forEach(store => tx.objectStore(store).clear());
+    const stores = [
+      'routes', 'stops', 'students', 'attendance',
+      'incidents', 'payments', 'maintenance_items',
+      'maintenance_logs', 'user_settings', 'contract_signatures', 'reminders'
+    ];
+
     return new Promise((resolve, reject) => {
-      tx.oncomplete = () => resolve();
+      const tx = db.transaction(stores, 'readwrite');
+      stores.forEach(storeName => {
+        try {
+          tx.objectStore(storeName).clear();
+        } catch (e) {
+          console.warn(`Erro ao limpar store ${storeName}:`, e);
+        }
+      });
+      tx.oncomplete = async () => {
+        // Limpar notificações locais para evitar vazamento entre usuários
+        try {
+          const pending = await LocalNotifications.getPending();
+          if (pending.notifications.length > 0) {
+            await LocalNotifications.cancel({ notifications: pending.notifications });
+          }
+          await LocalNotifications.removeAllDeliveredNotifications();
+        } catch (e) {
+          console.error("Erro ao limpar notificações:", e);
+        }
+        resolve();
+      };
       tx.onerror = () => reject(tx.error);
     });
   },
@@ -227,5 +308,44 @@ export const dbService = {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
+  },
+
+  // Cloud Pull (Sync from Server to Local)
+  pullFromCloud: async (): Promise<void> => {
+    try {
+      const cloudData = await cloudSync.pullAllData();
+      if (!cloudData) return;
+
+      const db = await openDB();
+      const stores = ['routes', 'stops', 'students', 'attendance', 'payments', 'user_settings', 'maintenance_items', 'maintenance_logs', 'incidents', 'reminders'];
+      const tx = db.transaction(stores, 'readwrite');
+
+      const restore = (storeName: string, items: any[]) => {
+        const store = tx.objectStore(storeName);
+        store.clear();
+        if (items) items.forEach(item => store.put(item));
+      };
+
+      restore('routes', cloudData.routes);
+      restore('stops', cloudData.stops);
+      restore('students', cloudData.students);
+      restore('attendance', cloudData.attendance);
+      restore('payments', cloudData.payments);
+      restore('incidents', cloudData.incidents);
+      restore('reminders', cloudData.reminders);
+      restore('maintenance_items', cloudData.maintenanceItems);
+      restore('maintenance_logs', cloudData.maintenanceLogs);
+
+      if (cloudData.userSettings) {
+        tx.objectStore('user_settings').put(cloudData.userSettings);
+      }
+
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {
+      console.error("Erro no Pull Cloud:", e);
+    }
   }
 };
