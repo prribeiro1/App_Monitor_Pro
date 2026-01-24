@@ -41,19 +41,32 @@ Deno.serve(async (req: Request) => {
             });
         }
 
+        // Verificar se a chave de serviço está disponível
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+        if (!serviceRoleKey) {
+            console.error("❌ ERRO CRÍTICO: SUPABASE_SERVICE_ROLE_KEY não encontrada nas variáveis de ambiente!");
+            return new Response(JSON.stringify({ error: "Erro interno: Chave de serviço não configurada. Contate o suporte." }), {
+                status: 500,
+                headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+            });
+        }
+
         // Cliente admin para deletar o usuário
         const supabaseAdmin = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+            serviceRoleKey,
             { auth: { autoRefreshToken: false, persistSession: false } }
         );
+
+        console.log(`🗑️ Tentando deletar usuário Auth ID: ${user.id}`);
 
         // Deletar usuário do Auth
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
         if (deleteError) {
-            console.error("Erro ao deletar usuário:", deleteError);
-            return new Response(JSON.stringify({ error: "Erro ao excluir conta: " + deleteError.message }), {
+            console.error("❌ Erro ao deletar usuário do Auth:", deleteError);
+            return new Response(JSON.stringify({ error: "Erro ao excluir conta Auth: " + deleteError.message }), {
                 status: 500,
                 headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
             });
