@@ -9,6 +9,7 @@ import autoTable from 'jspdf-autotable';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { supabase } from '../services/auth'; // Import for Storage
 
 export const MaintenanceScreen: React.FC = () => {
     const { t, language } = useI18n();
@@ -23,6 +24,8 @@ export const MaintenanceScreen: React.FC = () => {
     const [actionCost, setActionCost] = useState('');
     const [actionDate, setActionDate] = useState(new Date().toISOString().split('T')[0]);
     const [actionKm, setActionKm] = useState('');
+    const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     // Add Item Modal
     const [addItemModalOpen, setAddItemModalOpen] = useState(false);
@@ -46,14 +49,12 @@ export const MaintenanceScreen: React.FC = () => {
         loadData();
     }, []);
 
-    // Helper to format YYYY-MM-DD to DD/MM/YYYY without timezone shift
+    // Helper to format YYYY-MM-DD to DD/MM/YYYY
     const formatDateLocal = (dateString: string) => {
         if (!dateString) return '-';
-        // Check if ISO string (contains T)
         if (dateString.includes('T')) {
             return new Date(dateString).toLocaleDateString();
         }
-        // Assume YYYY-MM-DD
         const parts = dateString.split('-');
         if (parts.length === 3) {
             const [y, m, d] = parts;
@@ -72,47 +73,63 @@ export const MaintenanceScreen: React.FC = () => {
     };
 
     const calculateStatus = (item: MaintenanceItem) => {
-        // 0. New/Unknown State
-        // If lastKm is 0 AND user has driven (currentKm > 0) AND item expects KM interval
         if (item.lastKm === 0 && currentKm > 0 && item.intervalKm > 0) {
             return { status: 'unknown', label: 'PENDENTE', color: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/30' };
         }
 
-        // 1. Check KM
         let kmStatus = 'ok';
         let kmRemaining = 0;
 
         if (item.intervalKm > 0) {
             const dueKm = item.lastKm + item.intervalKm;
             kmRemaining = dueKm - currentKm;
-
             if (kmRemaining < 0) kmStatus = 'overdue';
-            else if (kmRemaining < 1000) kmStatus = 'warning'; // 1000km warning
+            else if (kmRemaining < 1000) kmStatus = 'warning';
         }
 
-        // 2. Check Date (imprecise, just months)
         let dateStatus = 'ok';
         let daysRemaining = 0;
 
         if (item.intervalMonths > 0) {
-            const lastDate = new Date(item.lastDate); // Note: this might be ISO or YYYY-MM-DD. Date constructor handles both but be careful with timezones.
-            // Best effort due to mixed data types potentially.
-
+            const lastDate = new Date(item.lastDate);
             const dueDate = new Date(lastDate);
             dueDate.setMonth(lastDate.getMonth() + item.intervalMonths);
-
             const now = new Date();
             const diffTime = dueDate.getTime() - now.getTime();
             daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
             if (daysRemaining < 0) dateStatus = 'overdue';
             else if (daysRemaining < 30) dateStatus = 'warning';
         }
 
-        // Final decision (worst case)
         if (kmStatus === 'overdue' || dateStatus === 'overdue') return { status: 'overdue', label: 'VENCIDO', color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/30' };
         if (kmStatus === 'warning' || dateStatus === 'warning') return { status: 'warning', label: 'ATENÇÃO', color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' };
         return { status: 'ok', label: 'OK', color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/30' };
+    };
+
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!event.target.files || event.target.files.length === 0) return;
+
+        try {
+            setUploading(true);
+            const file = event.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { data, error } = await supabase.storage
+                .from('maintenance-docs')
+                .upload(filePath, file);
+
+            if (error) throw error;
+
+            // Get public URL just for feedback, but we store the path
+            setAttachmentPath(data?.path || filePath);
+            alert('Arquivo anexado com sucesso!');
+        } catch (error: any) {
+            alert('Erro ao enviar arquivo: ' + error.message);
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handlePerformMaintenance = async (e: React.FormEvent) => {
@@ -121,18 +138,17 @@ export const MaintenanceScreen: React.FC = () => {
 
         const km = parseInt(actionKm);
 
-        // 1. Create Log
         const newLog: MaintenanceLog = {
             id: crypto.randomUUID(),
             itemId: selectedItem.id,
-            date: actionDate, // Store as YYYY-MM-DD
+            date: actionDate,
             km: km,
             cost: parseFloat(actionCost) || 0,
-            notes: 'Manutenção registrada via app'
+            notes: 'Manutenção registrada via app',
+            attachmentPath: attachmentPath || undefined
         };
         await dbService.saveMaintenanceLog(newLog);
 
-        // 2. Update Item
         const updatedItem = {
             ...selectedItem,
             lastKm: km,
@@ -140,12 +156,13 @@ export const MaintenanceScreen: React.FC = () => {
         };
         await dbService.saveMaintenanceItem(updatedItem);
 
-        // 3. Update Current KM if greater
         if (km > currentKm) {
             await dbService.saveUserSettings({ currentKm: km });
         }
 
         setActionModalOpen(false);
+        setAttachmentPath(null);
+        setActionCost('');
         loadData();
     };
 
@@ -208,7 +225,6 @@ export const MaintenanceScreen: React.FC = () => {
                 return;
             }
 
-            // Get item names
             const itemsMap = new Map<string, string>();
             items.forEach(i => itemsMap.set(i.id, i.name));
 
@@ -223,17 +239,17 @@ export const MaintenanceScreen: React.FC = () => {
                     formatDateLocal(log.date),
                     `${log.km.toLocaleString()} km`,
                     `R$ ${log.cost.toFixed(2)}`,
-                    log.notes || '-'
+                    log.notes || '-',
+                    log.attachmentPath ? 'SIM' : 'NÃO'
                 ];
             });
 
             autoTable(doc, {
-                head: [['Item', 'Data', 'KM', 'Custo', 'Obs']],
+                head: [['Item', 'Data', 'KM', 'Custo', 'Obs', 'Anexo']],
                 body: tableData,
                 startY: 30,
             });
 
-            // Add total
             doc.text(`Custo Total: R$ ${totalCost.toFixed(2)}`, 14, (doc as any).lastAutoTable.finalY + 10);
 
             const fileName = `historico_manutencao_${new Date().getTime()}.pdf`;
@@ -328,15 +344,12 @@ export const MaintenanceScreen: React.FC = () => {
                                 <div>
                                     <h3 className="text-lg font-bold text-white">{item.name}</h3>
                                     <p className="text-xs text-gray-500">
-                                        Última troca: {item.lastKm.toLocaleString()} km
-                                        ({formatDateLocal(item.lastDate)})
+                                        Última: {item.lastKm.toLocaleString()} km ({formatDateLocal(item.lastDate)})
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => handleDeleteItem(item.id, item.name)}
-                                    // Removed absolute positioning, now it's flex item
                                     className="p-2 text-gray-600 hover:text-red-500 transition-colors bg-navy-900/50 rounded-lg ml-2"
-                                    title="Excluir Item"
                                 >
                                     <Icon name="trash" size={18} />
                                 </button>
@@ -372,7 +385,7 @@ export const MaintenanceScreen: React.FC = () => {
                                 </button>
                             ) : (
                                 <button
-                                    onClick={() => { setSelectedItem(item); setActionModalOpen(true); }}
+                                    onClick={() => { setSelectedItem(item); setActionModalOpen(true); setAttachmentPath(null); setActionCost(''); }}
                                     className="w-full mt-3 bg-navy-700 hover:bg-navy-600 border border-navy-600 text-gray-300 hover:text-white py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors"
                                 >
                                     <Icon name="check-circle" size={16} />
@@ -387,7 +400,7 @@ export const MaintenanceScreen: React.FC = () => {
             {/* Maintenance Action Modal */}
             {actionModalOpen && selectedItem && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                    <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-md border border-navy-700 shadow-2xl">
+                    <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-md border border-navy-700 shadow-2xl overflow-y-auto max-h-[90vh]">
                         <h3 className="text-xl font-bold text-white mb-1">Registrar Manutenção</h3>
                         <p className="text-primary-400 text-sm mb-6">{selectedItem.name}</p>
 
@@ -404,7 +417,7 @@ export const MaintenanceScreen: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1 font-bold uppercase">KM do Veículo na Troca</label>
+                                <label className="block text-xs text-gray-400 mb-1 font-bold uppercase">KM Atual</label>
                                 <input
                                     type="number"
                                     value={actionKm}
@@ -426,6 +439,41 @@ export const MaintenanceScreen: React.FC = () => {
                                 />
                             </div>
 
+                            <div className="pt-2 border-t border-navy-700">
+                                <label className="block text-xs text-gray-400 mb-2 font-bold uppercase flex items-center gap-2">
+                                    <Icon name="paperclip" size={14} /> Anexar Documento (Foto/PDF)
+                                </label>
+
+                                <div className="flex gap-2 items-center">
+                                    <label className={`flex-1 flex items-center justify-center p-3 rounded-lg border border-dashed cursor-pointer transition-colors ${attachmentPath ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-gray-600 hover:border-primary-500 bg-navy-900 text-gray-400'}`}>
+                                        <input
+                                            type="file"
+                                            accept="image/*,application/pdf"
+                                            className="hidden"
+                                            onChange={handleFileUpload}
+                                            disabled={uploading}
+                                        />
+                                        {uploading ? (
+                                            <span className="flex items-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                                Enviando...
+                                            </span>
+                                        ) : attachmentPath ? (
+                                            <span className="flex items-center gap-2 text-sm font-medium">
+                                                <Icon name="check" size={16} /> Arquivo Anexado
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-2 text-sm">
+                                                <Icon name="camera" size={16} /> Escolher Arquivo
+                                            </span>
+                                        )}
+                                    </label>
+                                </div>
+                                <p className="text-[10px] text-gray-500 mt-1">
+                                    Requer internet para envio. O arquivo será salvo na nuvem segura.
+                                </p>
+                            </div>
+
                             <div className="flex justify-end gap-3 pt-4">
                                 <button
                                     type="button"
@@ -436,7 +484,8 @@ export const MaintenanceScreen: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg font-bold shadow-lg shadow-primary-600/20"
+                                    disabled={uploading}
+                                    className={`px-6 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg font-bold shadow-lg shadow-primary-600/20 ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     Confirmar
                                 </button>

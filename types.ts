@@ -98,6 +98,7 @@ export interface MaintenanceLog {
   km: number;
   cost: number;
   notes?: string;
+  attachmentPath?: string; // Caminho no Supabase Storage
 }
 
 // Tipos de planos disponíveis
