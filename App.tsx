@@ -486,6 +486,7 @@ function App() {
           <Route path="/landing" element={<LandingScreen />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/register" element={<RegisterScreen />} />
+          <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
           <Route path="/" element={isNativeApp ? <Navigate to="/login" /> : <LandingScreen />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
