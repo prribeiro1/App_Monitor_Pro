@@ -466,20 +466,20 @@ export const MaintenanceScreen: React.FC = () => {
                                                 <p className="text-xs text-gray-500">{new Date(doc.date).toLocaleDateString()}</p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-3">
                                             <button
                                                 onClick={() => handleViewDocument(doc)}
-                                                className="p-2 text-blue-400 hover:bg-blue-400/10 rounded-lg transition"
+                                                className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition shadow-lg shadow-blue-900/50"
                                                 title="Visualizar/Baixar"
                                             >
-                                                <Icon name="eye" size={18} />
+                                                <Icon name="eye" size={20} />
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteDocument(doc)}
-                                                className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition"
+                                                className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition shadow-lg shadow-red-900/50"
                                                 title="Excluir"
                                             >
-                                                <Icon name="trash" size={18} />
+                                                <Icon name="trash" size={20} />
                                             </button>
                                         </div>
                                     </div>
