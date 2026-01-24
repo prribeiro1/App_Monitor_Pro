@@ -101,6 +101,15 @@ export interface MaintenanceLog {
   attachmentPath?: string; // Caminho no Supabase Storage
 }
 
+export interface VehicleDocument {
+  id: string;
+  name: string; // Ex: CRLV 2024
+  type: string; // Ex: application/pdf, image/jpeg
+  path: string; // Caminho no Storage
+  size: number;
+  date: string; // Upload date
+}
+
 // Tipos de planos disponíveis
 export type SubscriptionTier = 'basic' | 'pro' | 'pro_plus';
 

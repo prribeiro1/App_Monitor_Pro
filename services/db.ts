@@ -1,10 +1,10 @@
 
-import { Route, Stop, Student, AttendanceRecord, Incident, BackupData, Payment, MaintenanceItem, MaintenanceLog, UserSettings } from '../types';
+import { Route, Stop, Student, AttendanceRecord, Incident, BackupData, Payment, MaintenanceItem, MaintenanceLog, UserSettings, VehicleDocument } from '../types';
 import { cloudSync } from './cloudSync';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 const DB_NAME = 'SchoolMonitorDB';
-const DB_VERSION = 2; // Incremented for Migration
+const DB_VERSION = 3; // Incremented for Migration
 
 // Helper to open DB
 const openDB = (): Promise<IDBDatabase> => {
@@ -57,6 +57,10 @@ const openDB = (): Promise<IDBDatabase> => {
       }
       if (!db.objectStoreNames.contains('reminders')) {
         db.createObjectStore('reminders', { keyPath: 'id' });
+      }
+      // New Vehicle Documents Store (v3)
+      if (!db.objectStoreNames.contains('vehicle_documents')) {
+        db.createObjectStore('vehicle_documents', { keyPath: 'id' });
       }
     };
 
@@ -313,6 +317,11 @@ export const dbService = {
     });
   },
 
+  // Vehicle Docs
+  getVehicleDocuments: () => getAll<VehicleDocument>('vehicle_documents'),
+  saveVehicleDocument: (doc: VehicleDocument) => putItem('vehicle_documents', doc),
+  deleteVehicleDocument: (id: string) => deleteItem('vehicle_documents', id),
+
   // Cloud Pull (Sync from Server to Local)
   pullFromCloud: async (): Promise<void> => {
     try {
@@ -320,7 +329,7 @@ export const dbService = {
       if (!cloudData) return;
 
       const db = await openDB();
-      const stores = ['routes', 'stops', 'students', 'attendance', 'payments', 'user_settings', 'maintenance_items', 'maintenance_logs', 'incidents', 'reminders'];
+      const stores = ['routes', 'stops', 'students', 'attendance', 'payments', 'user_settings', 'maintenance_items', 'maintenance_logs', 'incidents', 'reminders', 'vehicle_documents'];
       const tx = db.transaction(stores, 'readwrite');
 
       const restore = (storeName: string, items: any[]) => {
@@ -338,6 +347,7 @@ export const dbService = {
       restore('reminders', cloudData.reminders);
       restore('maintenance_items', cloudData.maintenanceItems);
       restore('maintenance_logs', cloudData.maintenanceLogs);
+      restore('vehicle_documents', cloudData.vehicleDocuments);
 
       if (cloudData.userSettings) {
         tx.objectStore('user_settings').put(cloudData.userSettings);
