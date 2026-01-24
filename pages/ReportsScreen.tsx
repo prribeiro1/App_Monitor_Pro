@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { Student, AttendanceRecord, Route, Stop, Incident } from '../types';
 import { Icon } from '../components/Icon';
+import { InitialsAvatar } from '../components/Avatar';
+import { useI18n } from '../i18n';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -22,19 +24,8 @@ interface RouteReportGroup {
     students: StudentStats[];
 }
 
-// Helper: Initials Avatar for Modal (Larger)
-const InitialsAvatarLarge: React.FC<{ name: string }> = ({ name }) => {
-    const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
-    const colorIndex = name.length % colors.length;
-    return (
-        <div className={`w-16 h-16 rounded-full ${colors[colorIndex]} flex items-center justify-center text-white font-bold text-xl border-4 border-navy-700 mx-auto mb-2`}>
-            {initials}
-        </div>
-    );
-};
-
 export const ReportsScreen: React.FC = () => {
+    const { t, language } = useI18n();
     const [reportType, setReportType] = useState<'monthly' | 'daily'>('monthly');
     const [month, setMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); // YYYY-MM-DD
@@ -209,13 +200,13 @@ export const ReportsScreen: React.FC = () => {
             }
 
             // Incidents Summary - logo abaixo da tabela
-            const periodIncidents = reportType === 'monthly' 
+            const periodIncidents = reportType === 'monthly'
                 ? incidents.filter(i => i.date.startsWith(month))
                 : incidents.filter(i => i.date === date);
-                
+
             if (periodIncidents.length > 0) {
                 const lastY = (doc as any).lastAutoTable?.finalY || 100;
-                
+
                 // Verificar se precisa de nova página
                 if (lastY > 220) {
                     doc.addPage();
@@ -440,7 +431,7 @@ export const ReportsScreen: React.FC = () => {
                         </button>
 
                         <div className="text-center mb-4">
-                            <InitialsAvatarLarge name={selectedStudentStats.student.name} />
+                            <InitialsAvatar name={selectedStudentStats.student.name} size="lg" />
                             <h3 className="text-xl font-bold text-white">{selectedStudentStats.student.name}</h3>
                             <p className="text-primary-400 text-sm">{month}</p>
                         </div>

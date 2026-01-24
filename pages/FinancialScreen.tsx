@@ -3,6 +3,7 @@ import { dbService } from '../services/db';
 import { supabase } from '../services/auth';
 import { Student, Payment, Stop, Route, UserSettings } from '../types';
 import { Icon } from '../components/Icon';
+import { useI18n } from '../i18n';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -17,6 +18,7 @@ interface FinancialScreenProps {
 }
 
 export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUpdateSettings, isTrial, isAdmin }) => {
+    const { t, language } = useI18n();
     const [students, setStudents] = useState<Student[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [stops, setStops] = useState<Stop[]>([]);
@@ -25,6 +27,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
     const [year, setYear] = useState(new Date().getFullYear());
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
 
     const fetchData = async () => {
         setLoading(true);
@@ -113,8 +116,29 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         }
     };
 
+    // Helper para verificar status do aluno
+    const getStudentPaymentStatus = (student: Student): 'paid' | 'pending' | 'overdue' => {
+        const payment = payments.find(p => p.studentId === student.id && p.month === month && p.year === year);
+        if (payment) return 'paid';
+
+        const today = new Date();
+        const currentDay = today.getDate();
+        const currentMonth = today.getMonth() + 1;
+        const currentYear = today.getFullYear();
+
+        // Só considera atrasado se estiver no mês/ano atual e passou do vencimento
+        if (month === currentMonth && year === currentYear && student.dueDay && currentDay > student.dueDay) {
+            return 'overdue';
+        }
+        return 'pending';
+    };
+
     const filteredStudents = students
         .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        .filter(s => {
+            if (statusFilter === 'all') return true;
+            return getStudentPaymentStatus(s) === statusFilter;
+        })
         .sort((a, b) => {
             const today = new Date();
             const currentDay = today.getDate();
@@ -258,7 +282,9 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
     // Stats
     const totalStudents = students.length;
-    const paidCount = students.filter(s => getPaymentForStudent(s.id)).length;
+    const paidCount = students.filter(s => getStudentPaymentStatus(s) === 'paid').length;
+    const pendingCount = students.filter(s => getStudentPaymentStatus(s) === 'pending').length;
+    const overdueCount = students.filter(s => getStudentPaymentStatus(s) === 'overdue').length;
 
     // Total recebido garante que soma apenas pagamentos vinculados a alunos locais deste usuário
     const totalReceived = payments
@@ -269,10 +295,9 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         .filter(s => !getPaymentForStudent(s.id))
         .reduce((sum, s) => sum + (s.monthlyFees || 0), 0);
 
-    const months = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
+    const months = language === 'es'
+        ? ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+        : ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
     const exportPDF = async () => {
         try {
@@ -391,7 +416,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             </div>
 
             {/* Asaas Quick Access - Apenas para Pro+ */}
-            {settings?.subscriptionTier === 'pro_plus' && (
+            {(settings?.subscriptionTier === 'pro_plus' || isTrial || isAdmin) && (
                 <div className="mb-6">
                     <a
                         href="#/automatic-billing"
@@ -399,8 +424,8 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                     >
                         <Icon name="zap" size={24} className="text-white" />
                         <div>
-                            <p className="text-white font-bold text-sm">Cobrança Automática</p>
-                            <p className="text-green-100 text-xs">Ativar por aluno</p>
+                            <p className="text-white font-bold text-sm">{t('financial_automatic_billing')}</p>
+                            <p className="text-green-100 text-xs">{t('financial_activate_student')}</p>
                         </div>
                     </a>
                 </div>
@@ -411,7 +436,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                 <div className="relative">
                     <input
                         type="text"
-                        placeholder="Buscar aluno..."
+                        placeholder={t('financial_search')}
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         className="w-full bg-navy-800 text-white border border-navy-700 rounded-xl p-3 pl-10 focus:border-primary-500 outline-none transition"
@@ -432,6 +457,38 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                     <p className="text-gray-400 text-xs uppercase font-bold">Pagantes</p>
                     <p className="text-2xl font-bold text-white">{paidCount}/{totalStudents}</p>
                 </div>
+            </div>
+
+            {/* Status Filter Tabs */}
+            <div className="flex bg-navy-800 p-1 rounded-xl border border-navy-700 mb-6 overflow-x-auto">
+                <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 whitespace-nowrap ${statusFilter === 'all' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                    Todos
+                    <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-[10px]">{totalStudents}</span>
+                </button>
+                <button
+                    onClick={() => setStatusFilter('paid')}
+                    className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 whitespace-nowrap ${statusFilter === 'paid' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                    Pagos
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${statusFilter === 'paid' ? 'bg-white/20' : 'bg-green-500/30'}`}>{paidCount}</span>
+                </button>
+                <button
+                    onClick={() => setStatusFilter('pending')}
+                    className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 whitespace-nowrap ${statusFilter === 'pending' ? 'bg-yellow-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                    Pendentes
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${statusFilter === 'pending' ? 'bg-white/20' : 'bg-yellow-500/30'}`}>{pendingCount}</span>
+                </button>
+                <button
+                    onClick={() => setStatusFilter('overdue')}
+                    className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 whitespace-nowrap ${statusFilter === 'overdue' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                    Atrasados
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${statusFilter === 'overdue' ? 'bg-white/20' : 'bg-red-500/30'}`}>{overdueCount}</span>
+                </button>
             </div>
 
             <div className="space-y-3 mb-20">

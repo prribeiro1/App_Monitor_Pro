@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { dbService } from '../services/db';
 import { Stop, Student, Route } from '../types';
 import { Icon } from '../components/Icon';
+import { InitialsAvatar } from '../components/Avatar';
+import { useI18n } from '../i18n';
 
 interface StopGroup {
   stop: Stop;
@@ -14,33 +16,8 @@ interface RouteGroup {
   stops: StopGroup[];
 }
 
-const InitialsAvatar: React.FC<{ name: string }> = ({ name }) => {
-  const initials = name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-
-  const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
-  const colorIndex = name.length % colors.length;
-  const bgClass = colors[colorIndex];
-
-  return (
-    <div className={`w-10 h-10 rounded-full ${bgClass} flex items-center justify-center text-white font-bold text-sm border-2 border-navy-800`}>
-      {initials}
-    </div>
-  );
-};
-
-const shiftLabels: Record<string, string> = {
-  integral: 'Integral',
-  manha: 'Manhã',
-  tarde: 'Tarde',
-  noite: 'Noite'
-};
-
 export const StudentsScreen: React.FC = () => {
+  const { t, language } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [students, setStudents] = useState<Student[]>([]);
   const [stops, setStops] = useState<Stop[]>([]);
@@ -49,6 +26,11 @@ export const StudentsScreen: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
   const [expandedStops, setExpandedStops] = useState<Record<string, boolean>>({});
+
+  // Labels de turnos pelo idioma
+  const shiftLabels: Record<string, string> = language === 'es'
+    ? { integral: 'Tiempo Completo', manha: 'Mañana', tarde: 'Tarde', noite: 'Noche' }
+    : { integral: 'Integral', manha: 'Manhã', tarde: 'Tarde', noite: 'Noite' };
 
   // Modal de detalhes do aluno
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);

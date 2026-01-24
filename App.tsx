@@ -1,13 +1,14 @@
 import React, { useState, useEffect, PropsWithChildren, useRef } from 'react';
 import { SignaturePad } from './components/SignaturePad';
 import { Capacitor } from '@capacitor/core';
-import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Icon, IconName } from './components/Icon';
 import { DashboardScreen } from './pages/DashboardScreen';
 import { RoutesScreen } from './pages/RoutesScreen';
 import { StudentsScreen } from './pages/StudentsScreen';
 import { AttendanceScreen } from './pages/AttendanceScreen';
 import { IncidentsScreen } from './pages/IncidentsScreen';
+import { RouteNavigationScreen } from './pages/RouteNavigationScreen';
 import { ReportsScreen } from './pages/ReportsScreen';
 import { RemindersScreen } from './pages/RemindersScreen';
 import { TeamScreen } from './pages/TeamScreen';
@@ -23,12 +24,17 @@ import { AutomaticBillingScreen } from './pages/AutomaticBillingScreen';
 import { OnboardingBankScreen } from './pages/OnboardingBankScreen';
 import { WelcomeScreen } from './pages/WelcomeScreen';
 import { PublicSignaturePage } from './pages/PublicSignaturePage';
+import { PublicTrackingPage } from './pages/PublicTrackingPage';
 import { dbService } from './services/db';
 import { UserSettings, Student } from './types';
 import { backupRepository } from './services/BackupRepository';
 import { authService, supabase } from './services/auth';
 import { Session } from '@supabase/supabase-js';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { SyncIndicator } from './components/SyncIndicator';
+import { syncQueue } from './services/syncQueue';
+import { I18nProvider } from './i18n';
+import { LanguageSelector } from './components/LanguageSelector';
 
 declare global {
   interface Window {
@@ -202,7 +208,8 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
             </div>
           );
         })()}
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <SyncIndicator />
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
           <button onClick={() => setIsSearchOpen(true)} className="p-2 bg-gray-700/50 text-gray-300 rounded-full hover:bg-gray-700 transition" title="Buscar Aluno">
             <Icon name="search" size={20} />
@@ -291,6 +298,10 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
                   </div>
                 </div>
                 <div className="p-4 bg-navy-900 rounded-xl border border-navy-700">
+                  <h4 className="text-gray-400 text-sm font-bold mb-3 uppercase">Idioma</h4>
+                  <LanguageSelector />
+                </div>
+                <div className="p-4 bg-navy-900 rounded-xl border border-navy-700">
                   <h4 className="text-gray-400 text-sm font-bold mb-3 uppercase">Conta</h4>
                   <button onClick={onLogout} className="w-full flex items-center gap-3 p-3 text-gray-300 hover:bg-navy-800 rounded-lg transition mb-2">
                     <Icon name="log-out" size={20} /><span>Sair da Conta</span>
@@ -357,7 +368,7 @@ const DashboardWrapper: React.FC = () => {
   return <DashboardScreen onNavigate={(path) => navigate(path)} />;
 };
 
-export default function App() {
+function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [backupLoading, setBackupLoading] = useState(false);
@@ -521,82 +532,94 @@ export default function App() {
   const canViewRoutes = checkPermission('routes', true);
 
   return (
-    <HashRouter>
-      <Layout
-        onBackup={performBackup}
-        onImport={performImport}
-        onLogout={handleLogout}
-        onDeleteAccount={handleDeleteAccount}
-        isBackupLoading={backupLoading}
-        settings={settings}
-        onSaveSettings={handleSaveSettings}
-        session={session}
-        permissions={{
-          dashboard: true,
-          routes: canViewRoutes,
-          students: canViewStudents,
-          attendance: canViewAttendance,
-          incidents: canViewIncidents,
-          reports: canViewReports,
-          financial: canViewFinancial,
-          reminders: canViewReminders,
-          maintenance: canViewMaintenance,
-          contracts: canViewContracts,
-          gps: canViewGps,
-          team: isSuperUser,
-          tier: currentTier
-        }}
-      >
-        <Routes>
-          <Route path="/dashboard" element={<DashboardWrapper />} />
-          {canViewRoutes && <Route path="/routes" element={<RoutesScreen canUseGps={canViewGps} />} />}
-          {canViewStudents && <Route path="/students" element={<StudentsScreen />} />}
-          {canViewAttendance && <Route path="/attendance" element={<AttendanceScreen />} />}
-          {canViewIncidents && <Route path="/incidents" element={<IncidentsScreen />} />}
-          {canViewReports && <Route path="/reports" element={<ReportsScreen />} />}
-          {canViewReminders && <Route path="/reminders" element={<RemindersScreen />} />}
-          {canViewMaintenance && <Route path="/maintenance" element={<MaintenanceScreen />} />}
-          {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
-          {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} isTrial={isTrialActive} isAdmin={isSuperUser} />} />}
-          {isSuperUser && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => {
-            const updated: UserSettings = { ...settings!, asaasConfig: config };
-            await dbService.saveUserSettings(updated);
-            fetchSettings();
-          }} initialConfig={settings?.asaasConfig} />} />}
-          {isProPlus && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
-          {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => {
-            fetchSettings();
-            window.location.hash = '/automatic-billing';
-          }} onSkip={() => {
-            window.location.hash = '/dashboard';
-          }} />} />}
-          {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
-          <Route path="/change-plan" element={
-            <div className="fixed inset-0 bg-navy-900 z-50 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-              <WelcomeScreen
-                settings={settings}
-                onComplete={() => {
-                  fetchSettings();
-                  window.location.hash = '/dashboard';
-                }}
-              />
-            </div>
-          } />
-          <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
-          <Route path="*" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </Layout>
+    <I18nProvider>
+      <HashRouter>
+        <Layout
+          onBackup={performBackup}
+          onImport={performImport}
+          onLogout={handleLogout}
+          onDeleteAccount={handleDeleteAccount}
+          isBackupLoading={backupLoading}
+          settings={settings}
+          onSaveSettings={handleSaveSettings}
+          session={session}
+          permissions={{
+            dashboard: true,
+            routes: canViewRoutes,
+            students: canViewStudents,
+            attendance: canViewAttendance,
+            incidents: canViewIncidents,
+            reports: canViewReports,
+            financial: canViewFinancial,
+            reminders: canViewReminders,
+            maintenance: canViewMaintenance,
+            contracts: canViewContracts,
+            gps: canViewGps,
+            team: isSuperUser,
+            tier: currentTier
+          }}
+        >
+          <Routes>
+            <Route path="/dashboard" element={<DashboardWrapper />} />
+            {canViewRoutes && <Route path="/routes" element={<RoutesScreen canUseGps={canViewGps} />} />}
+            {canViewRoutes && <Route path="/routes/navigate/:id" element={<RouteHandler />} />}
+            {canViewStudents && <Route path="/students" element={<StudentsScreen />} />}
+            {canViewAttendance && <Route path="/attendance" element={<AttendanceScreen />} />}
+            {canViewIncidents && <Route path="/incidents" element={<IncidentsScreen />} />}
+            {canViewReports && <Route path="/reports" element={<ReportsScreen />} />}
+            {canViewReminders && <Route path="/reminders" element={<RemindersScreen />} />}
+            {canViewMaintenance && <Route path="/maintenance" element={<MaintenanceScreen />} />}
+            {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
+            {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} isTrial={isTrialActive} isAdmin={isSuperUser} />} />}
+            {isSuperUser && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => {
+              const updated: UserSettings = { ...settings!, asaasConfig: config };
+              await dbService.saveUserSettings(updated);
+              fetchSettings();
+            }} initialConfig={settings?.asaasConfig} />} />}
+            {isProPlus && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
+            {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => {
+              fetchSettings();
+              window.location.hash = '/automatic-billing';
+            }} onSkip={() => {
+              window.location.hash = '/dashboard';
+            }} />} />}
+            {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
+            <Route path="/change-plan" element={
+              <div className="fixed inset-0 bg-navy-900 z-50 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+                <WelcomeScreen
+                  settings={settings}
+                  onComplete={() => {
+                    fetchSettings();
+                    window.location.hash = '/dashboard';
+                  }}
+                />
+              </div>
+            } />
+            <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
+            <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </Layout>
 
-      {isUpdateRequired && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 text-center">
-          <div className="bg-navy-800 p-8 rounded-3xl border border-primary-500 max-w-sm shadow-2xl">
-            <div className="w-20 h-20 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><Icon name="refresh-cw" size={40} className="text-primary-500" /></div>
-            <h2 className="text-2xl font-bold text-white mb-4">Nova Versão Disponível! 🚀</h2>
-            <p className="text-gray-400 mb-8">Uma nova atualização obrigatória está disponível na Play Store.</p>
-            <a href="https://play.google.com/store/apps/details?id=com.monitorescolar.pro" target="_blank" rel="noopener noreferrer" className="block w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 rounded-xl shadow-lg transition text-lg">Atualizar Agora</a>
+        {isUpdateRequired && (
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 text-center">
+            <div className="bg-navy-800 p-8 rounded-3xl border border-primary-500 max-w-sm shadow-2xl">
+              <div className="w-20 h-20 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><Icon name="refresh-cw" size={40} className="text-primary-500" /></div>
+              <h2 className="text-2xl font-bold text-white mb-4">Nova Versão Disponível! 🚀</h2>
+              <p className="text-gray-400 mb-8">Uma nova atualização obrigatória está disponível na Play Store.</p>
+              <a href="https://play.google.com/store/apps/details?id=com.monitorescolar.pro" target="_blank" rel="noopener noreferrer" className="block w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 rounded-xl shadow-lg transition text-lg">Atualizar Agora</a>
+            </div>
           </div>
-        </div>
-      )}
-    </HashRouter>
+        )}
+      </HashRouter>
+    </I18nProvider>
   );
 }
+
+const RouteHandler = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  return <RouteNavigationScreen routeId={id!} onBack={() => navigate('/routes')} />;
+};
+
+export default App;

@@ -3,6 +3,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Icon } from '../components/Icon';
 import { Capacitor } from '@capacitor/core';
 import { dbService } from '../services/db';
+import { useI18n } from '../i18n';
 
 interface Reminder {
     id: number;
@@ -12,6 +13,7 @@ interface Reminder {
 }
 
 export const RemindersScreen: React.FC = () => {
+    const { t, language } = useI18n();
     const [reminders, setReminders] = useState<Reminder[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -30,7 +32,7 @@ export const RemindersScreen: React.FC = () => {
         if (Capacitor.isNativePlatform()) {
             const result = await LocalNotifications.requestPermissions();
             if (result.display !== 'granted') {
-                alert('Precisamos de permissão para enviar notificações!');
+                alert(language === 'es' ? '¡Necesitamos permiso para enviar notificaciones!' : 'Precisamos de permissão para enviar notificações!');
             }
         }
     };
@@ -52,7 +54,7 @@ export const RemindersScreen: React.FC = () => {
 
     const scheduleReminder = async () => {
         if (!title || !date || !time) {
-            alert('Preencha todos os campos!');
+            alert(t('reminders_fill_all'));
             return;
         }
 
@@ -60,7 +62,7 @@ export const RemindersScreen: React.FC = () => {
         const now = new Date();
 
         if (scheduledTime <= now) {
-            alert('A data/hora deve ser no futuro!');
+            alert(t('reminders_future_date'));
             return;
         }
 
@@ -94,17 +96,17 @@ export const RemindersScreen: React.FC = () => {
                 });
             }
 
-            alert('Lembrete agendado!');
+            alert(t('reminders_scheduled'));
             setIsModalOpen(false);
             resetForm();
             loadReminders();
         } catch (e: any) {
-            alert(`Erro ao agendar: ${e.message}`);
+            alert(`Error: ${e.message}`);
         }
     };
 
     const cancelReminder = async (id: number) => {
-        if (!confirm("Deseja remover este lembrete?")) return;
+        if (!confirm(t('reminders_remove_confirm'))) return;
         try {
             // 1. Remove do banco
             await dbService.deleteReminder(id);
@@ -128,13 +130,13 @@ export const RemindersScreen: React.FC = () => {
 
     return (
         <div className="p-4 pb-20">
-            <h2 className="text-2xl font-bold text-white mb-4">Lembretes</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">{t('reminders_title')}</h2>
 
             {/* List */}
             <div className="space-y-4">
                 {reminders.length === 0 ? (
                     <div className="text-gray-400 text-center mt-10">
-                        Nenhum lembrete agendado.
+                        {t('reminders_no_reminders_msg')}
                     </div>
                 ) : (
                     reminders.map(r => (
@@ -143,7 +145,7 @@ export const RemindersScreen: React.FC = () => {
                                 <h3 className="text-white font-bold">{r.title}</h3>
                                 <p className="text-gray-400 text-sm">{r.body}</p>
                                 <p className="text-primary-400 text-xs mt-1">
-                                    {new Date(r.date).toLocaleString()}
+                                    {new Date(r.date).toLocaleString(language === 'es' ? 'es-ES' : 'pt-BR')}
                                 </p>
                             </div>
                             <button
@@ -173,18 +175,18 @@ export const RemindersScreen: React.FC = () => {
                             <Icon name="x" />
                         </button>
 
-                        <h3 className="text-xl font-bold text-white mb-4">Novo Lembrete</h3>
+                        <h3 className="text-xl font-bold text-white mb-4">{t('reminders_new')}</h3>
 
                         <div className="space-y-3">
                             <input
                                 type="text"
-                                placeholder="Título"
+                                placeholder={t('reminders_title_field')}
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
                                 className="w-full bg-navy-900 text-white p-3 rounded-xl border border-navy-700 focus:border-primary-500 outline-none"
                             />
                             <textarea
-                                placeholder="Detalhes (Opcional)"
+                                placeholder={t('reminders_details')}
                                 value={body}
                                 onChange={e => setBody(e.target.value)}
                                 className="w-full bg-navy-900 text-white p-3 rounded-xl border border-navy-700 focus:border-primary-500 outline-none h-24"
@@ -208,7 +210,7 @@ export const RemindersScreen: React.FC = () => {
                                 onClick={scheduleReminder}
                                 className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 rounded-xl mt-4 transition"
                             >
-                                Agendar
+                                {t('reminders_schedule')}
                             </button>
                         </div>
                     </div>

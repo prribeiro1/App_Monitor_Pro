@@ -199,8 +199,11 @@ export const dbService = {
     const s = await getItem<UserSettings>('user_settings', 'settings');
     return s || { id: 'settings', currentKm: 0 } as any;
   },
-  saveUserSettings: async (settings: UserSettings) => {
-    await putItem('user_settings', { ...settings, id: 'settings' });
+  saveUserSettings: async (partialSettings: Partial<UserSettings>) => {
+    // Get existing settings first and merge
+    const existing = await getItem<UserSettings>('user_settings', 'settings');
+    const settings = { ...existing, ...partialSettings, id: 'settings' } as UserSettings;
+    await putItem('user_settings', settings);
     try { await cloudSync.saveUserSettings(settings); } catch (e) { }
   },
 

@@ -3,8 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { Student, Incident } from '../types';
 import { Icon } from '../components/Icon';
+import { useI18n } from '../i18n';
 
 export const IncidentsScreen: React.FC = () => {
+  const { t, language } = useI18n();
   const [students, setStudents] = useState<Student[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
 
@@ -38,18 +40,18 @@ export const IncidentsScreen: React.FC = () => {
     await dbService.saveIncident(incident);
     setObservation('');
     setType('');
-    alert('Ocorrência registrada!');
+    alert(t('incidents_registered'));
     fetchData();
   };
 
   return (
     <div className="p-4 pb-20">
-      <h2 className="text-2xl font-bold text-white mb-6">Ocorrências</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">{t('incidents_title')}</h2>
 
       {/* Form Card */}
       <form onSubmit={handleSubmit} className="bg-navy-800 p-5 rounded-2xl border border-navy-700 shadow-lg mb-8">
         <div>
-          <label className="text-sm text-gray-400">Aluno</label>
+          <label className="text-sm text-gray-400">{t('incidents_student')}</label>
           <select
             value={selectedStudent}
             onChange={e => setSelectedStudent(e.target.value)}
@@ -60,40 +62,40 @@ export const IncidentsScreen: React.FC = () => {
           </select>
         </div>
         <div className="mt-4">
-          <label className="text-sm text-gray-400">Tipo da Ocorrência</label>
+          <label className="text-sm text-gray-400">{t('incidents_incident_type')}</label>
           <input
             value={type}
             onChange={e => setType(e.target.value)}
-            placeholder="Ex: Comportamento, Material..."
+            placeholder={t('incidents_type_placeholder')}
             className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mt-1"
             required
           />
         </div>
         <div className="mt-4 mb-6">
-          <label className="text-sm text-gray-400">Observação Detalhada</label>
+          <label className="text-sm text-gray-400">{t('incidents_detailed_obs')}</label>
           <textarea
             value={observation}
             onChange={e => setObservation(e.target.value)}
             className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mt-1 min-h-[100px]"
-            placeholder="Descreva o ocorrido..."
+            placeholder={t('incidents_obs_placeholder')}
             required
           />
         </div>
         <button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-red-900/20 transition">
-          Registrar Ocorrência
+          {t('incidents_register')}
         </button>
       </form>
 
       {/* History List */}
-      <h3 className="text-white font-bold mb-4">Histórico Recente</h3>
+      <h3 className="text-white font-bold mb-4">{t('incidents_recent_history')}</h3>
       <div className="space-y-3">
         {incidents.map(inc => {
           const student = students.find(s => s.id === inc.studentId);
-          const date = new Date(inc.timestamp).toLocaleDateString('pt-BR');
+          const date = new Date(inc.timestamp).toLocaleDateString(language === 'es' ? 'es-ES' : 'pt-BR');
           return (
             <div key={inc.id} className="bg-navy-800 p-4 rounded-xl border border-navy-700 border-l-4 border-l-red-500">
               <div className="flex justify-between mb-1">
-                <span className="font-bold text-white">{student?.name || 'Aluno removido'}</span>
+                <span className="font-bold text-white">{student?.name || t('incidents_student_removed')}</span>
                 <span className="text-xs text-gray-400">{date}</span>
               </div>
               <div className="text-sm text-accent-500 font-medium mb-1">{inc.type}</div>
@@ -101,7 +103,7 @@ export const IncidentsScreen: React.FC = () => {
             </div>
           )
         })}
-        {incidents.length === 0 && <p className="text-gray-500 text-center">Nenhuma ocorrência registrada.</p>}
+        {incidents.length === 0 && <p className="text-gray-500 text-center">{t('incidents_no_incidents')}</p>}
       </div>
     </div>
   );

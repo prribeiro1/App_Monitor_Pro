@@ -3,16 +3,18 @@ import { dbService } from '../services/db';
 import { Route, Stop } from '../types';
 import { Icon } from '../components/Icon';
 import { Geolocation } from '@capacitor/geolocation';
+import { useI18n } from '../i18n';
 
 interface RoutesScreenProps {
   canUseGps?: boolean;
 }
 
 export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) => {
+  const { t, language } = useI18n();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [stops, setStops] = useState<Stop[]>([]);
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
-  
+
   const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
   const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
   const [routeName, setRouteName] = useState('');
@@ -70,6 +72,76 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
       await Promise.all([dbService.saveStop(stop), dbService.saveStop(next)]);
       fetchData();
     }
+  };
+
+  const handleOptimizeRoute = async (routeId: string) => {
+    if (!confirm("Isso irá reordenar todos os pontos desta rota pela distância mais curta. Deseja continuar?")) return;
+
+    // 1. Pega os stops da rota atual
+    let routeStops = stops.filter(s => s.routeId === routeId).filter(s => s.latitude && s.longitude);
+    const stopsWithoutGps = stops.filter(s => s.routeId === routeId && (!s.latitude || !s.longitude));
+
+    if (routeStops.length < 2) {
+      alert("É preciso ter pelo menos 2 pontos com GPS para otimizar.");
+      return;
+    }
+
+    // 2. Tenta pegar a localização atual do usuário para começar de lá
+    let startLat = 0;
+    let startLng = 0;
+
+    try {
+      const pos = await Geolocation.getCurrentPosition();
+      startLat = pos.coords.latitude;
+      startLng = pos.coords.longitude;
+    } catch (e) {
+      // Se falhar GPS, começa do primeiro ponto da lista atual
+      startLat = routeStops[0].latitude!;
+      startLng = routeStops[0].longitude!;
+    }
+
+    // 3. Algoritmo Nearest Neighbor (Vizinho Mais Próximo)
+    const optimized: Stop[] = [];
+    let currentLat = startLat;
+    let currentLng = startLng;
+
+    while (routeStops.length > 0) {
+      let nearestIndex = -1;
+      let minDist = Infinity;
+
+      for (let i = 0; i < routeStops.length; i++) {
+        const s = routeStops[i];
+        // Distância Euclidiana simples (funciona bem p/ pequenas distâncias)
+        const d = Math.sqrt(Math.pow(s.latitude! - currentLat, 2) + Math.pow(s.longitude! - currentLng, 2));
+        if (d < minDist) {
+          minDist = d;
+          nearestIndex = i;
+        }
+      }
+
+      const nextStop = routeStops[nearestIndex];
+      optimized.push(nextStop);
+      currentLat = nextStop.latitude!;
+      currentLng = nextStop.longitude!;
+      routeStops.splice(nearestIndex, 1);
+    }
+
+    // 4. Salva a nova ordem (mantendo os sem GPS no final)
+    const finalOrder = [...optimized, ...stopsWithoutGps];
+
+    // Atualiza campo 'order'
+    const updates = finalOrder.map((s, index) => ({
+      ...s,
+      order: index
+    }));
+
+    // Salva tudo no banco (dbService já chama cloudSync)
+    for (const s of updates) {
+      await dbService.saveStop(s);
+    }
+
+    alert("Rota otimizada com sucesso!");
+    fetchData();
   };
 
   const searchAddress = async () => {
@@ -153,16 +225,16 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
   return (
     <div className="p-4 pb-24">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-white">Rotas e Pontos</h2>
+        <h2 className="text-xl font-bold text-white">{t('routes_title')}</h2>
         <button onClick={() => { setRouteName(''); setEditingRouteId(null); setIsRouteModalOpen(true); }} className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition">
-          <Icon name="plus" size={18} /> Nova Rota
+          <Icon name="plus" size={18} /> {t('routes_new')}
         </button>
       </div>
 
       {routes.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <Icon name="map" size={48} className="mx-auto mb-4 opacity-50" />
-          <p>Nenhuma rota cadastrada</p>
+          <p>{t('routes_no_routes')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -220,64 +292,84 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
                         <Icon name="plus" size={16} /> Adicionar Ponto
                       </button>
                     </div>
+                    {/* Botões de Ação da Rota */}
+                    <div className="p-3 border-t border-navy-700 flex gap-2">
+                      <button
+                        onClick={() => window.location.hash = `/routes/navigate/${route.id}`}
+                        className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition"
+                      >
+                        <Icon name="navigation" size={20} /> Iniciar Rota
+                      </button>
+                      <button
+                        onClick={() => handleOptimizeRoute(route.id)}
+                        className="bg-accent-600 hover:bg-accent-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition"
+                        title="Otimizar ordem dos pontos"
+                      >
+                        <Icon name="refresh-cw" size={20} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             );
           })}
-        </div>
+        </div >
       )}
 
       {/* Route Modal */}
-      {isRouteModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700">
-            <h3 className="text-xl font-bold text-white mb-4">{editingRouteId ? 'Editar Rota' : 'Nova Rota'}</h3>
-            <form onSubmit={handleRouteSubmit}>
-              <input type="text" value={routeName} onChange={e => setRouteName(e.target.value)} placeholder="Nome da rota" className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mb-4 outline-none focus:border-primary-500" required />
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setIsRouteModalOpen(false)} className="flex-1 py-3 bg-gray-700 text-white rounded-xl">Cancelar</button>
-                <button type="submit" className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-bold">Salvar</button>
-              </div>
-            </form>
+      {
+        isRouteModalOpen && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700">
+              <h3 className="text-xl font-bold text-white mb-4">{editingRouteId ? 'Editar Rota' : 'Nova Rota'}</h3>
+              <form onSubmit={handleRouteSubmit}>
+                <input type="text" value={routeName} onChange={e => setRouteName(e.target.value)} placeholder="Nome da rota" className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mb-4 outline-none focus:border-primary-500" required />
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setIsRouteModalOpen(false)} className="flex-1 py-3 bg-gray-700 text-white rounded-xl">Cancelar</button>
+                  <button type="submit" className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-bold">Salvar</button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Stop Modal */}
-      {isStopModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-white mb-4">{editingStopId ? 'Editar Ponto' : 'Novo Ponto'}</h3>
-            <form onSubmit={handleStopSubmit}>
-              <input type="text" value={stopName} onChange={e => setStopName(e.target.value)} placeholder="Nome do ponto" className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mb-4 outline-none focus:border-primary-500" required />
-              
-              {canUseGps && (
-                <div className="mb-4 space-y-3">
-                  <div className="flex gap-2">
-                    <input type="text" value={addressQuery} onChange={e => setAddressQuery(e.target.value)} placeholder="Buscar endereço..." className="flex-1 bg-navy-900 border border-navy-700 text-white p-3 rounded-lg outline-none focus:border-primary-500" />
-                    <button type="button" onClick={searchAddress} disabled={isSearchingAddress} className="px-4 bg-blue-600 text-white rounded-lg disabled:opacity-50">
-                      {isSearchingAddress ? '...' : <Icon name="search" size={18} />}
-                    </button>
-                  </div>
-                  <button type="button" onClick={getCurrentLocation} disabled={isLoadingLocation} className="w-full py-3 bg-accent-600 hover:bg-accent-500 text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition">
-                    <Icon name="map-pin" size={18} />
-                    {isLoadingLocation ? 'Obtendo...' : 'Usar Localização Atual'}
-                  </button>
-                  {latitude && longitude && (
-                    <p className="text-xs text-green-400 text-center">📍 Localização definida: {latitude.toFixed(5)}, {longitude.toFixed(5)}</p>
-                  )}
-                </div>
-              )}
+      {
+        isStopModalOpen && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-white mb-4">{editingStopId ? 'Editar Ponto' : 'Novo Ponto'}</h3>
+              <form onSubmit={handleStopSubmit}>
+                <input type="text" value={stopName} onChange={e => setStopName(e.target.value)} placeholder="Nome do ponto" className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mb-4 outline-none focus:border-primary-500" required />
 
-              <div className="flex gap-3">
-                <button type="button" onClick={resetStopForm} className="flex-1 py-3 bg-gray-700 text-white rounded-xl">Cancelar</button>
-                <button type="submit" className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-bold">Salvar</button>
-              </div>
-            </form>
+                {canUseGps && (
+                  <div className="mb-4 space-y-3">
+                    <div className="flex gap-2">
+                      <input type="text" value={addressQuery} onChange={e => setAddressQuery(e.target.value)} placeholder="Buscar endereço..." className="flex-1 bg-navy-900 border border-navy-700 text-white p-3 rounded-lg outline-none focus:border-primary-500" />
+                      <button type="button" onClick={searchAddress} disabled={isSearchingAddress} className="px-4 bg-blue-600 text-white rounded-lg disabled:opacity-50">
+                        {isSearchingAddress ? '...' : <Icon name="search" size={18} />}
+                      </button>
+                    </div>
+                    <button type="button" onClick={getCurrentLocation} disabled={isLoadingLocation} className="w-full py-3 bg-accent-600 hover:bg-accent-500 text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition">
+                      <Icon name="map-pin" size={18} />
+                      {isLoadingLocation ? 'Obtendo...' : 'Usar Localização Atual'}
+                    </button>
+                    {latitude && longitude && (
+                      <p className="text-xs text-green-400 text-center">📍 Localização definida: {latitude.toFixed(5)}, {longitude.toFixed(5)}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={resetStopForm} className="flex-1 py-3 bg-gray-700 text-white rounded-xl">Cancelar</button>
+                  <button type="submit" className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-bold">Salvar</button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };

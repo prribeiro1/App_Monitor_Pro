@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type IconName = 'bus' | 'map-pin' | 'users' | 'user' | 'clipboard' | 'alert-triangle' | 'bar-chart' | 'plus' | 'trash' | 'edit' | 'edit-3' | 'check' | 'x' | 'log-out' | 'menu' | 'google' | 'save' | 'cloud-upload' | 'road' | 'pencil' | 'face' | 'phone' | 'download' | 'map' | 'chevron-up' | 'chevron-down' | 'dollar-sign' | 'lock' | 'message-circle' | 'settings' | 'tool' | 'check-circle' | 'file-text' | 'arrow-left' | 'smartphone' | 'share-2' | 'info' | 'refresh-cw' | 'book' | 'file-minus' | 'shield-off' | 'home' | 'search' | 'bell' | 'upload-cloud' | 'download-cloud' | 'alert-circle' | 'cloud' | 'chevron-right' | 'loader';
+export type IconName = 'bus' | 'map-pin' | 'users' | 'user' | 'clipboard' | 'alert-triangle' | 'bar-chart' | 'plus' | 'trash' | 'edit' | 'edit-3' | 'check' | 'x' | 'log-out' | 'menu' | 'google' | 'save' | 'cloud-upload' | 'road' | 'pencil' | 'face' | 'phone' | 'download' | 'map' | 'chevron-up' | 'chevron-down' | 'dollar-sign' | 'lock' | 'message-circle' | 'settings' | 'tool' | 'check-circle' | 'file-text' | 'arrow-left' | 'smartphone' | 'share-2' | 'info' | 'refresh-cw' | 'book' | 'file-minus' | 'shield-off' | 'home' | 'search' | 'bell' | 'upload-cloud' | 'download-cloud' | 'alert-circle' | 'cloud' | 'chevron-right' | 'loader' | 'wifi-off' | 'cloud-off' | 'zap' | 'arrow-right';
 
 interface IconProps {
   name: IconName;
@@ -59,8 +59,11 @@ const icons: Record<IconName, React.ReactNode> = {
   'alert-circle': <><circle cx="12" cy="12" r="10" /><path d="M12 8v4 M12 16h.01" /></>,
   cloud: <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />,
   'chevron-right': <path d="M9 18l6-6-6-6" />,
-  loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-
+  loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />,
+  'wifi-off': <><path d="M1 1l22 22" /><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" /><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" /><path d="M10.71 5.05A16 16 0 0 1 22.58 9" /><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><path d="M12 20h.01" /></>,
+  'cloud-off': <><path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3" /><path d="M1 1l22 22" /></>,
+  zap: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
+  'arrow-right': <path d="M5 12h14M12 5l7 7-7 7" />
 };
 
 export const Icon: React.FC<IconProps> = ({ name, size = 24, className = '', strokeWidth = 2 }) => {

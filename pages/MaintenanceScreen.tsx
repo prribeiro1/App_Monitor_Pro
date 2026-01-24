@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { MaintenanceItem, MaintenanceLog } from '../types';
 import { Icon } from '../components/Icon';
+import { useI18n } from '../i18n';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -10,6 +11,7 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 export const MaintenanceScreen: React.FC = () => {
+    const { t, language } = useI18n();
     const [items, setItems] = useState<MaintenanceItem[]>([]);
     const [currentKm, setCurrentKm] = useState<number>(0);
     const [isEditingKm, setIsEditingKm] = useState(false);
@@ -264,7 +266,7 @@ export const MaintenanceScreen: React.FC = () => {
         <div className="p-4 pb-20 min-h-screen">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <Icon name="tool" /> Manutenção
+                    <Icon name="tool" /> {t('maintenance_title')}
                 </h2>
                 <div className="flex gap-2">
                     <button onClick={exportHistory} className="p-2 bg-navy-800 text-blue-400 rounded-lg hover:bg-navy-700 border border-navy-700">
@@ -278,7 +280,7 @@ export const MaintenanceScreen: React.FC = () => {
 
             {/* Odometer Panel */}
             <div className="bg-navy-800 p-6 rounded-2xl border border-navy-700 mb-6 flex flex-col items-center">
-                <span className="text-gray-400 text-sm uppercase font-bold tracking-wider mb-2">Odômetro Atual</span>
+                <span className="text-gray-400 text-sm uppercase font-bold tracking-wider mb-2">{t('maintenance_odometer')}</span>
 
                 {isEditingKm ? (
                     <div className="flex gap-2">

@@ -2,25 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { Student, Stop, Route, AttendanceRecord, AttendanceStatus } from '../types';
 import { Icon } from '../components/Icon';
+import { InitialsAvatar } from '../components/Avatar';
+import { useI18n } from '../i18n';
 
 interface RouteGroup {
   routeName: string;
   students: Student[];
 }
 
-// Helper: Initials Avatar
-const InitialsAvatar: React.FC<{ name: string }> = ({ name }) => {
-  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
-  const colorIndex = name.length % colors.length;
-  return (
-    <div className={`w-10 h-10 min-w-[2.5rem] rounded-full ${colors[colorIndex]} flex items-center justify-center text-white font-bold text-sm border border-navy-600`}>
-      {initials}
-    </div>
-  );
-};
-
 export const AttendanceScreen: React.FC = () => {
+  const { t, language } = useI18n();
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [stops, setStops] = useState<Stop[]>([]);
@@ -110,25 +101,25 @@ export const AttendanceScreen: React.FC = () => {
   return (
     <div className="p-4 pb-20">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Chamada Diária</h2>
-        <p className="text-gray-400 text-sm">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <h2 className="text-2xl font-bold text-white">{t('attendance_title')}</h2>
+        <p className="text-gray-400 text-sm">{new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-navy-800 p-3 rounded-xl border border-navy-700 text-center">
           <div className="text-2xl font-bold text-white">{total}</div>
-          <div className="text-xs text-gray-400 uppercase">Total</div>
+          <div className="text-xs text-gray-400 uppercase">{t('attendance_total')}</div>
         </div>
         <div className="bg-navy-800 p-3 rounded-xl border border-green-900/50 text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-green-500/5"></div>
           <div className="text-2xl font-bold text-green-400">{present}</div>
-          <div className="text-xs text-green-200/70 uppercase">Presentes</div>
+          <div className="text-xs text-green-200/70 uppercase">{t('attendance_present')}</div>
         </div>
         <div className="bg-navy-800 p-3 rounded-xl border border-red-900/50 text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-red-500/5"></div>
           <div className="text-2xl font-bold text-red-400">{absent}</div>
-          <div className="text-xs text-red-200/70 uppercase">Faltas</div>
+          <div className="text-xs text-red-200/70 uppercase">{t('attendance_absent')}</div>
         </div>
       </div>
 
