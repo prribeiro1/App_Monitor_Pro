@@ -220,8 +220,18 @@ export const dbService = {
     try { await cloudSync.saveReminder(reminder); } catch (e) { }
   },
   deleteReminder: async (id: number) => {
-    await deleteItem('reminders', id.toString());
-    try { await cloudSync.deleteReminder(id); } catch (e) { }
+    // O id dos reminders é number, então passamos direto sem converter para string
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('reminders', 'readwrite');
+      const store = tx.objectStore('reminders');
+      const request = store.delete(id);
+      request.onsuccess = async () => {
+        try { await cloudSync.deleteReminder(id); } catch (e) { }
+        resolve();
+      };
+      request.onerror = () => reject(request.error);
+    });
   },
 
 

@@ -1,5 +1,5 @@
 import { supabase } from './auth';
-import { Route, Stop, Student, AttendanceRecord, Payment, MaintenanceItem, MaintenanceLog, UserSettings, Incident } from '../types';
+import { Route, Stop, Student, AttendanceRecord, Payment, MaintenanceItem, MaintenanceLog, UserSettings, Incident, VehicleDocument } from '../types';
 
 export const cloudSync = {
     // Alunos
@@ -204,6 +204,30 @@ export const cloudSync = {
         await supabase.from('reminders').delete().eq('id', id);
     },
 
+    // Documentos de Veículo
+    saveVehicleDocument: async (doc: VehicleDocument) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { error } = await supabase.from('vehicle_documents').upsert({
+            id: doc.id,
+            user_id: user.id,
+            name: doc.name,
+            type: doc.type,
+            path: doc.path,
+            size: doc.size,
+            date: doc.date
+        });
+        if (error) {
+            console.error('Erro sync cloud (vehicle_document):', error.message);
+            throw error;
+        }
+    },
+
+    deleteVehicleDocument: async (id: string) => {
+        const { error } = await supabase.from('vehicle_documents').delete().eq('id', id);
+        if (error) throw error;
+    },
+
     // FUNÇÃO PRINCIPAL: Puxar tudo da nuvem para o celular
     pullAllData: async (): Promise<any> => {
         try {
@@ -212,7 +236,7 @@ export const cloudSync = {
 
             console.log("Iniciando PULL de dados da nuvem para usuário:", user.id);
 
-            const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes] = await Promise.all([
+            const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes, vehicleDocsRes] = await Promise.all([
                 supabase.from('students').select('*'),
                 supabase.from('routes').select('*').order('order'),
                 supabase.from('stops').select('*').order('order'),
@@ -222,7 +246,8 @@ export const cloudSync = {
                 supabase.from('maintenance_items').select('*'),
                 supabase.from('maintenance_logs').select('*'),
                 supabase.from('incidents').select('*'),
-                supabase.from('reminders').select('*')
+                supabase.from('reminders').select('*'),
+                supabase.from('vehicle_documents').select('*')
             ]);
 
             return {
@@ -297,6 +322,14 @@ export const cloudSync = {
                     title: r.title,
                     body: r.body,
                     date: r.date
+                })) || [],
+                vehicleDocuments: vehicleDocsRes.data?.map(d => ({
+                    id: d.id,
+                    name: d.name,
+                    type: d.type,
+                    path: d.path,
+                    size: d.size,
+                    date: d.date
                 })) || [],
                 userSettings: settingsRes.data ? {
                     id: 'settings',

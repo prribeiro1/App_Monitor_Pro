@@ -13,11 +13,19 @@ interface RouteNavigationScreenProps {
     onBack: () => void;
 }
 
+interface StudentInfo {
+    id: string;
+    name: string;
+    phone: string;
+    guardianName?: string;
+}
+
 interface RoutePoint {
     id: string;
     name: string;
     address?: string;
     students: string[];
+    studentData: StudentInfo[]; // Dados completos dos alunos
     lat: number;
     lng: number;
     order: number;
@@ -60,15 +68,24 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
             .filter(s => s.routeId === routeId && s.latitude && s.longitude)
             .sort((a, b) => a.order - b.order);
 
-        const mappedPoints: RoutePoint[] = routeStops.map(stop => ({
-            id: stop.id,
-            name: stop.name,
-            address: `Lat: ${stop.latitude?.toFixed(4)}, Lng: ${stop.longitude?.toFixed(4)}`,
-            students: students.filter(s => s.stopId === stop.id).map(s => s.name),
-            lat: stop.latitude!,
-            lng: stop.longitude!,
-            order: stop.order
-        }));
+        const mappedPoints: RoutePoint[] = routeStops.map(stop => {
+            const stopStudents = students.filter(s => s.stopId === stop.id);
+            return {
+                id: stop.id,
+                name: stop.name,
+                address: `Lat: ${stop.latitude?.toFixed(4)}, Lng: ${stop.longitude?.toFixed(4)}`,
+                students: stopStudents.map(s => s.name),
+                studentData: stopStudents.map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    phone: s.responsiblePhone || s.contact || '',
+                    guardianName: s.guardianName
+                })),
+                lat: stop.latitude!,
+                lng: stop.longitude!,
+                order: stop.order
+            };
+        });
 
         setPoints(mappedPoints);
     };
@@ -157,6 +174,67 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
         if (point) {
             window.open(`google.navigation:q=${point.lat},${point.lng}`, '_system');
         }
+    };
+
+    // Calcular distância entre duas coordenadas (Haversine formula - retorna em metros)
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+        const R = 6371000; // Raio da Terra em metros
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    };
+
+    // Distância atual até o ponto
+    const getDistanceToCurrentPoint = (): number | null => {
+        const point = points[currentPointIndex];
+        if (!point || !userLocation) return null;
+        return calculateDistance(userLocation.lat, userLocation.lng, point.lat, point.lng);
+    };
+
+    // Função para notificar os responsáveis via WhatsApp
+    const notifyArrival = () => {
+        const point = points[currentPointIndex];
+        if (!point || point.studentData.length === 0) {
+            alert('Nenhum aluno cadastrado neste ponto.');
+            return;
+        }
+
+        // Filtra alunos que têm telefone
+        const studentsWithPhone = point.studentData.filter(s => s.phone);
+
+        if (studentsWithPhone.length === 0) {
+            alert('Nenhum telefone cadastrado para os alunos deste ponto.');
+            return;
+        }
+
+        // Calcula a distância
+        const distance = getDistanceToCurrentPoint();
+        const distanceText = distance
+            ? (distance < 1000 ? `${Math.round(distance)}m` : `${(distance / 1000).toFixed(1)}km`)
+            : '';
+
+        // Se há mais de um aluno, pergunta se quer avisar todos
+        if (studentsWithPhone.length > 1) {
+            const names = studentsWithPhone.map(s => s.name).join(', ');
+            if (!confirm(`Avisar os responsáveis de: ${names}?\n\n(${studentsWithPhone.length} mensagens serão enviadas)`)) {
+                return;
+            }
+        }
+
+        // Envia mensagem para cada responsável
+        studentsWithPhone.forEach((student, index) => {
+            const cleanPhone = student.phone.replace(/\D/g, '');
+            const message = `Olá! 🚐\nEstou chegando para buscar/deixar ${student.name}${distanceText ? ` (aprox. ${distanceText})` : ''}.\nPor favor, esteja pronto(a)!`;
+
+            // Pequeno delay entre aberturas para não sobrecarregar
+            setTimeout(() => {
+                window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+            }, index * 500);
+        });
     };
 
     const center = userLocation ? [userLocation.lat, userLocation.lng] as [number, number] :
@@ -344,7 +422,7 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                         </div>
 
                         {/* Botões de Ação */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '6px' }}>
                             <button
                                 onClick={launchNavigation}
                                 style={{
@@ -352,9 +430,9 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '12px',
-                                    padding: '14px 8px',
+                                    padding: '12px 4px',
                                     fontWeight: 'bold',
-                                    fontSize: '14px',
+                                    fontSize: '12px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -363,8 +441,29 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                     gap: '4px'
                                 }}
                             >
-                                <Icon name="navigation" size={20} />
+                                <Icon name="navigation" size={18} />
                                 <span>GPS</span>
+                            </button>
+                            <button
+                                onClick={notifyArrival}
+                                style={{
+                                    backgroundColor: '#25D366',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    padding: '12px 4px',
+                                    fontWeight: 'bold',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '4px'
+                                }}
+                            >
+                                <Icon name="message-circle" size={18} />
+                                <span>Avisar</span>
                             </button>
                             <button
                                 onClick={handleMarkAsVisited}
@@ -373,9 +472,9 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '12px',
-                                    padding: '14px 8px',
+                                    padding: '12px 4px',
                                     fontWeight: 'bold',
-                                    fontSize: '14px',
+                                    fontSize: '12px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -384,7 +483,7 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                     gap: '4px'
                                 }}
                             >
-                                <Icon name="check" size={20} />
+                                <Icon name="check" size={18} />
                                 <span>Cheguei</span>
                             </button>
                             <button
@@ -394,9 +493,9 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '12px',
-                                    padding: '14px 8px',
+                                    padding: '12px 4px',
                                     fontWeight: 'bold',
-                                    fontSize: '14px',
+                                    fontSize: '12px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -405,7 +504,7 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                     gap: '4px'
                                 }}
                             >
-                                <Icon name="skip-forward" size={20} />
+                                <Icon name="skip-forward" size={18} />
                                 <span>Pular</span>
                             </button>
                         </div>

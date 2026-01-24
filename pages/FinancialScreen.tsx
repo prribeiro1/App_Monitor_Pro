@@ -10,6 +10,16 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
+// Interface para gastos
+interface Expense {
+    id: string;
+    user_id: string;
+    description: string;
+    amount: number;
+    date: string;
+    created_at: string;
+}
+
 interface FinancialScreenProps {
     settings: UserSettings | null;
     onUpdateSettings: () => void;
@@ -28,6 +38,14 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+
+    // Estados para gastos
+    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [showExpenseModal, setShowExpenseModal] = useState(false);
+    const [showExpensesList, setShowExpensesList] = useState(false);
+    const [newExpenseDescription, setNewExpenseDescription] = useState('');
+    const [newExpenseAmount, setNewExpenseAmount] = useState('');
+    const [savingExpense, setSavingExpense] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -48,10 +66,101 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             setPayments(p);
         }
 
+        // Carregar gastos do Supabase
+        await fetchExpenses();
+
         setStudents(s.filter(student => student.active));
         setStops(st);
         setRoutes(r);
         setLoading(false);
+    };
+
+    // Buscar gastos do Supabase para o mês/ano selecionado
+    const fetchExpenses = async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Calcula o primeiro e último dia do mês selecionado
+            const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+            const lastDay = new Date(year, month, 0).getDate();
+            const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+
+            const { data, error } = await supabase
+                .from('expenses')
+                .select('*')
+                .eq('user_id', user.id)
+                .gte('date', startDate)
+                .lte('date', endDate)
+                .order('date', { ascending: false });
+
+            if (error) throw error;
+            setExpenses(data || []);
+        } catch (err) {
+            console.warn('⚠️ Não foi possível carregar gastos:', err);
+            setExpenses([]);
+        }
+    };
+
+    // Salvar novo gasto no Supabase
+    const saveExpense = async () => {
+        if (!newExpenseDescription.trim() || !newExpenseAmount) {
+            alert('Preencha a descrição e o valor do gasto.');
+            return;
+        }
+
+        const amount = parseFloat(newExpenseAmount.replace(',', '.'));
+        if (isNaN(amount) || amount <= 0) {
+            alert('Valor inválido.');
+            return;
+        }
+
+        setSavingExpense(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { error } = await supabase
+                .from('expenses')
+                .insert([{
+                    user_id: user.id,
+                    description: newExpenseDescription.trim(),
+                    amount: amount,
+                    // Usa data local (evita problema de timezone com toISOString que converte para UTC)
+                    date: new Date().toLocaleDateString('en-CA') // Formato YYYY-MM-DD em timezone local
+                }]);
+
+            if (error) throw error;
+
+            // Limpa campos e fecha modal
+            setNewExpenseDescription('');
+            setNewExpenseAmount('');
+            setShowExpenseModal(false);
+
+            // Recarrega gastos
+            await fetchExpenses();
+        } catch (err: any) {
+            alert('Erro ao salvar gasto: ' + err.message);
+        } finally {
+            setSavingExpense(false);
+        }
+    };
+
+    // Deletar gasto
+    const deleteExpense = async (expenseId: string) => {
+        if (!confirm('Remover este gasto?')) return;
+
+        try {
+            const { error } = await supabase
+                .from('expenses')
+                .delete()
+                .eq('id', expenseId);
+
+            if (error) throw error;
+            await fetchExpenses();
+        } catch (err: any) {
+            alert('Erro ao remover gasto: ' + err.message);
+        }
     };
 
     const syncPaymentsWithServer = async (currentUserStudents: Student[]) => {
@@ -175,6 +284,9 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
     useEffect(() => { fetchData(); }, []);
 
+    // Recarregar gastos quando mudar mês/ano
+    useEffect(() => { fetchExpenses(); }, [month, year]);
+
     const getPaymentForStudent = (studentId: string) => {
         return payments.find(p => p.studentId === studentId && p.month === month && p.year === year);
     };
@@ -295,6 +407,12 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         .filter(s => !getPaymentForStudent(s.id))
         .reduce((sum, s) => sum + (s.monthlyFees || 0), 0);
 
+    // Total de gastos do mês
+    const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+
+    // Lucro líquido (Receitas - Despesas)
+    const netProfit = totalReceived - totalExpenses;
+
     const months = language === 'es'
         ? ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
         : ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -307,9 +425,11 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
             doc.setFontSize(10);
             doc.text(`Total Recebido: R$ ${totalReceived.toFixed(2)}`, 14, 30);
-            doc.text(`Total Pendente: R$ ${totalPending.toFixed(2)}`, 14, 35);
-            doc.text(`Pagantes: ${paidCount} / ${totalStudents}`, 14, 40);
+            doc.text(`Total Gastos: R$ ${totalExpenses.toFixed(2)}`, 14, 35);
+            doc.text(`Lucro Líquido: R$ ${netProfit.toFixed(2)}`, 14, 40);
+            doc.text(`Pagantes: ${paidCount} / ${totalStudents}`, 14, 45);
 
+            // Tabela de Mensalidades
             const bodyData = students.map(student => {
                 const payment = getPaymentForStudent(student.id);
                 const valor = payment ? payment.amount : (student.monthlyFees || 0);
@@ -324,7 +444,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             autoTable(doc, {
                 head: [['Aluno', 'Valor', 'Data Pagto.', 'Status']],
                 body: bodyData,
-                startY: 50,
+                startY: 55,
                 theme: 'grid',
                 styles: { fontSize: 10 },
                 headStyles: { fillColor: [22, 163, 74] }, // Green header
@@ -338,6 +458,30 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                     }
                 }
             });
+
+            // Tabela de Gastos (se houver)
+            if (expenses.length > 0) {
+                const expenseBody = expenses.map(e => [
+                    e.description,
+                    `R$ ${Number(e.amount).toFixed(2)}`,
+                    new Date(e.date).toLocaleDateString()
+                ]);
+
+                // Pega a posição Y final da tabela anterior
+                const finalY = (doc as any).lastAutoTable?.finalY || 120;
+
+                doc.setFontSize(12);
+                doc.text('Gastos do Mês', 14, finalY + 15);
+
+                autoTable(doc, {
+                    head: [['Descrição', 'Valor', 'Data']],
+                    body: expenseBody,
+                    startY: finalY + 20,
+                    theme: 'grid',
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [220, 38, 38] }, // Red header para gastos
+                });
+            }
 
             const base64 = doc.output('datauristring').split(',')[1];
             const fileName = `financeiro_${month}_${year}.pdf`;
@@ -448,7 +592,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-navy-800 p-4 rounded-xl border border-navy-700">
                     <p className="text-gray-400 text-xs uppercase font-bold">Recebido</p>
                     <p className="text-2xl font-bold text-green-400">R$ {totalReceived.toFixed(2)}</p>
@@ -457,6 +601,75 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                     <p className="text-gray-400 text-xs uppercase font-bold">Pagantes</p>
                     <p className="text-2xl font-bold text-white">{paidCount}/{totalStudents}</p>
                 </div>
+            </div>
+
+            {/* Seção de Caixa (Gastos + Lucro) */}
+            <div className="bg-navy-800 p-4 rounded-xl border border-navy-700 mb-6">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-gray-400 text-xs uppercase font-bold">💰 Caixa do Mês</p>
+                    <div className="flex gap-2">
+                        {/* Olhinho - Ver Gastos */}
+                        <button
+                            onClick={() => setShowExpensesList(!showExpensesList)}
+                            className={`p-2 rounded-lg transition ${showExpensesList ? 'bg-red-600/30 text-red-400' : 'bg-navy-700 text-gray-400 hover:text-white'}`}
+                            title={showExpensesList ? 'Ocultar gastos' : 'Ver gastos'}
+                        >
+                            <Icon name={showExpensesList ? 'eye-off' : 'eye'} size={18} />
+                        </button>
+                        {/* Botão Adicionar Gasto */}
+                        <button
+                            onClick={() => setShowExpenseModal(true)}
+                            className="bg-red-600/20 text-red-400 hover:bg-red-600/30 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 transition"
+                        >
+                            <Icon name="minus-circle" size={16} />
+                            Adicionar Gasto
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <p className="text-xs text-gray-500">Gastos</p>
+                        <p className="text-lg font-bold text-red-400">- R$ {totalExpenses.toFixed(2)}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-500">Lucro Líquido</p>
+                        <p className={`text-lg font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            R$ {netProfit.toFixed(2)}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Lista de Gastos (expandível) */}
+                {showExpensesList && (
+                    <div className="mt-4 pt-4 border-t border-navy-700">
+                        <p className="text-xs text-gray-500 mb-2">Gastos registrados ({expenses.length})</p>
+                        {expenses.length === 0 ? (
+                            <p className="text-gray-500 text-sm italic">Nenhum gasto registrado neste mês.</p>
+                        ) : (
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {expenses.map(expense => (
+                                    <div key={expense.id} className="flex items-center justify-between bg-navy-900 p-2 rounded-lg">
+                                        <div>
+                                            <p className="text-white text-sm">{expense.description}</p>
+                                            <p className="text-gray-500 text-xs">{new Date(expense.date).toLocaleDateString()}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-red-400 font-bold text-sm">- R$ {Number(expense.amount).toFixed(2)}</span>
+                                            <button
+                                                onClick={() => deleteExpense(expense.id)}
+                                                className="text-gray-500 hover:text-red-400 p-1"
+                                                title="Remover gasto"
+                                            >
+                                                <Icon name="trash-2" size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Status Filter Tabs */}
@@ -574,6 +787,72 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             >
                 <Icon name="save" size={24} />
             </button>
+
+            {/* Modal de Adicionar Gasto */}
+            {showExpenseModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-navy-800 rounded-2xl p-6 w-full max-w-md border border-navy-700">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white">Registrar Gasto</h3>
+                            <button
+                                onClick={() => setShowExpenseModal(false)}
+                                className="text-gray-400 hover:text-white p-1"
+                            >
+                                <Icon name="x" size={24} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-gray-400 text-sm mb-1 block">Descrição</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ex: Combustível, Pedágio, Lavagem..."
+                                    value={newExpenseDescription}
+                                    onChange={e => setNewExpenseDescription(e.target.value)}
+                                    className="w-full bg-navy-900 text-white border border-navy-700 rounded-xl p-3 focus:border-red-500 outline-none transition"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-gray-400 text-sm mb-1 block">Valor (R$)</label>
+                                <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    placeholder="0,00"
+                                    value={newExpenseAmount}
+                                    onChange={e => setNewExpenseAmount(e.target.value)}
+                                    className="w-full bg-navy-900 text-white border border-navy-700 rounded-xl p-3 focus:border-red-500 outline-none transition text-2xl font-bold"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={() => setShowExpenseModal(false)}
+                                className="flex-1 bg-navy-700 text-gray-300 py-3 rounded-xl font-bold hover:bg-navy-600 transition"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={saveExpense}
+                                disabled={savingExpense}
+                                className="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-500 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {savingExpense ? (
+                                    <>Salvando...</>
+                                ) : (
+                                    <>
+                                        <Icon name="minus-circle" size={18} />
+                                        Registrar Gasto
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

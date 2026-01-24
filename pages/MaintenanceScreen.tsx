@@ -11,6 +11,7 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '../services/auth';
 import { Browser } from '@capacitor/browser';
+import { cloudSync } from '../services/cloudSync';
 
 export const MaintenanceScreen: React.FC = () => {
     const { t, language } = useI18n();
@@ -131,6 +132,7 @@ export const MaintenanceScreen: React.FC = () => {
             };
 
             await dbService.saveVehicleDocument(newDoc);
+            await cloudSync.saveVehicleDocument(newDoc); // Sync to Supabase
             setDocuments(prev => [...prev, newDoc]);
             alert('Arquivo enviado com sucesso!');
         } catch (error: any) {
@@ -170,8 +172,9 @@ export const MaintenanceScreen: React.FC = () => {
 
             if (error) console.error('Erro ao excluir do storage:', error);
 
-            // 2. Delete from DB
+            // 2. Delete from DB (local + cloud)
             await dbService.deleteVehicleDocument(doc.id);
+            await cloudSync.deleteVehicleDocument(doc.id); // Sync deletion
             setDocuments(prev => prev.filter(d => d.id !== doc.id));
         } catch (e: any) {
             alert('Erro: ' + e.message);
