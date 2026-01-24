@@ -173,6 +173,11 @@ export const AttendanceScreen: React.FC = () => {
                             <p className="text-[10px] text-gray-400 flex items-center gap-1">
                               <Icon name="map-pin" size={8} /> {stopName}
                             </p>
+                            {student.observation && (
+                              <p className="text-[10px] text-yellow-400 flex items-center gap-1 mt-0.5">
+                                <Icon name="alert-circle" size={10} /> {student.observation}
+                              </p>
+                            )}
                           </div>
                         </div>
 
