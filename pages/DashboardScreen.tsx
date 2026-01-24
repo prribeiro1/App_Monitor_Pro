@@ -45,8 +45,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
       setRoutes(rt);
       setStops(sp);
       setLoading(false);
+      setLoading(false);
     };
+
+    // Carregar inicialmente
     loadData();
+
+    // Ouvir evento de sync concluído
+    const handleSync = () => {
+      console.log("🔄 Dashboard detectou sync, recarregando...");
+      loadData();
+    };
+
+    window.addEventListener('db-synced', handleSync);
+
+    return () => {
+      window.removeEventListener('db-synced', handleSync);
+    };
   }, []);
 
   // Aniversariantes de hoje

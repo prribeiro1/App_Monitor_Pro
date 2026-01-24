@@ -364,7 +364,11 @@ export const dbService = {
       }
 
       return new Promise((resolve, reject) => {
-        tx.oncomplete = () => resolve();
+        tx.oncomplete = () => {
+          // Dispara evento para avisar a UI que novos dados chegaram
+          window.dispatchEvent(new Event('db-synced'));
+          resolve();
+        };
         tx.onerror = () => reject(tx.error);
       });
     } catch (e) {
