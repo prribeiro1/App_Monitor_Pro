@@ -24,6 +24,8 @@ export const cloudSync = {
                 due_day: student.dueDay,
                 monthly_fees: student.monthlyFees,
                 stop_id: student.stopId,
+                birth_date: student.birthDate,
+                observation: student.observation,
                 updated_at: new Date().toISOString()
             });
 
@@ -264,7 +266,9 @@ export const cloudSync = {
                     shift: s.shift,
                     dueDay: s.due_day,
                     monthlyFees: s.monthly_fees ? parseFloat(s.monthly_fees) : 0,
-                    stopId: s.stop_id
+                    stopId: s.stop_id,
+                    birthDate: s.birth_date,
+                    observation: s.observation
                 })) || [],
                 routes: routesRes.data || [],
                 stops: stopsRes.data?.map(s => ({
@@ -349,6 +353,73 @@ export const cloudSync = {
         } catch (error) {
             console.error("Erro crítico ao puxar dados da nuvem:", error);
             return null;
+        }
+    },
+
+    // Deletar todos os dados do usuário na nuvem (para exclusão de conta)
+    deleteUserCloudData: async (): Promise<boolean> => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return false;
+
+            console.log("🗑️ Deletando dados do usuário na nuvem...", user.id);
+
+            // Deletar em ordem para evitar problemas de FK
+            await supabase.from('vehicle_documents').delete().eq('user_id', user.id);
+            await supabase.from('maintenance_logs').delete().eq('user_id', user.id);
+            await supabase.from('maintenance_items').delete().eq('user_id', user.id);
+            await supabase.from('attendance').delete().eq('user_id', user.id);
+            await supabase.from('payments').delete().eq('user_id', user.id);
+            await supabase.from('incidents').delete().eq('user_id', user.id);
+            await supabase.from('students').delete().eq('user_id', user.id);
+            await supabase.from('stops').delete().eq('user_id', user.id);
+            await supabase.from('routes').delete().eq('user_id', user.id);
+            await supabase.from('user_settings').delete().eq('user_id', user.id);
+            await supabase.from('reminders').delete().eq('user_id', user.id);
+            await supabase.from('expenses').delete().eq('user_id', user.id);
+
+            console.log("✅ Dados do usuário deletados da nuvem com sucesso");
+
+            // Tentar deletar a conta do Auth (libera o username)
+            await cloudSync.deleteAuthAccount();
+
+            return true;
+        } catch (error) {
+            console.error("❌ Erro ao deletar dados da nuvem:", error);
+            return false;
+        }
+    },
+
+    // Deletar a conta do Supabase Auth (libera o username para reuso)
+    deleteAuthAccount: async (): Promise<boolean> => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return false;
+
+            console.log("🗑️ Deletando conta do Auth...");
+
+            const response = await fetch(
+                'https://nrkwrmksqhykfvgmfpcw.supabase.co/functions/v1/delete-account',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.warn("⚠️ Não foi possível deletar conta do Auth:", errorData);
+                return false;
+            }
+
+            console.log("✅ Conta do Auth deletada, username liberado");
+            return true;
+        } catch (error) {
+            console.warn("⚠️ Erro ao deletar conta do Auth (username pode permanecer reservado):", error);
+            return false;
         }
     }
 };

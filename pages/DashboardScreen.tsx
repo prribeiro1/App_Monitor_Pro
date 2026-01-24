@@ -78,31 +78,34 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
     if (maintenanceItems.length === 0 || currentKm === 0) return null;
 
     // Calcular quanto falta para cada item
-    const itemsWithRemaining = maintenanceItems
+    const allItems = maintenanceItems
       .filter(m => m.intervalKm > 0 && m.lastKm > 0)
       .map(m => {
         const nextKm = m.lastKm + m.intervalKm;
         const remaining = nextKm - currentKm;
         return { ...m, remaining, nextKm };
-      })
-      .filter(m => m.remaining > 0) // Apenas os que ainda não venceram
-      .sort((a, b) => a.remaining - b.remaining);
+      });
 
-    if (itemsWithRemaining.length === 0) {
-      // Se todos venceram, mostrar o mais urgente (mais negativo)
-      const overdueItems = maintenanceItems
-        .filter(m => m.intervalKm > 0 && m.lastKm > 0)
-        .map(m => {
-          const nextKm = m.lastKm + m.intervalKm;
-          const remaining = nextKm - currentKm;
-          return { ...m, remaining, nextKm };
-        })
-        .sort((a, b) => a.remaining - b.remaining);
+    if (allItems.length === 0) return null;
 
-      return overdueItems[0] || null;
+    // Separar itens vencidos (remaining <= 0) dos pendentes (remaining > 0)
+    const overdueItems = allItems.filter(m => m.remaining <= 0);
+    const pendingItems = allItems.filter(m => m.remaining > 0);
+
+    // PRIORIDADE 1: Se houver itens vencidos, mostrar o mais atrasado (mais negativo)
+    if (overdueItems.length > 0) {
+      // Ordenar do mais atrasado (mais negativo) para o menos atrasado
+      overdueItems.sort((a, b) => a.remaining - b.remaining);
+      return overdueItems[0];
     }
 
-    return itemsWithRemaining[0];
+    // PRIORIDADE 2: Se não houver vencidos, mostrar o mais próximo de vencer
+    if (pendingItems.length > 0) {
+      pendingItems.sort((a, b) => a.remaining - b.remaining);
+      return pendingItems[0];
+    }
+
+    return null;
   };
 
   const nextMaintenance = getNextMaintenance();
@@ -188,13 +191,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
 
       {/* Próxima Manutenção */}
       {nextMaintenance && (
-        <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 mb-4">
-          <h3 className="text-orange-400 font-bold text-sm flex items-center gap-2 mb-2">
-            <Icon name="tool" size={16} />
-            {t('dashboard_next_maintenance')}
+        <div
+          onClick={() => onNavigate('/maintenance')}
+          className={`${nextMaintenance.remaining <= 0
+            ? 'bg-red-500/10 border-red-500/30'
+            : 'bg-orange-500/10 border-orange-500/30'
+            } border rounded-xl p-4 mb-4 cursor-pointer hover:opacity-80 transition`}
+        >
+          <h3 className={`${nextMaintenance.remaining <= 0 ? 'text-red-400' : 'text-orange-400'} font-bold text-sm flex items-center gap-2 mb-2`}>
+            <Icon name={nextMaintenance.remaining <= 0 ? 'alert-triangle' : 'tool'} size={16} />
+            {nextMaintenance.remaining <= 0
+              ? (language === 'es' ? '⚠️ Mantenimiento Atrasado!' : '⚠️ Manutenção Atrasada!')
+              : t('dashboard_next_maintenance')
+            }
           </h3>
           <p className="text-white font-medium">{nextMaintenance.name}</p>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${nextMaintenance.remaining <= 0 ? 'text-red-300' : 'text-gray-400'}`}>
             {nextMaintenance.remaining > 0
               ? t('maintenance_remaining', { km: nextMaintenance.remaining.toLocaleString() })
               : t('maintenance_overdue', { km: Math.abs(nextMaintenance.remaining).toLocaleString() })

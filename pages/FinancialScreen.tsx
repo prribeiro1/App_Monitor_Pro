@@ -47,6 +47,12 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
     const [newExpenseAmount, setNewExpenseAmount] = useState('');
     const [savingExpense, setSavingExpense] = useState(false);
 
+    // Helper function to format YYYY-MM-DD date in local timezone
+    const formatDateLocal = (dateStr: string): string => {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day).toLocaleDateString();
+    };
+
     const fetchData = async () => {
         setLoading(true);
         const [s, p, st, r] = await Promise.all([
@@ -464,7 +470,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                 const expenseBody = expenses.map(e => [
                     e.description,
                     `R$ ${Number(e.amount).toFixed(2)}`,
-                    new Date(e.date).toLocaleDateString()
+                    formatDateLocal(e.date)
                 ]);
 
                 // Pega a posição Y final da tabela anterior
@@ -652,7 +658,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                                     <div key={expense.id} className="flex items-center justify-between bg-navy-900 p-2 rounded-lg">
                                         <div>
                                             <p className="text-white text-sm">{expense.description}</p>
-                                            <p className="text-gray-500 text-xs">{new Date(expense.date).toLocaleDateString()}</p>
+                                            <p className="text-gray-500 text-xs">{formatDateLocal(expense.date)}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-red-400 font-bold text-sm">- R$ {Number(expense.amount).toFixed(2)}</span>

@@ -463,10 +463,19 @@ function App() {
   const handleDeleteAccount = async () => {
     try {
       setBackupLoading(true);
+
+      // 1. Deletar dados na nuvem primeiro
+      const { cloudSync } = await import('./services/cloudSync');
+      await cloudSync.deleteUserCloudData();
+
+      // 2. Limpar banco local
       await dbService.clearDatabase();
       setSettings(null);
+
+      // 3. Fazer logout
       await authService.signOut();
-      alert("Conta desconectada e dados removidos.");
+
+      alert("Conta excluída com sucesso! Todos os dados foram removidos.");
     } catch (error: any) {
       console.error(error);
       alert("Erro: " + error.message);
