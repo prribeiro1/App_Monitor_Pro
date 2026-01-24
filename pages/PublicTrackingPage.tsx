@@ -63,6 +63,8 @@ const MapUpdater: React.FC<{ location: DriverLocation | null }> = ({ location })
     useEffect(() => {
         if (location) {
             map.setView([location.latitude, location.longitude], map.getZoom());
+            // Force resize in case map was hidden or 0 height
+            map.invalidateSize();
         }
     }, [location, map]);
 
@@ -172,7 +174,7 @@ export const PublicTrackingPage: React.FC = () => {
     // Loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+            <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
                 <div className="text-center text-white">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mx-auto mb-4"></div>
                     <p>Conectando ao rastreamento...</p>
@@ -184,72 +186,64 @@ export const PublicTrackingPage: React.FC = () => {
     // Error state
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-gray-900 flex items-center justify-center p-4">
                 <div className="bg-gray-800 rounded-2xl p-8 text-center max-w-md w-full border border-gray-700">
                     <div className="text-5xl mb-4">❌</div>
                     <h1 className="text-xl font-bold text-white mb-2">Ops!</h1>
                     <p className="text-gray-400 mb-6">{error}</p>
-                    <p className="text-sm text-gray-500">
-                        Verifique se o link está correto ou peça um novo link ao motorista.
-                    </p>
                 </div>
             </div>
         );
     }
 
-    // Waiting for driver state
-    if (!driverLocation || !isOnline) {
+    // Waiting for GPS Fix (0,0) or no Data
+    if (!driverLocation || !isOnline || (driverLocation.latitude === 0 && driverLocation.longitude === 0)) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-gray-900 flex items-center justify-center p-4">
                 <div className="bg-gray-800 rounded-2xl p-8 text-center max-w-md w-full border border-gray-700">
-                    <div className="text-5xl mb-4">🚐</div>
-                    <h1 className="text-xl font-bold text-white mb-2">Aguardando Rota</h1>
+                    <div className="text-5xl mb-4">🛰️</div>
+                    <h1 className="text-xl font-bold text-white mb-2">Aguardando GPS</h1>
                     <p className="text-gray-400 mb-6">
-                        O motorista ainda não iniciou o rastreamento.
+                        O motorista iniciou a rota, mas o GPS ainda está conectando.
                     </p>
                     <div className="flex items-center justify-center gap-2 text-yellow-400">
                         <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                        <span className="text-sm">Aguardando conexão...</span>
+                        <span className="text-sm">Aguardando sinal...</span>
                     </div>
-                    {lastUpdate && (
-                        <p className="text-xs text-gray-500 mt-4">
-                            Última atualização: {lastUpdate.toLocaleTimeString()}
-                        </p>
-                    )}
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 flex flex-col">
+        <div className="h-screen w-screen flex flex-col bg-gray-900 overflow-hidden">
             {/* Header */}
-            <header className="bg-gray-800 p-4 flex items-center justify-between border-b border-gray-700">
+            <header className="bg-gray-800 p-4 flex items-center justify-between border-b border-gray-700 h-16 shrink-0 z-10 relative shadow-md">
                 <div className="flex items-center gap-3">
                     <span className="text-2xl">🚐</span>
                     <div>
-                        <h1 className="text-white font-bold">Monitor Escolar PRO</h1>
-                        <p className="text-gray-400 text-xs">Rastreamento em tempo real</p>
+                        <h1 className="text-white font-bold leading-tight">Monitor PRO</h1>
+                        <p className="text-gray-400 text-[10px] uppercase tracking-wider">Tempo Real</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-gray-700/50 px-3 py-1 rounded-full">
                     <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
-                    <span className={`text-sm ${isOnline ? 'text-green-400' : 'text-gray-400'}`}>
-                        {isOnline ? 'Ao vivo' : 'Offline'}
+                    <span className={`text-xs font-medium ${isOnline ? 'text-green-400' : 'text-gray-400'}`}>
+                        {isOnline ? 'AO VIVO' : 'OFFLINE'}
                     </span>
                 </div>
             </header>
 
-            {/* Map */}
-            <div className="flex-1 relative">
+            {/* Map - Fixed Height Logic */}
+            <div className="flex-1 relative bg-white z-0">
                 <MapContainer
                     center={[driverLocation.latitude, driverLocation.longitude]}
                     zoom={16}
-                    style={{ height: '100%', width: '100%' }}
+                    style={{ height: '100%', width: '100%', minHeight: '300px' }}
                     zoomControl={false}
                 >
                     <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        attribution='&copy; OpenStreetMap'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <Marker
@@ -259,9 +253,6 @@ export const PublicTrackingPage: React.FC = () => {
                         <Popup>
                             <div className="text-center">
                                 <strong>🚐 Van Escolar</strong>
-                                {driverLocation.speed && (
-                                    <p className="text-sm">{Math.round(driverLocation.speed)} km/h</p>
-                                )}
                             </div>
                         </Popup>
                     </Marker>
@@ -270,18 +261,20 @@ export const PublicTrackingPage: React.FC = () => {
             </div>
 
             {/* Info Panel */}
-            <div className="bg-gray-800 p-4 border-t border-gray-700">
+            <div className="bg-gray-800 p-4 border-t border-gray-700 shrink-0 z-10 relative safe-area-bottom">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-gray-400 text-xs">Última atualização</p>
-                        <p className="text-white font-medium">
-                            {lastUpdate ? lastUpdate.toLocaleTimeString() : 'Agora'}
+                        <p className="text-gray-400 text-xs mb-1">Última atualização</p>
+                        <p className="text-white font-mono font-medium">
+                            {lastUpdate ? lastUpdate.toLocaleTimeString() : '--:--'}
                         </p>
                     </div>
-                    {driverLocation.speed !== undefined && driverLocation.speed > 0 && (
+                    {driverLocation.speed !== undefined && (
                         <div className="text-right">
-                            <p className="text-gray-400 text-xs">Velocidade</p>
-                            <p className="text-white font-medium">{Math.round(driverLocation.speed)} km/h</p>
+                            <p className="text-gray-400 text-xs mb-1">Velocidade</p>
+                            <p className="text-white font-mono font-medium text-lg">
+                                {Math.round(driverLocation.speed)} <span className="text-sm text-gray-400">km/h</span>
+                            </p>
                         </div>
                     )}
                 </div>
