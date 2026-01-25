@@ -44,20 +44,24 @@ export const authService = {
             if (error) throw error;
             if (!data.user) throw new Error("Usuário não encontrado.");
 
-            // 2. Trava de Dispositivo (Device Lock)
-            const deviceId = (await Device.getId()).identifier;
-            const userDeviceId = data.user.user_metadata?.device_id;
+            // 2. Trava de Dispositivo (Device Lock) - APENAS EM APPS NATIVOS
+            const isNativeApp = window.Capacitor?.isNativePlatform?.() || false;
+            
+            if (isNativeApp) {
+                const deviceId = (await Device.getId()).identifier;
+                const userDeviceId = data.user.user_metadata?.device_id;
 
-            if (!userDeviceId) {
-                // Primeiro acesso: Vincula este dispositivo ao usuário
-                const { error: updateError } = await supabase.auth.updateUser({
-                    data: { device_id: deviceId }
-                });
-                if (updateError) throw updateError;
-            } else if (userDeviceId !== deviceId && cleanUsername !== 'google_test' && cleanUsername !== 'teste') {
-                // Dispositivo diferente: Bloqueia (EXCETO para o usuário de teste)
-                await supabase.auth.signOut();
-                throw new Error("Este usuário já está vinculado a outro dispositivo. Entre em contato com o suporte para resetar.");
+                if (!userDeviceId) {
+                    // Primeiro acesso: Vincula este dispositivo ao usuário
+                    const { error: updateError } = await supabase.auth.updateUser({
+                        data: { device_id: deviceId }
+                    });
+                    if (updateError) throw updateError;
+                } else if (userDeviceId !== deviceId && cleanUsername !== 'google_test' && cleanUsername !== 'teste') {
+                    // Dispositivo diferente: Bloqueia (EXCETO para o usuário de teste)
+                    await supabase.auth.signOut();
+                    throw new Error("Este usuário já está vinculado a outro dispositivo. Entre em contato com o suporte para resetar.");
+                }
             }
 
             return data;

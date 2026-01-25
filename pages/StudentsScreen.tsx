@@ -49,6 +49,13 @@ export const StudentsScreen: React.FC = () => {
   const [observation, setObservation] = useState('');
   const [monthlyFees, setMonthlyFees] = useState('');
   const [dueDay, setDueDay] = useState('');
+  
+  // 🆕 NOVOS CAMPOS (Nova Estrutura)
+  const [address, setAddress] = useState('');
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
+  const [routeOrder, setRouteOrder] = useState('');
+  const [useNewStructure, setUseNewStructure] = useState(false); // Por padrão usa estrutura antiga
 
   const fetchData = async () => {
     const [st, sp, rt] = await Promise.all([
@@ -120,7 +127,7 @@ export const StudentsScreen: React.FC = () => {
 
     const student: Student = {
       id: editingId || crypto.randomUUID(),
-      stopId,
+      stopId: useNewStructure ? '' : stopId, // Vazio se usar nova estrutura
       name: studentName,
       active: true,
       birthDate: birthDate || undefined,
@@ -133,7 +140,14 @@ export const StudentsScreen: React.FC = () => {
       observation: observation || undefined,
       monthlyFees: monthlyFees ? parseFloat(monthlyFees.replace(',', '.')) : 0,
       dueDay: dueDay ? parseInt(dueDay) : 0,
-      order: existing?.order || Date.now()
+      order: existing?.order || Date.now(),
+      
+      // 🆕 NOVOS CAMPOS (Nova Estrutura)
+      routeId: useNewStructure ? selectedRouteId : undefined,
+      address: useNewStructure && address ? address : undefined,
+      latitude: useNewStructure ? latitude : undefined,
+      longitude: useNewStructure ? longitude : undefined,
+      routeOrder: useNewStructure && routeOrder ? parseInt(routeOrder) : undefined,
     };
 
     await dbService.saveStudent(student);
@@ -155,6 +169,13 @@ export const StudentsScreen: React.FC = () => {
     setMonthlyFees('');
     setDueDay('');
     setEditingId(null);
+    
+    // 🆕 Limpar novos campos
+    setAddress('');
+    setLatitude(undefined);
+    setLongitude(undefined);
+    setRouteOrder('');
+    setUseNewStructure(false);
 
     if (routes.length > 0) {
       const firstRouteId = routes[0].id;
