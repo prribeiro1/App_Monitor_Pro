@@ -2,9 +2,15 @@ import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { Device } from '@capacitor/device';
 
 // --- CONFIGURAÇÃO DO SUPABASE ---
-// Substitua pelos seus dados do painel do Supabase
-const SUPABASE_URL = 'https://nrkwrmksqhykfvgmfpcw.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_I-rsXf9WcK3BOrGjVLj4UA_WhAKix0x';
+// Agora lê das variáveis de ambiente (.env.development ou .env.production)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://nrkwrmksqhykfvgmfpcw.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_I-rsXf9WcK3BOrGjVLj4UA_WhAKix0x';
+
+// Log para debug (remover em produção)
+console.log('🔧 Supabase Config:', {
+    url: SUPABASE_URL,
+    environment: import.meta.env.VITE_ENVIRONMENT || 'default'
+});
 
 // Sufixo para "esconder" o e-mail
 const EMAIL_SUFFIX = '@monitorescolar.app';
