@@ -1,191 +1,166 @@
-# 📊 Resumo da Sessão - 25/01/2026
+# 📝 Resumo da Sessão - 25/01/2026
 
-**Branch:** `feature/feedback-condutores`  
-**Objetivo:** Implementar nova estrutura de rotas baseada no feedback dos condutores
+## ✅ O QUE FOI FEITO
 
----
+### 1. StudentsScreen - UI Atualizada (100% COMPLETO)
 
-## ✅ O Que Foi Feito Hoje
+**Backend (handleSubmit, resetForm, populateForm):**
+- ✅ Removida dependência de `stopId` (estrutura antiga)
+- ✅ Adicionado suporte para `routeId` (nova estrutura)
+- ✅ Novos campos salvos: `address`, `latitude`, `longitude`, `routeOrder`
+- ✅ Função `populateForm` atualizada para carregar novos campos ao editar
 
-### 1. Fase 1 - Banco de Dados (100% ✅)
+**Formulário:**
+- ✅ Removido campo "Ponto de Embarque" (não existe mais)
+- ✅ Adicionado campo "Endereço" (textarea, opcional)
+- ✅ Adicionado botão "Usar Localização Atual" (GPS via Geolocation API)
+- ✅ Adicionado campo "Ordem na Rota" (número, opcional)
+- ✅ Campo "Rota" agora é obrigatório
 
-**Arquivos Criados:**
-- `supabase/migrations/007_new_route_structure.sql` - Migration completa
-- `SETUP_COMPLETO_PROJETO_NOVO.sql` - Setup inicial (com bugs)
-- `SETUP_LIMPO_PROJETO_NOVO.sql` - Setup corrigido
-- `CRIAR_VEHICLE_DOCUMENTS.sql` - Tabela faltante
-- `APLICAR_MIGRATION_007.sql` - Apenas migration 007
+**Visualização:**
+- ✅ Estrutura simplificada: Rota → Alunos (sem pontos intermediários)
+- ✅ Contador de alunos por rota
+- ✅ Exibição de ordem (#1, #2, #3...) quando definida
+- ✅ Exibição de endereço e horário estimado (quando disponível)
+- ✅ Botões de reordenar (setas) agora usam `routeOrder` ao invés de `order`
 
-**Modificações:**
-- ✅ `types.ts` - Novas interfaces (RouteSession, RouteEvent)
-- ✅ `services/db.ts` - IndexedDB v4 com novos stores
-- ✅ `services/cloudSync.ts` - Sincronização das novas tabelas
+**Modal de Detalhes:**
+- ✅ Removida exibição de "Ponto"
+- ✅ Adicionada exibição de "Endereço"
+- ✅ Adicionada exibição de "Ordem na Rota"
+- ✅ Adicionada exibição de "Horário Estimado"
 
-**Novos Campos em `students`:**
-- `route_id` - ID da rota (substitui stopId)
-- `address` - Endereço completo (opcional)
-- `latitude`, `longitude` - Coordenadas (opcional)
-- `route_order` - Ordem na rota (1, 2, 3...)
-- `estimated_pickup_time` - Horário estimado de embarque
-- `estimated_drop_time` - Horário estimado de desembarque
+**Funções Auxiliares:**
+- ✅ `getRouteName()` agora recebe `routeId` diretamente
+- ✅ `getStopName()` removida (não precisa mais)
+- ✅ `handleRouteChange()` simplificada (não precisa mais setar stopId)
+- ✅ `moveStudent()` atualizada para usar `routeId` e `routeOrder`
+- ✅ `fetchData()` atualizada para ordenar por `routeOrder` (prioridade) ou `order` (fallback)
 
-**Novas Tabelas:**
-- `route_sessions` - Controla cada viagem (ida/volta)
-- `route_events` - Histórico detalhado de eventos
-
-**Status:** ✅ Banco configurado no projeto de desenvolvimento
-
----
-
-### 2. Fase 2 - Services (100% ✅)
-
-**Arquivos Criados:**
-- ✅ `services/routeOptimizationService.ts`
-  - Algoritmo Nearest Neighbor (Vizinho Mais Próximo)
-  - Cálculo de distâncias (Haversine)
-  - Cálculo de horários estimados
-  - Formatação de distâncias
-  - Cálculo de distância total da rota
-
-- ✅ `services/notificationService.ts`
-  - Notificação "Estou chegando"
-  - Notificação "Embarque confirmado"
-  - Notificação "Desembarque confirmado"
-  - Notificação "Rota iniciada"
-  - Notificação "Rota concluída"
-  - Envio via WhatsApp
-
-**Status:** ✅ Serviços prontos para uso
+**Nova Funcionalidade:**
+- ✅ `handleGetLocation()` - Captura GPS do dispositivo
+- ✅ Feedback visual quando localização é capturada
+- ✅ Botão "Limpar" para remover coordenadas
 
 ---
 
-### 3. Fase 3 - Telas (0% ⏳)
+## 📊 ESTRUTURA ATUAL
 
-**Próximas Tarefas:**
-- [ ] Atualizar `pages/StudentsScreen.tsx`
-  - Adicionar campo "Rota" (dropdown)
-  - Adicionar campo "Endereço" (manual ou GPS)
-  - Adicionar campo "Ordem na rota"
-  - Remover dependência de "Ponto"
-
-- [ ] Criar `pages/RouteOrganizerScreen.tsx`
-  - Lista de alunos com drag & drop
-  - Botão "Otimizar Automaticamente"
-  - Preview do mapa com marcadores numerados
-  - Salvar ordem
-
-- [ ] Criar `pages/RouteStartScreen.tsx`
-  - Lista de alunos da rota
-  - Checkbox para marcar faltantes
-  - Botão "Iniciar Rota"
-
-- [ ] Atualizar `pages/RouteNavigationScreen.tsx`
-  - Adicionar botão "Avisar que estou chegando"
-  - Adicionar botão "Confirmar embarque"
-  - Adicionar botão "Confirmar desembarque"
-  - Mostrar histórico de eventos
-
-- [ ] Atualizar `pages/RoutesScreen.tsx`
-  - Adicionar botão "Organizar Rota"
-  - Atualizar botão "Otimizar Rota"
-
-**Status:** ⏳ Aguardando implementação
-
----
-
-## 🎯 Estrutura Implementada
-
-### ❌ ANTES (3 níveis):
+### Antes (3 níveis):
 ```
-Rota → Ponto → Aluno
+Rota
+  └─ Ponto (Stop)
+      └─ Aluno (Student)
 ```
 
-### ✅ AGORA (2 níveis):
+### Agora (2 níveis):
 ```
-Rota → Aluno (com endereço opcional)
+Rota
+  └─ Aluno (Student)
+      ├─ Endereço (opcional)
+      ├─ GPS (opcional)
+      └─ Ordem (opcional)
 ```
 
 ---
 
-## 📦 Arquivos de Documentação Criados
+## 🎯 PRÓXIMOS PASSOS
 
-- ✅ `FASE1_BANCO_DADOS_COMPLETO.md` - Documentação da Fase 1
-- ✅ `PROGRESSO_IMPLEMENTACAO.md` - Progresso geral
-- ✅ `RESOLVER_PROBLEMA_LOGIN.md` - Guia de troubleshooting
-- ✅ `SPEC_NOVA_ESTRUTURA.md` - Especificação completa (criado anteriormente)
+### Fase 3 - Telas (Continuar)
 
----
+**Falta implementar:**
 
-## 🐛 Problemas Resolvidos
+1. **RouteOrganizerScreen.tsx** (NOVA TELA)
+   - Drag & drop para reordenar alunos
+   - Botão "Otimizar Automaticamente" (usa `routeOptimizationService`)
+   - Preview do mapa com marcadores numerados
+   - Salvar ordem atualizada
 
-### Problema 1: Login não funcionava
-**Causa:** Projeto novo do Supabase não tinha tabelas criadas  
-**Solução:** Executado `SETUP_LIMPO_PROJETO_NOVO.sql` + `CRIAR_VEHICLE_DOCUMENTS.sql`  
-**Status:** ✅ Resolvido
+2. **RouteStartScreen.tsx** (NOVA TELA)
+   - Lista de alunos da rota
+   - Checkbox para marcar faltantes
+   - Botão "Iniciar Rota" (cria `RouteSession`)
 
-### Problema 2: Erro de tipo nas policies
-**Causa:** Comparação incorreta entre `uuid` e `text`  
-**Solução:** Usar `user_id::uuid = auth.uid()` ao invés de `auth.uid()::text = user_id`  
-**Status:** ✅ Resolvido
+3. **RouteNavigationScreen.tsx** (ATUALIZAR)
+   - Integrar com `RouteSession` e `RouteEvent`
+   - Botão "Avisar que estou chegando" (usa `notificationService`)
+   - Botão "Confirmar embarque/desembarque" (registra evento)
+   - Progresso visual (1/5, 2/5, etc.)
+   - Histórico de eventos
 
-### Problema 3: Policies duplicadas
-**Causa:** Tentativa de criar policies que já existiam  
-**Solução:** Dropar policies antigas antes de recriar  
-**Status:** ✅ Resolvido
-
----
-
-## ⚠️ Lembretes Importantes
-
-### 1. Hardcode Temporário
-- ⚠️ `services/auth.ts` está com hardcode do projeto novo
-- ⚠️ **REVERTER ANTES DO MERGE NA MAIN!**
-- ⚠️ Ver arquivo `LEMBRETE_ANTES_DO_MERGE.md`
-
-### 2. Projetos Supabase
-- **Desenvolvimento:** bkwrflgrfhsgeowjynou (atual)
-- **Produção:** nrkwrmksqhykfvgmfpcw (não mexer)
-
-### 3. Backup
-- **Tag criada:** `v1.3.0-stable` (backup permanente da versão estável)
+4. **RoutesScreen.tsx** (ATUALIZAR)
+   - Botão "Organizar Rota" (abre RouteOrganizerScreen)
+   - Botão "Iniciar Rota" (abre RouteStartScreen)
+   - Indicador de quantos alunos na rota
 
 ---
 
-## 📊 Progresso Geral
+## 📁 ARQUIVOS MODIFICADOS
 
-```
-Fase 1 (Banco):    ████████████████████ 100%
-Fase 2 (Services): ████████████████████ 100%
-Fase 3 (Telas):    ░░░░░░░░░░░░░░░░░░░░   0%
-```
-
-**Total:** ~67% completo (backend pronto, falta frontend)
-
----
-
-## 🚀 Próximos Passos
-
-1. **Atualizar StudentsScreen** - Adicionar campos de endereço e rota
-2. **Criar RouteOrganizerScreen** - Tela para organizar ordem dos alunos
-3. **Criar RouteStartScreen** - Tela para selecionar faltantes
-4. **Atualizar RouteNavigationScreen** - Adicionar avisos e histórico
-5. **Testar tudo** - Criar rota, adicionar alunos, otimizar, iniciar rota
+- ✅ `pages/StudentsScreen.tsx` - UI completa atualizada
+- ✅ `types.ts` - Interfaces atualizadas (já estava pronto)
+- ✅ `services/db.ts` - IndexedDB atualizado (já estava pronto)
+- ✅ `services/cloudSync.ts` - Sync atualizado (já estava pronto)
+- ✅ `services/routeOptimizationService.ts` - Criado (já estava pronto)
+- ✅ `services/notificationService.ts` - Criado (já estava pronto)
+- ✅ `supabase/migrations/007_new_route_structure.sql` - Migration criada (já estava pronto)
 
 ---
 
-## 💡 Funcionalidades Implementadas (Backend)
+## 🧪 COMO TESTAR
 
-✅ Aluno com endereço opcional (estrutura pronta)  
-✅ Otimização automática de rota (algoritmo pronto)  
-✅ Cálculo de horários estimados (serviço pronto)  
-✅ Avisos via WhatsApp (serviço pronto)  
-✅ Histórico de eventos (estrutura pronta)  
-⏳ Interface para usar tudo isso (próximo passo)
+1. **Cadastrar Aluno com Nova Estrutura:**
+   - Abrir "Alunos"
+   - Clicar em "Adicionar Aluno"
+   - Preencher nome e selecionar rota
+   - Adicionar endereço (opcional)
+   - Clicar em "Usar Localização Atual" (opcional)
+   - Definir ordem (opcional)
+   - Salvar
+
+2. **Visualizar Alunos por Rota:**
+   - Abrir "Alunos"
+   - Expandir uma rota
+   - Ver lista de alunos diretamente (sem pontos)
+   - Ver ordem, endereço e horário estimado (se disponível)
+
+3. **Editar Aluno:**
+   - Clicar em um aluno
+   - Clicar em "Editar"
+   - Verificar que todos os campos são carregados corretamente
+   - Modificar e salvar
+
+4. **Reordenar Alunos:**
+   - Expandir uma rota
+   - Passar o mouse sobre um aluno
+   - Usar setas para mover para cima/baixo
+   - Verificar que ordem é atualizada
 
 ---
 
-**Última Atualização:** 25/01/2026 - 18:00  
-**Tempo de Sessão:** ~2 horas  
-**Commits Sugeridos:** 
-1. `feat: add new route structure database schema`
-2. `feat: add route optimization and notification services`
+## ⚠️ IMPORTANTE
+
+### Compatibilidade com Estrutura Antiga:
+- Alunos antigos (com `stopId`) ainda funcionam
+- Ao editar, podem ser migrados para nova estrutura
+- Visualização mostra ambos os tipos
+
+### Antes do Merge na Main:
+- ⚠️ REVERTER hardcode em `services/auth.ts`
+- ⚠️ Testar com projeto de produção
+- ⚠️ Verificar se migration 007 foi aplicada
+
+---
+
+## 📝 NOTAS
+
+- **GPS:** Funciona apenas em HTTPS ou localhost (restrição do navegador)
+- **Ordem:** Se não definida, usa ordem de cadastro (timestamp)
+- **Otimização:** Algoritmo Nearest Neighbor já implementado, falta UI
+- **Notificações:** Serviço pronto, falta integrar nas telas
+
+---
+
+**Última Atualização:** 25/01/2026 - 18:00
+**Branch:** feature/feedback-condutores
+**Status:** StudentsScreen 100% completa, próximo passo: RouteOrganizerScreen

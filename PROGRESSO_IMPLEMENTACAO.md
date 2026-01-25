@@ -2,11 +2,11 @@
 
 **Data:** 25/01/2026  
 **Branch:** feature/feedback-condutores  
-**Última Atualização:** 17:30
+**Última Atualização:** 18:00
 
 ---
 
-## ✅ FASE 1: Banco de Dados - COMPLETO
+## ✅ FASE 1: Banco de Dados - COMPLETO (100%)
 
 ### Arquivos Criados:
 - ✅ `supabase/migrations/007_new_route_structure.sql`
@@ -32,7 +32,7 @@
 
 ---
 
-## ✅ FASE 2: Backend/Services - COMPLETO
+## ✅ FASE 2: Backend/Services - COMPLETO (100%)
 
 ### Arquivos Criados:
 - ✅ `services/routeOptimizationService.ts`
@@ -51,65 +51,79 @@
 
 ---
 
-## 🔄 FASE 3: Telas do Condutor - EM PROGRESSO
+## 🔄 FASE 3: Telas do Condutor - EM PROGRESSO (25%)
 
-### Telas a Modificar:
-- [ ] `pages/StudentsScreen.tsx`
-  - Adicionar campo "Rota" (dropdown)
-  - Adicionar campo "Endereço" (manual ou GPS)
-  - Remover dependência de "Ponto"
-  - Adicionar campo "Ordem na rota"
+### ✅ StudentsScreen.tsx - COMPLETO (100%)
+- ✅ Backend atualizado (`handleSubmit`, `resetForm`, `populateForm`)
+- ✅ Removida dependência de `stopId` (estrutura antiga)
+- ✅ UI do formulário atualizada:
+  - ✅ Removido campo "Ponto de Embarque"
+  - ✅ Adicionado campo "Endereço" (textarea, opcional)
+  - ✅ Adicionado botão "Usar Localização Atual" (GPS)
+  - ✅ Adicionado campo "Ordem na Rota" (número, opcional)
+- ✅ Visualização atualizada:
+  - ✅ Estrutura simplificada: Rota → Alunos (sem pontos)
+  - ✅ Contador de alunos por rota
+  - ✅ Exibição de ordem (#1, #2, #3...)
+  - ✅ Exibição de endereço e horário estimado
+- ✅ Modal de detalhes atualizado
+- ✅ Função `handleGetLocation()` para capturar GPS
+- ✅ Build testado e funcionando
 
-- [ ] `pages/RoutesScreen.tsx`
-  - Adicionar botão "Organizar Rota"
-  - Atualizar botão "Otimizar Rota" (usar novo serviço)
+### ⏳ RouteOrganizerScreen.tsx - NÃO INICIADO
+- [ ] Criar tela de organização de rota
+- [ ] Drag & drop para reordenar alunos
+- [ ] Botão "Otimizar Automaticamente" (usa routeOptimizationService)
+- [ ] Preview do mapa com marcadores numerados
+- [ ] Salvar ordem atualizada
 
-- [ ] `pages/RouteNavigationScreen.tsx`
-  - Adicionar botão "Avisar que estou chegando"
-  - Adicionar botão "Confirmar embarque"
-  - Adicionar botão "Confirmar desembarque"
-  - Mostrar histórico de eventos
-  - Integrar com notificationService
+### ⏳ RouteStartScreen.tsx - NÃO INICIADO
+- [ ] Criar tela de seleção de faltantes
+- [ ] Lista de alunos da rota com checkboxes
+- [ ] Botão "Iniciar Rota" (cria RouteSession)
 
-### Telas a Criar:
-- [ ] `pages/RouteOrganizerScreen.tsx`
-  - Lista de alunos com drag & drop
-  - Botão "Otimizar Automaticamente"
-  - Preview do mapa com marcadores numerados
-  - Salvar ordem
+### ⏳ RouteNavigationScreen.tsx - NÃO INICIADO
+- [ ] Integrar com RouteSession e RouteEvent
+- [ ] Botão "Avisar que estou chegando" (usa notificationService)
+- [ ] Botão "Confirmar embarque/desembarque" (registra evento)
+- [ ] Progresso visual (1/5, 2/5, etc.)
+- [ ] Histórico de eventos
 
-- [ ] `pages/RouteStartScreen.tsx`
-  - Lista de alunos da rota
-  - Checkbox para marcar faltantes
-  - Botão "Iniciar Rota"
+### ⏳ RoutesScreen.tsx - NÃO INICIADO
+- [ ] Botão "Organizar Rota" (abre RouteOrganizerScreen)
+- [ ] Botão "Iniciar Rota" (abre RouteStartScreen)
+- [ ] Indicador de quantos alunos na rota
 
 ---
 
 ## 🎯 Próximos Passos Imediatos
 
-### 1. Aplicar SQL no Supabase ⚠️ URGENTE
-**Arquivo:** `SETUP_COMPLETO_PROJETO_NOVO.sql`
+### 1. Criar RouteOrganizerScreen.tsx
+**Funcionalidades:**
+- Drag & drop para reordenar alunos
+- Botão "Otimizar Automaticamente" (usa `routeOptimizationService`)
+- Preview do mapa com marcadores numerados
+- Salvar ordem atualizada
 
-**Como fazer:**
-1. Acesse: https://supabase.com/dashboard/project/bkwrflgrfhsgeowjynou/sql/new
-2. Cole o conteúdo do arquivo `SETUP_COMPLETO_PROJETO_NOVO.sql`
-3. Execute (Run)
-4. Aguarde confirmação de sucesso
+### 2. Criar RouteStartScreen.tsx
+**Funcionalidades:**
+- Lista de alunos da rota
+- Checkbox para marcar faltantes
+- Botão "Iniciar Rota" (cria `RouteSession`)
 
-**Isso vai resolver o problema de login!**
+### 3. Atualizar RouteNavigationScreen.tsx
+**Funcionalidades:**
+- Integrar com `RouteSession` e `RouteEvent`
+- Botão "Avisar que estou chegando" (usa `notificationService`)
+- Botão "Confirmar embarque/desembarque" (registra evento)
+- Progresso visual (1/5, 2/5, etc.)
+- Histórico de eventos
 
-### 2. Testar Login
-Após aplicar o SQL:
-1. Abra o app (`npm run dev`)
-2. Tente criar uma conta
-3. Faça login
-4. Verifique se está funcionando
-
-### 3. Atualizar StudentsScreen
-Adicionar campos de endereço e rota
-
-### 4. Criar RouteOrganizerScreen
-Tela para organizar ordem dos alunos
+### 4. Atualizar RoutesScreen.tsx
+**Funcionalidades:**
+- Botão "Organizar Rota" (abre RouteOrganizerScreen)
+- Botão "Iniciar Rota" (abre RouteStartScreen)
+- Indicador de quantos alunos na rota
 
 ---
 
@@ -144,13 +158,21 @@ Tela para organizar ordem dos alunos
 ## 📊 Progresso Geral
 
 ```
-Fase 1 (Banco): ████████████████████ 100%
+Fase 1 (Banco):    ████████████████████ 100%
 Fase 2 (Services): ████████████████████ 100%
-Fase 3 (Telas): ████░░░░░░░░░░░░░░░░  20%
+Fase 3 (Telas):    █████░░░░░░░░░░░░░░░  25%
 ```
 
-**Total:** ~40% completo
+**Total:** ~75% completo
 
 ---
 
-**Última Atualização:** 25/01/2026 - 17:30
+## 📁 Arquivos Modificados Hoje
+
+- ✅ `pages/StudentsScreen.tsx` - UI completa atualizada
+- ✅ `RESUMO_SESSAO_25_JAN.md` - Resumo detalhado das mudanças
+- ✅ `PROGRESSO_IMPLEMENTACAO.md` - Este arquivo
+
+---
+
+**Última Atualização:** 25/01/2026 - 18:00

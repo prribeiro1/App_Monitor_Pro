@@ -6,18 +6,13 @@ import { Icon } from '../components/Icon';
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
 
-interface StopGroup {
-  stop: Stop;
+interface RouteGroup {
+  route: Route;
   students: Student[];
 }
 
-interface RouteGroup {
-  route: Route;
-  stops: StopGroup[];
-}
-
 export const StudentsScreen: React.FC = () => {
-  const { t, language } = useI18n();
+  const { language } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [students, setStudents] = useState<Student[]>([]);
   const [stops, setStops] = useState<Stop[]>([]);
@@ -25,7 +20,6 @@ export const StudentsScreen: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
-  const [expandedStops, setExpandedStops] = useState<Record<string, boolean>>({});
 
   // Labels de turnos pelo idioma
   const shiftLabels: Record<string, string> = language === 'es'
@@ -40,7 +34,6 @@ export const StudentsScreen: React.FC = () => {
   const [birthDate, setBirthDate] = useState('');
   const [school, setSchool] = useState('');
   const [shift, setShift] = useState<'integral' | 'manha' | 'tarde' | 'noite'>('manha');
-  const [stopId, setStopId] = useState('');
   const [selectedRouteId, setSelectedRouteId] = useState('');
   const [guardianName, setGuardianName] = useState('');
   const [responsibleCpf, setResponsibleCpf] = useState('');
@@ -50,12 +43,35 @@ export const StudentsScreen: React.FC = () => {
   const [monthlyFees, setMonthlyFees] = useState('');
   const [dueDay, setDueDay] = useState('');
   
-  // 🆕 NOVOS CAMPOS (Nova Estrutura)
+  // 🆕 NOVA ESTRUTURA (sem pontos)
   const [address, setAddress] = useState('');
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
   const [routeOrder, setRouteOrder] = useState('');
-  const [useNewStructure, setUseNewStructure] = useState(false); // Por padrão usa estrutura antiga
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  // 🆕 Capturar localização GPS
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocalização não suportada neste navegador');
+      return;
+    }
+
+    setIsLoadingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        setIsLoadingLocation(false);
+        alert('Localização capturada com sucesso!');
+      },
+      (error) => {
+        console.error('Erro ao capturar localização:', error);
+        alert('Não foi possível capturar a localização. Verifique as permissões.');
+        setIsLoadingLocation(false);
+      }
+    );
+  };
 
   const fetchData = async () => {
     const [st, sp, rt] = await Promise.all([
@@ -64,16 +80,17 @@ export const StudentsScreen: React.FC = () => {
       dbService.getRoutes()
     ]);
 
-    st.sort((a, b) => (a.order || 0) - (b.order || 0));
+    st.sort((a, b) => (a.routeOrder || a.order || 0) - (b.routeOrder || b.order || 0));
     sp.sort((a, b) => a.order - b.order);
 
     setStudents(st);
     setStops(sp);
     setRoutes(rt);
 
-    const firstRouteId = rt.length > 0 ? rt[0].id : '';
-    const firstRouteStops = sp.filter(s => s.routeId === firstRouteId);
-    if (firstRouteStops.length > 0 && !stopId) setStopId(firstRouteStops[0].id);
+    // Inicializar com primeira rota se disponível
+    if (rt.length > 0 && !selectedRouteId) {
+      setSelectedRouteId(rt[0].id);
+    }
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -95,26 +112,22 @@ export const StudentsScreen: React.FC = () => {
     setExpandedRoutes(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const toggleStop = (id: string) => {
-    setExpandedStops(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
   const moveStudent = async (student: Student, direction: 'up' | 'down') => {
-    const siblings = students.filter(s => s.stopId === student.stopId);
+    const siblings = students.filter(s => s.routeId === student.routeId);
     const index = siblings.findIndex(s => s.id === student.id);
 
     if (direction === 'up' && index > 0) {
       const prev = siblings[index - 1];
-      const tempOrder = student.order || 0;
-      student.order = prev.order || 0;
-      prev.order = tempOrder;
+      const tempOrder = student.routeOrder || student.order || 0;
+      student.routeOrder = prev.routeOrder || prev.order || 0;
+      prev.routeOrder = tempOrder;
       await Promise.all([dbService.saveStudent(student), dbService.saveStudent(prev)]);
       fetchData();
     } else if (direction === 'down' && index < siblings.length - 1) {
       const next = siblings[index + 1];
-      const tempOrder = student.order || 0;
-      student.order = next.order || 0;
-      next.order = tempOrder;
+      const tempOrder = student.routeOrder || student.order || 0;
+      student.routeOrder = next.routeOrder || next.order || 0;
+      next.routeOrder = tempOrder;
       await Promise.all([dbService.saveStudent(student), dbService.saveStudent(next)]);
       fetchData();
     }
@@ -127,7 +140,7 @@ export const StudentsScreen: React.FC = () => {
 
     const student: Student = {
       id: editingId || crypto.randomUUID(),
-      stopId: useNewStructure ? '' : stopId, // Vazio se usar nova estrutura
+      stopId: '', // Não usa mais pontos
       name: studentName,
       active: true,
       birthDate: birthDate || undefined,
@@ -142,12 +155,12 @@ export const StudentsScreen: React.FC = () => {
       dueDay: dueDay ? parseInt(dueDay) : 0,
       order: existing?.order || Date.now(),
       
-      // 🆕 NOVOS CAMPOS (Nova Estrutura)
-      routeId: useNewStructure ? selectedRouteId : undefined,
-      address: useNewStructure && address ? address : undefined,
-      latitude: useNewStructure ? latitude : undefined,
-      longitude: useNewStructure ? longitude : undefined,
-      routeOrder: useNewStructure && routeOrder ? parseInt(routeOrder) : undefined,
+      // 🆕 NOVA ESTRUTURA (obrigatório)
+      routeId: selectedRouteId,
+      address: address || undefined,
+      latitude: latitude,
+      longitude: longitude,
+      routeOrder: routeOrder ? parseInt(routeOrder) : 0,
     };
 
     await dbService.saveStudent(student);
@@ -175,13 +188,9 @@ export const StudentsScreen: React.FC = () => {
     setLatitude(undefined);
     setLongitude(undefined);
     setRouteOrder('');
-    setUseNewStructure(false);
 
     if (routes.length > 0) {
-      const firstRouteId = routes[0].id;
-      setSelectedRouteId(firstRouteId);
-      const firstRouteStops = stops.filter(s => s.routeId === firstRouteId);
-      setStopId(firstRouteStops.length > 0 ? firstRouteStops[0].id : '');
+      setSelectedRouteId(routes[0].id);
     }
   };
 
@@ -199,11 +208,12 @@ export const StudentsScreen: React.FC = () => {
     setDueDay(student.dueDay ? student.dueDay.toString() : '');
     setEditingId(student.id);
 
-    const stop = stops.find(s => s.id === student.stopId);
-    if (stop) {
-      setSelectedRouteId(stop.routeId);
-      setStopId(student.stopId);
-    }
+    // 🆕 NOVA ESTRUTURA
+    setSelectedRouteId(student.routeId || '');
+    setAddress(student.address || '');
+    setLatitude(student.latitude);
+    setLongitude(student.longitude);
+    setRouteOrder(student.routeOrder ? student.routeOrder.toString() : '');
 
     setSelectedStudent(null);
     setIsModalOpen(true);
@@ -211,8 +221,6 @@ export const StudentsScreen: React.FC = () => {
 
   const handleRouteChange = (newRouteId: string) => {
     setSelectedRouteId(newRouteId);
-    const routeStops = stops.filter(s => s.routeId === newRouteId);
-    setStopId(routeStops.length > 0 ? routeStops[0].id : '');
   };
 
   const handleDelete = async (id: string) => {
@@ -232,15 +240,9 @@ export const StudentsScreen: React.FC = () => {
     }
   };
 
-  const getStopName = (stopId: string) => {
-    const stop = stops.find(s => s.id === stopId);
-    return stop?.name || '';
-  };
-
-  const getRouteName = (stopId: string) => {
-    const stop = stops.find(s => s.id === stopId);
-    if (!stop) return '';
-    const route = routes.find(r => r.id === stop.routeId);
+  const getRouteName = (routeId?: string) => {
+    if (!routeId) return '';
+    const route = routes.find(r => r.id === routeId);
     return route?.name || '';
   };
 
@@ -251,15 +253,9 @@ export const StudentsScreen: React.FC = () => {
   };
 
   const groupedData: RouteGroup[] = routes.map(route => {
-    const routeStops = stops.filter(s => s.routeId === route.id);
-    const stopGroups: StopGroup[] = routeStops.map(stop => ({
-      stop,
-      students: students.filter(s => s.stopId === stop.id)
-    }));
-    return { route, stops: stopGroups };
+    const routeStudents = students.filter(s => s.routeId === route.id);
+    return { route, students: routeStudents };
   });
-
-  const filteredStops = stops.filter(s => s.routeId === selectedRouteId);
 
   return (
     <div className="p-4 pb-20">
@@ -274,8 +270,8 @@ export const StudentsScreen: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-        {groupedData.map(({ route, stops: routeStops }) => {
-          if (routeStops.every(g => g.students.length === 0)) return null;
+        {groupedData.map(({ route, students: routeStudents }) => {
+          if (routeStudents.length === 0) return null;
           const isRouteExpanded = expandedRoutes[route.id];
 
           return (
@@ -287,67 +283,57 @@ export const StudentsScreen: React.FC = () => {
                 <h3 className="text-primary-400 font-bold uppercase tracking-wider flex items-center gap-2">
                   <Icon name="map" size={18} />
                   {route.name}
+                  <span className="text-sm text-gray-400 font-normal">({routeStudents.length} alunos)</span>
                 </h3>
                 <Icon name={isRouteExpanded ? "x" : "plus"} size={16} className="text-primary-400 rotate-45 transition-transform" />
               </div>
 
               {isRouteExpanded && (
-                <div className="p-3 space-y-4">
-                  {routeStops.map(({ stop, students: stopStudents }) => {
-                    if (stopStudents.length === 0) return null;
-                    const isStopExpanded = expandedStops[stop.id];
-
-                    return (
-                      <div key={stop.id}>
-                        <div
-                          onClick={() => toggleStop(stop.id)}
-                          className="flex items-center justify-between mb-2 cursor-pointer hover:opacity-80 transition-opacity pl-2 border-l-2 border-accent-500/30"
-                        >
-                          <h4 className="text-accent-400 font-bold flex items-center gap-2 text-sm">
-                            <Icon name="map-pin" size={14} />
-                            {stop.name} ({stopStudents.length})
-                          </h4>
-                          <Icon name={isStopExpanded ? "x" : "plus"} size={12} className="text-accent-400 rotate-45 transition-transform" />
+                <div className="p-3 grid gap-2">
+                  {routeStudents.map((student, index) => (
+                    <div
+                      key={student.id}
+                      onClick={() => setSelectedStudent(student)}
+                      className="bg-navy-800 p-3 rounded-lg border border-navy-700 flex items-center justify-between group cursor-pointer hover:bg-navy-700/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); moveStudent(student, 'up'); }} 
+                            disabled={index === 0} 
+                            className="text-gray-500 hover:text-white disabled:opacity-30"
+                          >
+                            <Icon name="chevron-up" size={16} />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); moveStudent(student, 'down'); }} 
+                            disabled={index === routeStudents.length - 1} 
+                            className="text-gray-500 hover:text-white disabled:opacity-30"
+                          >
+                            <Icon name="chevron-down" size={16} />
+                          </button>
                         </div>
-
-                        {isStopExpanded && (
-                          <div className="grid gap-2 pl-4">
-                            {stopStudents.map((student, index) => (
-                              <div
-                                key={student.id}
-                                onClick={() => setSelectedStudent(student)}
-                                className="bg-navy-800 p-3 rounded-lg border border-navy-700 flex items-center justify-between group cursor-pointer hover:bg-navy-700/50 transition-colors"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="flex flex-col gap-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={(e) => { e.stopPropagation(); moveStudent(student, 'up'); }} disabled={index === 0} className="text-gray-500 hover:text-white disabled:opacity-30">
-                                      <Icon name="chevron-up" size={16} />
-                                    </button>
-                                    <button onClick={(e) => { e.stopPropagation(); moveStudent(student, 'down'); }} disabled={index === stopStudents.length - 1} className="text-gray-500 hover:text-white disabled:opacity-30">
-                                      <Icon name="chevron-down" size={16} />
-                                    </button>
-                                  </div>
-                                  <InitialsAvatar name={student.name} />
-                                  <div>
-                                    <span className="text-white font-medium flex items-center gap-1">
-                                      {student.observation && (
-                                        <span className="text-orange-400" title="Possui observação">⚠️</span>
-                                      )}
-                                      {student.name}
-                                    </span>
-                                    {student.school && (
-                                      <span className="text-xs text-gray-400 block">{student.school}</span>
-                                    )}
-                                  </div>
-                                </div>
-                                <Icon name="chevron-right" size={20} className="text-gray-500" />
-                              </div>
-                            ))}
+                        <InitialsAvatar name={student.name} />
+                        <div>
+                          <span className="text-white font-medium flex items-center gap-1">
+                            {student.observation && (
+                              <span className="text-orange-400" title="Possui observação">⚠️</span>
+                            )}
+                            {student.routeOrder != null && student.routeOrder > 0 && (
+                              <span className="text-primary-400 text-xs font-bold mr-1">#{student.routeOrder}</span>
+                            )}
+                            {student.name}
+                          </span>
+                          <div className="text-xs text-gray-400 space-y-0.5">
+                            {student.school && <div>{student.school}</div>}
+                            {student.address && <div>📍 {student.address}</div>}
+                            {student.estimatedPickupTime && <div>🕐 {student.estimatedPickupTime}</div>}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    );
-                  })}
+                      <Icon name="chevron-right" size={20} className="text-gray-500" />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -402,14 +388,30 @@ export const StudentsScreen: React.FC = () => {
                       <span className="text-white">{selectedStudent.school}</span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Rota</span>
-                    <span className="text-white">{getRouteName(selectedStudent.stopId)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Ponto</span>
-                    <span className="text-white">{getStopName(selectedStudent.stopId)}</span>
-                  </div>
+                  {selectedStudent.routeId && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Rota</span>
+                      <span className="text-white">{getRouteName(selectedStudent.routeId)}</span>
+                    </div>
+                  )}
+                  {selectedStudent.address && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Endereço</span>
+                      <span className="text-white text-right">{selectedStudent.address}</span>
+                    </div>
+                  )}
+                  {selectedStudent.routeOrder != null && selectedStudent.routeOrder > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Ordem na Rota</span>
+                      <span className="text-white">#{selectedStudent.routeOrder}</span>
+                    </div>
+                  )}
+                  {selectedStudent.estimatedPickupTime && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Horário Estimado</span>
+                      <span className="text-white">{selectedStudent.estimatedPickupTime}</span>
+                    </div>
+                  )}
                   {selectedStudent.monthlyFees && selectedStudent.monthlyFees > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Mensalidade</span>
@@ -546,18 +548,74 @@ export const StudentsScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Rota e Ponto */}
+              {/* Rota */}
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Rota *</label>
-                <select value={selectedRouteId} onChange={e => handleRouteChange(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mb-3">
+                <select 
+                  value={selectedRouteId} 
+                  onChange={e => handleRouteChange(e.target.value)} 
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                  required
+                >
+                  <option value="">Selecione uma rota</option>
                   {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
+              </div>
 
-                <label className="block text-sm text-gray-400 mb-1">Ponto de Embarque *</label>
-                <select value={stopId} onChange={e => setStopId(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg" disabled={filteredStops.length === 0}>
-                  {filteredStops.length === 0 && <option value="">Nenhum ponto nesta rota</option>}
-                  {filteredStops.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+              {/* 🆕 Endereço */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Endereço (opcional)</label>
+                <textarea
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  placeholder="Ex: Rua das Flores, 123 - Centro"
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg h-20"
+                />
+              </div>
+
+              {/* 🆕 Localização GPS */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Localização GPS (opcional)</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    disabled={isLoadingLocation}
+                    className="flex-1 bg-blue-500/20 text-blue-400 py-3 rounded-lg font-bold hover:bg-blue-500/30 transition disabled:opacity-50"
+                  >
+                    {isLoadingLocation ? 'Capturando...' : latitude && longitude ? '✓ Localização Salva' : '📍 Usar Localização Atual'}
+                  </button>
+                  {latitude && longitude && (
+                    <button
+                      type="button"
+                      onClick={() => { setLatitude(undefined); setLongitude(undefined); }}
+                      className="bg-red-500/20 text-red-400 px-4 rounded-lg hover:bg-red-500/30 transition"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+                {latitude && longitude && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Lat: {latitude.toFixed(6)}, Lng: {longitude.toFixed(6)}
+                  </p>
+                )}
+              </div>
+
+              {/* 🆕 Ordem na Rota */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Ordem na Rota (opcional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={routeOrder}
+                  onChange={e => setRouteOrder(e.target.value)}
+                  placeholder="Ex: 1, 2, 3... (deixe vazio para automático)"
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Deixe vazio para ordenar automaticamente ou use a tela "Organizar Rota"
+                </p>
               </div>
 
               <hr className="border-navy-700" />
