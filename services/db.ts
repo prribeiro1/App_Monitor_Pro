@@ -4,7 +4,7 @@ import { cloudSync } from './cloudSync';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 const DB_NAME = 'SchoolMonitorDB';
-const DB_VERSION = 3; // Incremented for Migration
+const DB_VERSION = 4; // Incremented for New Route Structure
 
 // Helper to open DB
 const openDB = (): Promise<IDBDatabase> => {
@@ -61,6 +61,17 @@ const openDB = (): Promise<IDBDatabase> => {
       // New Vehicle Documents Store (v3)
       if (!db.objectStoreNames.contains('vehicle_documents')) {
         db.createObjectStore('vehicle_documents', { keyPath: 'id' });
+      }
+      // 🆕 New Route Structure Stores (v4)
+      if (!db.objectStoreNames.contains('route_sessions')) {
+        const store = db.createObjectStore('route_sessions', { keyPath: 'id' });
+        store.createIndex('routeId', 'routeId', { unique: false });
+        store.createIndex('date', 'date', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('route_events')) {
+        const store = db.createObjectStore('route_events', { keyPath: 'id' });
+        store.createIndex('sessionId', 'sessionId', { unique: false });
+        store.createIndex('studentId', 'studentId', { unique: false });
       }
     };
 
@@ -267,7 +278,8 @@ export const dbService = {
     const stores = [
       'routes', 'stops', 'students', 'attendance',
       'incidents', 'payments', 'maintenance_items',
-      'maintenance_logs', 'user_settings', 'contract_signatures', 'reminders'
+      'maintenance_logs', 'user_settings', 'contract_signatures', 'reminders',
+      'route_sessions', 'route_events' // 🆕 Novos stores
     ];
 
     return new Promise((resolve, reject) => {
@@ -339,7 +351,7 @@ export const dbService = {
       if (!cloudData) return;
 
       const db = await openDB();
-      const stores = ['routes', 'stops', 'students', 'attendance', 'payments', 'user_settings', 'maintenance_items', 'maintenance_logs', 'incidents', 'reminders', 'vehicle_documents'];
+      const stores = ['routes', 'stops', 'students', 'attendance', 'payments', 'user_settings', 'maintenance_items', 'maintenance_logs', 'incidents', 'reminders', 'vehicle_documents', 'route_sessions', 'route_events'];
       const tx = db.transaction(stores, 'readwrite');
 
       const restore = (storeName: string, items: any[]) => {
@@ -358,6 +370,8 @@ export const dbService = {
       restore('maintenance_items', cloudData.maintenanceItems);
       restore('maintenance_logs', cloudData.maintenanceLogs);
       restore('vehicle_documents', cloudData.vehicleDocuments);
+      restore('route_sessions', cloudData.routeSessions || []); // 🆕
+      restore('route_events', cloudData.routeEvents || []); // 🆕
 
       if (cloudData.userSettings) {
         tx.objectStore('user_settings').put(cloudData.userSettings);
@@ -374,5 +388,27 @@ export const dbService = {
     } catch (e) {
       console.error("Erro no Pull Cloud:", e);
     }
+  },
+
+  // 🆕 ROUTE SESSIONS (Nova Estrutura)
+  getRouteSessions: () => getAll<any>('route_sessions'),
+  saveRouteSession: async (session: any) => {
+    await putItem('route_sessions', session);
+    try { await cloudSync.saveRouteSession(session); } catch (e) { }
+  },
+  deleteRouteSession: async (id: string) => {
+    await deleteItem('route_sessions', id);
+    try { await cloudSync.deleteRouteSession(id); } catch (e) { }
+  },
+
+  // 🆕 ROUTE EVENTS (Nova Estrutura)
+  getRouteEvents: () => getAll<any>('route_events'),
+  saveRouteEvent: async (event: any) => {
+    await putItem('route_events', event);
+    try { await cloudSync.saveRouteEvent(event); } catch (e) { }
+  },
+  deleteRouteEvent: async (id: string) => {
+    await deleteItem('route_events', id);
+    try { await cloudSync.deleteRouteEvent(id); } catch (e) { }
   }
 };

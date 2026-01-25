@@ -24,6 +24,13 @@ export const cloudSync = {
                 due_day: student.dueDay,
                 monthly_fees: student.monthlyFees,
                 stop_id: student.stopId,
+                route_id: student.routeId, // 🆕
+                address: student.address, // 🆕
+                latitude: student.latitude, // 🆕
+                longitude: student.longitude, // 🆕
+                route_order: student.routeOrder, // 🆕
+                estimated_pickup_time: student.estimatedPickupTime, // 🆕
+                estimated_drop_time: student.estimatedDropTime, // 🆕
                 birth_date: student.birthDate,
                 observation: student.observation,
                 updated_at: new Date().toISOString()
@@ -230,6 +237,59 @@ export const cloudSync = {
         if (error) throw error;
     },
 
+    // 🆕 ROUTE SESSIONS (Nova Estrutura)
+    saveRouteSession: async (session: any) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { error } = await supabase.from('route_sessions').upsert({
+            id: session.id,
+            user_id: user.id,
+            route_id: session.routeId,
+            date: session.date,
+            type: session.type,
+            start_time: session.startTime,
+            end_time: session.endTime,
+            skipped_students: session.skippedStudents,
+            status: session.status,
+            updated_at: new Date().toISOString()
+        });
+        if (error) {
+            console.error('Erro sync cloud (route_session):', error.message);
+            throw error;
+        }
+    },
+
+    deleteRouteSession: async (id: string) => {
+        const { error } = await supabase.from('route_sessions').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // 🆕 ROUTE EVENTS (Nova Estrutura)
+    saveRouteEvent: async (event: any) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { error } = await supabase.from('route_events').upsert({
+            id: event.id,
+            user_id: user.id,
+            session_id: event.sessionId,
+            student_id: event.studentId,
+            event_type: event.eventType,
+            timestamp: event.timestamp,
+            latitude: event.latitude,
+            longitude: event.longitude,
+            notes: event.notes
+        });
+        if (error) {
+            console.error('Erro sync cloud (route_event):', error.message);
+            throw error;
+        }
+    },
+
+    deleteRouteEvent: async (id: string) => {
+        const { error } = await supabase.from('route_events').delete().eq('id', id);
+        if (error) throw error;
+    },
+
     // FUNÇÃO PRINCIPAL: Puxar tudo da nuvem para o celular
     pullAllData: async (): Promise<any> => {
         try {
@@ -238,7 +298,7 @@ export const cloudSync = {
 
             console.log("Iniciando PULL de dados da nuvem para usuário:", user.id);
 
-            const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes, vehicleDocsRes] = await Promise.all([
+            const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes, vehicleDocsRes, routeSessionsRes, routeEventsRes] = await Promise.all([
                 supabase.from('students').select('*'),
                 supabase.from('routes').select('*').order('order'),
                 supabase.from('stops').select('*').order('order'),
@@ -249,7 +309,9 @@ export const cloudSync = {
                 supabase.from('maintenance_logs').select('*'),
                 supabase.from('incidents').select('*'),
                 supabase.from('reminders').select('*'),
-                supabase.from('vehicle_documents').select('*')
+                supabase.from('vehicle_documents').select('*'),
+                supabase.from('route_sessions').select('*'), // 🆕
+                supabase.from('route_events').select('*') // 🆕
             ]);
 
             return {
@@ -267,6 +329,13 @@ export const cloudSync = {
                     dueDay: s.due_day,
                     monthlyFees: s.monthly_fees ? parseFloat(s.monthly_fees) : 0,
                     stopId: s.stop_id,
+                    routeId: s.route_id, // 🆕
+                    address: s.address, // 🆕
+                    latitude: s.latitude, // 🆕
+                    longitude: s.longitude, // 🆕
+                    routeOrder: s.route_order, // 🆕
+                    estimatedPickupTime: s.estimated_pickup_time, // 🆕
+                    estimatedDropTime: s.estimated_drop_time, // 🆕
                     birthDate: s.birth_date,
                     observation: s.observation
                 })) || [],
@@ -335,6 +404,31 @@ export const cloudSync = {
                     size: d.size,
                     date: d.date
                 })) || [],
+                routeSessions: routeSessionsRes.data?.map(rs => ({ // 🆕
+                    id: rs.id,
+                    routeId: rs.route_id,
+                    userId: rs.user_id,
+                    date: rs.date,
+                    type: rs.type,
+                    startTime: rs.start_time,
+                    endTime: rs.end_time,
+                    skippedStudents: rs.skipped_students,
+                    status: rs.status,
+                    createdAt: rs.created_at,
+                    updatedAt: rs.updated_at
+                })) || [],
+                routeEvents: routeEventsRes.data?.map(re => ({ // 🆕
+                    id: re.id,
+                    sessionId: re.session_id,
+                    studentId: re.student_id,
+                    userId: re.user_id,
+                    eventType: re.event_type,
+                    timestamp: re.timestamp,
+                    latitude: re.latitude,
+                    longitude: re.longitude,
+                    notes: re.notes,
+                    createdAt: re.created_at
+                })) || [],
                 userSettings: settingsRes.data ? {
                     id: 'settings',
                     currentKm: settingsRes.data.current_km,
@@ -365,6 +459,8 @@ export const cloudSync = {
             console.log("🗑️ Deletando dados do usuário na nuvem...", user.id);
 
             // Deletar em ordem para evitar problemas de FK
+            await supabase.from('route_events').delete().eq('user_id', user.id); // 🆕
+            await supabase.from('route_sessions').delete().eq('user_id', user.id); // 🆕
             await supabase.from('vehicle_documents').delete().eq('user_id', user.id);
             await supabase.from('maintenance_logs').delete().eq('user_id', user.id);
             await supabase.from('maintenance_items').delete().eq('user_id', user.id);

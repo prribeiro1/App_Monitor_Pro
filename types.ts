@@ -17,7 +17,8 @@ export interface Stop {
 
 export interface Student {
   id: string;
-  stopId: string;
+  stopId: string; // ⚠️ DEPRECATED: Manter por compatibilidade, usar routeId
+  routeId?: string; // 🆕 NOVO: ID da rota (substitui stopId)
   name: string;
   active: boolean;
   guardianName?: string; // Nome do Responsável
@@ -25,7 +26,13 @@ export interface Student {
   responsibleCpf?: string;
   responsibleEmail?: string;
   responsiblePhone?: string;
-  order?: number;
+  order?: number; // ⚠️ DEPRECATED: Usar routeOrder
+  routeOrder?: number; // 🆕 NOVO: Ordem na rota (1, 2, 3...)
+  address?: string; // 🆕 NOVO: Endereço completo (opcional)
+  latitude?: number; // 🆕 NOVO: Coordenadas (opcional)
+  longitude?: number; // 🆕 NOVO: Coordenadas (opcional)
+  estimatedPickupTime?: string; // 🆕 NOVO: Horário estimado de embarque (HH:MM)
+  estimatedDropTime?: string; // 🆕 NOVO: Horário estimado de desembarque (HH:MM)
   monthlyFees?: number; // Valor da Mensalidade
   dueDay?: number; // Dia de Vencimento
   birthDate?: string; // Data de nascimento
@@ -161,4 +168,33 @@ export interface StudentPayment {
   lastPaymentDate?: string;
   nextDueDate?: string;
   amount: number;
+}
+
+// 🆕 NOVA ESTRUTURA DE ROTAS
+
+export interface RouteSession {
+  id: string;
+  routeId: string;
+  userId: string;
+  date: string; // ISO Date YYYY-MM-DD
+  type: 'pickup' | 'dropoff'; // Ida ou volta
+  startTime?: string; // ISO DateTime
+  endTime?: string; // ISO DateTime
+  skippedStudents: string[]; // IDs dos alunos que faltaram
+  status: 'planned' | 'in_progress' | 'completed';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface RouteEvent {
+  id: string;
+  sessionId: string;
+  studentId: string;
+  userId: string;
+  eventType: 'notification_sent' | 'picked_up' | 'dropped_off' | 'skipped';
+  timestamp: string; // ISO DateTime
+  latitude?: number;
+  longitude?: number;
+  notes?: string;
+  createdAt?: string;
 }
