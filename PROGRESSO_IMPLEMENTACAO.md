@@ -51,7 +51,7 @@
 
 ---
 
-## 🔄 FASE 3: Telas do Condutor - EM PROGRESSO (25%)
+## 🔄 FASE 3: Telas do Condutor - EM PROGRESSO (50%)
 
 ### ✅ StudentsScreen.tsx - COMPLETO (100%)
 - ✅ Backend atualizado (`handleSubmit`, `resetForm`, `populateForm`)
@@ -68,6 +68,17 @@
   - ✅ Exibição de endereço e horário estimado
 - ✅ Modal de detalhes atualizado
 - ✅ Função `handleGetLocation()` para capturar GPS
+- ✅ Build testado e funcionando
+
+### ✅ RoutesScreen.tsx - COMPLETO (100%)
+- ✅ Removida toda funcionalidade de "Pontos"
+- ✅ Visualização simplificada: Rota → Alunos
+- ✅ Contador de alunos por rota
+- ✅ Botão "Adicionar Ponto" removido
+- ✅ Botão "Organizar" preparado (placeholder)
+- ✅ Validação: não permite deletar rota com alunos
+- ✅ Link para adicionar alunos quando rota vazia
+- ✅ Link para abrir detalhes do aluno
 - ✅ Build testado e funcionando
 
 ### ⏳ RouteOrganizerScreen.tsx - NÃO INICIADO
@@ -160,19 +171,20 @@
 ```
 Fase 1 (Banco):    ████████████████████ 100%
 Fase 2 (Services): ████████████████████ 100%
-Fase 3 (Telas):    █████░░░░░░░░░░░░░░░  25%
+Fase 3 (Telas):    ██████████░░░░░░░░░░  50%
 ```
 
-**Total:** ~75% completo
+**Total:** ~83% completo
 
 ---
 
 ## 📁 Arquivos Modificados Hoje
 
 - ✅ `pages/StudentsScreen.tsx` - UI completa atualizada
+- ✅ `pages/RoutesScreen.tsx` - Removida funcionalidade de pontos
 - ✅ `RESUMO_SESSAO_25_JAN.md` - Resumo detalhado das mudanças
 - ✅ `PROGRESSO_IMPLEMENTACAO.md` - Este arquivo
 
 ---
 
-**Última Atualização:** 25/01/2026 - 18:00
+**Última Atualização:** 25/01/2026 - 18:30
