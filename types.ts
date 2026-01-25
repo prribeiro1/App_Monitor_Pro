@@ -17,7 +17,7 @@ export interface Stop {
 
 export interface Student {
   id: string;
-  stopId: string; // ⚠️ DEPRECATED: Manter por compatibilidade, usar routeId
+  stopId?: string; // ⚠️ DEPRECATED: Manter por compatibilidade, usar routeId
   routeId?: string; // 🆕 NOVO: ID da rota (substitui stopId)
   name: string;
   active: boolean;

@@ -140,7 +140,6 @@ export const StudentsScreen: React.FC = () => {
 
     const student: Student = {
       id: editingId || crypto.randomUUID(),
-      stopId: '', // Não usa mais pontos
       name: studentName,
       active: true,
       birthDate: birthDate || undefined,
@@ -155,13 +154,18 @@ export const StudentsScreen: React.FC = () => {
       dueDay: dueDay ? parseInt(dueDay) : 0,
       order: existing?.order || Date.now(),
       
-      // 🆕 NOVA ESTRUTURA (obrigatório)
+      // 🆕 NOVA ESTRUTURA
       routeId: selectedRouteId,
       address: address || undefined,
       latitude: latitude,
       longitude: longitude,
       routeOrder: routeOrder ? parseInt(routeOrder) : 0,
     };
+
+    // Manter stopId apenas se já existir (compatibilidade)
+    if (existing?.stopId) {
+      student.stopId = existing.stopId;
+    }
 
     await dbService.saveStudent(student);
     setIsModalOpen(false);
