@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { Route, Student } from '../types';
 import { Icon } from '../components/Icon';
+import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
 
 interface RoutesScreenProps {
@@ -28,6 +29,27 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
   useEffect(() => { fetchData(); }, []);
 
   const toggleRoute = (id: string) => setExpandedRoutes(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const moveStudent = async (student: Student, direction: 'up' | 'down') => {
+    const siblings = students.filter(s => s.routeId === student.routeId);
+    const index = siblings.findIndex(s => s.id === student.id);
+
+    if (direction === 'up' && index > 0) {
+      const prev = siblings[index - 1];
+      const tempOrder = student.routeOrder || student.order || 0;
+      student.routeOrder = prev.routeOrder || prev.order || 0;
+      prev.routeOrder = tempOrder;
+      await Promise.all([dbService.saveStudent(student), dbService.saveStudent(prev)]);
+      fetchData();
+    } else if (direction === 'down' && index < siblings.length - 1) {
+      const next = siblings[index + 1];
+      const tempOrder = student.routeOrder || student.order || 0;
+      student.routeOrder = next.routeOrder || next.order || 0;
+      next.routeOrder = tempOrder;
+      await Promise.all([dbService.saveStudent(student), dbService.saveStudent(next)]);
+      fetchData();
+    }
+  };
 
   const handleRouteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,29 +123,49 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
                         </button>
                       </div>
                     ) : (
-                      <div className="divide-y divide-navy-700">
+                      <div className="p-3 grid gap-2">
                         {routeStudents.map((student, idx) => (
-                          <div key={student.id} className="p-3 flex items-center justify-between">
+                          <div 
+                            key={student.id} 
+                            onClick={() => window.location.hash = `/students?open=${student.id}`}
+                            className="bg-navy-800 p-3 rounded-lg border border-navy-700 flex items-center justify-between group cursor-pointer hover:bg-navy-700/50 transition-colors"
+                          >
                             <div className="flex items-center gap-3">
-                              <span className="w-6 h-6 bg-primary-500/20 text-primary-400 rounded-full flex items-center justify-center text-xs font-bold">
-                                {student.routeOrder || idx + 1}
-                              </span>
+                              <div className="flex flex-col gap-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); moveStudent(student, 'up'); }} 
+                                  disabled={idx === 0} 
+                                  className="text-gray-500 hover:text-white disabled:opacity-30"
+                                >
+                                  <Icon name="chevron-up" size={16} />
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); moveStudent(student, 'down'); }} 
+                                  disabled={idx === routeStudents.length - 1} 
+                                  className="text-gray-500 hover:text-white disabled:opacity-30"
+                                >
+                                  <Icon name="chevron-down" size={16} />
+                                </button>
+                              </div>
+                              <InitialsAvatar name={student.name} />
                               <div>
-                                <p className="text-white text-sm font-medium">{student.name}</p>
-                                {student.address && (
-                                  <p className="text-xs text-gray-400">📍 {student.address}</p>
-                                )}
-                                {student.estimatedPickupTime && (
-                                  <p className="text-xs text-gray-400">🕐 {student.estimatedPickupTime}</p>
-                                )}
+                                <span className="text-white font-medium flex items-center gap-1">
+                                  {student.observation && (
+                                    <span className="text-orange-400" title="Possui observação">⚠️</span>
+                                  )}
+                                  {student.routeOrder != null && student.routeOrder > 0 && (
+                                    <span className="text-primary-400 text-xs font-bold mr-1">#{student.routeOrder}</span>
+                                  )}
+                                  {student.name}
+                                </span>
+                                <div className="text-xs text-gray-400 space-y-0.5">
+                                  {student.school && <div>{student.school}</div>}
+                                  {student.address && <div>📍 {student.address}</div>}
+                                  {student.estimatedPickupTime && <div>🕐 {student.estimatedPickupTime}</div>}
+                                </div>
                               </div>
                             </div>
-                            <button
-                              onClick={() => window.location.hash = `/students?open=${student.id}`}
-                              className="p-1.5 text-gray-400 hover:text-white transition"
-                            >
-                              <Icon name="chevron-right" size={16} />
-                            </button>
+                            <Icon name="chevron-right" size={20} className="text-gray-500" />
                           </div>
                         ))}
                       </div>
