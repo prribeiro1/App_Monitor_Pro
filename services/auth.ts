@@ -2,15 +2,23 @@ import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { Device } from '@capacitor/device';
 
 // --- CONFIGURAÇÃO DO SUPABASE ---
-// Agora lê das variáveis de ambiente (.env.development ou .env.production)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://nrkwrmksqhykfvgmfpcw.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_I-rsXf9WcK3BOrGjVLj4UA_WhAKix0x';
+// ⚠️⚠️⚠️ ATENÇÃO: HARDCODED PARA DESENVOLVIMENTO ⚠️⚠️⚠️
+// TODO: ANTES DE FAZER MERGE NA MAIN, REVERTER PARA USAR .env
+// Branch: feature/feedback-condutores
+// Projeto: DESENVOLVIMENTO (bkwrflgrfhsgeowjynou)
+const SUPABASE_URL = 'https://bkwrflgrfhsgeowjynou.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrd3JmbGdyZmhzZ2Vvd2p5bm91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNDEyNjEsImV4cCI6MjA4NDkxNzI2MX0.w4Y8o4hQ3Sq2NZTcVasqQUE85QcPjdlJc2zUzYxLzzM';
 
-// Log para debug (remover em produção)
-console.log('🔧 Supabase Config:', {
-    url: SUPABASE_URL,
-    environment: import.meta.env.VITE_ENVIRONMENT || 'default'
-});
+// ALERTA VISUAL NO CONSOLE
+console.warn('⚠️⚠️⚠️ ATENÇÃO: USANDO PROJETO DE DESENVOLVIMENTO HARDCODED! ⚠️⚠️⚠️');
+console.warn('🔴 NÃO FAZER MERGE NA MAIN SEM REVERTER!');
+console.warn('📝 Arquivo: services/auth.ts');
+
+// Log para debug
+console.log('🔧 Supabase Config:');
+console.log('   URL:', SUPABASE_URL);
+console.log('   Environment: development (hardcoded)');
+console.log('   Mode:', import.meta.env.MODE);
 
 // Sufixo para "esconder" o e-mail
 const EMAIL_SUFFIX = '@monitorescolar.app';
