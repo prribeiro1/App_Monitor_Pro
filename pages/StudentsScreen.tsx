@@ -6,11 +6,6 @@ import { Icon } from '../components/Icon';
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
 
-interface RouteGroup {
-  route: Route;
-  students: Student[];
-}
-
 export const StudentsScreen: React.FC = () => {
   const { language } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,7 +14,6 @@ export const StudentsScreen: React.FC = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
 
   // Labels de turnos pelo idioma
   const shiftLabels: Record<string, string> = language === 'es'
@@ -108,31 +102,6 @@ export const StudentsScreen: React.FC = () => {
     }
   }, [searchParams, students]);
 
-  const toggleRoute = (id: string) => {
-    setExpandedRoutes(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const moveStudent = async (student: Student, direction: 'up' | 'down') => {
-    const siblings = students.filter(s => s.routeId === student.routeId);
-    const index = siblings.findIndex(s => s.id === student.id);
-
-    if (direction === 'up' && index > 0) {
-      const prev = siblings[index - 1];
-      const tempOrder = student.routeOrder || student.order || 0;
-      student.routeOrder = prev.routeOrder || prev.order || 0;
-      prev.routeOrder = tempOrder;
-      await Promise.all([dbService.saveStudent(student), dbService.saveStudent(prev)]);
-      fetchData();
-    } else if (direction === 'down' && index < siblings.length - 1) {
-      const next = siblings[index + 1];
-      const tempOrder = student.routeOrder || student.order || 0;
-      student.routeOrder = next.routeOrder || next.order || 0;
-      next.routeOrder = tempOrder;
-      await Promise.all([dbService.saveStudent(student), dbService.saveStudent(next)]);
-      fetchData();
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -140,6 +109,7 @@ export const StudentsScreen: React.FC = () => {
 
     const student: Student = {
       id: editingId || crypto.randomUUID(),
+      stopId: '', // Não usa mais pontos
       name: studentName,
       active: true,
       birthDate: birthDate || undefined,
@@ -154,18 +124,13 @@ export const StudentsScreen: React.FC = () => {
       dueDay: dueDay ? parseInt(dueDay) : 0,
       order: existing?.order || Date.now(),
       
-      // 🆕 NOVA ESTRUTURA
+      // 🆕 NOVA ESTRUTURA (obrigatório)
       routeId: selectedRouteId,
       address: address || undefined,
       latitude: latitude,
       longitude: longitude,
       routeOrder: routeOrder ? parseInt(routeOrder) : 0,
     };
-
-    // Manter stopId apenas se já existir (compatibilidade)
-    if (existing?.stopId) {
-      student.stopId = existing.stopId;
-    }
 
     await dbService.saveStudent(student);
     setIsModalOpen(false);
@@ -256,11 +221,6 @@ export const StudentsScreen: React.FC = () => {
     return `${day}/${month}/${year}`;
   };
 
-  const groupedData: RouteGroup[] = routes.map(route => {
-    const routeStudents = students.filter(s => s.routeId === route.id);
-    return { route, students: routeStudents };
-  });
-
   return (
     <div className="p-4 pb-20">
       <div className="flex justify-between items-center mb-6">
@@ -273,76 +233,35 @@ export const StudentsScreen: React.FC = () => {
         </button>
       </div>
 
-      <div className="space-y-6">
-        {groupedData.map(({ route, students: routeStudents }) => {
-          if (routeStudents.length === 0) return null;
-          const isRouteExpanded = expandedRoutes[route.id];
-
-          return (
-            <div key={route.id} className="border border-navy-700 rounded-xl overflow-hidden bg-navy-800/30">
-              <div
-                onClick={() => toggleRoute(route.id)}
-                className="flex items-center justify-between bg-navy-700 p-3 cursor-pointer hover:bg-navy-600 transition-colors"
-              >
-                <h3 className="text-primary-400 font-bold uppercase tracking-wider flex items-center gap-2">
-                  <Icon name="map" size={18} />
-                  {route.name}
-                  <span className="text-sm text-gray-400 font-normal">({routeStudents.length} alunos)</span>
-                </h3>
-                <Icon name={isRouteExpanded ? "x" : "plus"} size={16} className="text-primary-400 rotate-45 transition-transform" />
-              </div>
-
-              {isRouteExpanded && (
-                <div className="p-3 grid gap-2">
-                  {routeStudents.map((student, index) => (
-                    <div
-                      key={student.id}
-                      onClick={() => setSelectedStudent(student)}
-                      className="bg-navy-800 p-3 rounded-lg border border-navy-700 flex items-center justify-between group cursor-pointer hover:bg-navy-700/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col gap-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); moveStudent(student, 'up'); }} 
-                            disabled={index === 0} 
-                            className="text-gray-500 hover:text-white disabled:opacity-30"
-                          >
-                            <Icon name="chevron-up" size={16} />
-                          </button>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); moveStudent(student, 'down'); }} 
-                            disabled={index === routeStudents.length - 1} 
-                            className="text-gray-500 hover:text-white disabled:opacity-30"
-                          >
-                            <Icon name="chevron-down" size={16} />
-                          </button>
-                        </div>
-                        <InitialsAvatar name={student.name} />
-                        <div>
-                          <span className="text-white font-medium flex items-center gap-1">
-                            {student.observation && (
-                              <span className="text-orange-400" title="Possui observação">⚠️</span>
-                            )}
-                            {student.routeOrder != null && student.routeOrder > 0 && (
-                              <span className="text-primary-400 text-xs font-bold mr-1">#{student.routeOrder}</span>
-                            )}
-                            {student.name}
-                          </span>
-                          <div className="text-xs text-gray-400 space-y-0.5">
-                            {student.school && <div>{student.school}</div>}
-                            {student.address && <div>📍 {student.address}</div>}
-                            {student.estimatedPickupTime && <div>🕐 {student.estimatedPickupTime}</div>}
-                          </div>
-                        </div>
-                      </div>
-                      <Icon name="chevron-right" size={20} className="text-gray-500" />
+      <div className="space-y-3">
+        {students.map((student) => (
+          <div
+            key={student.id}
+            onClick={() => setSelectedStudent(student)}
+            className="bg-navy-800 p-4 rounded-xl border border-navy-700 flex items-center justify-between cursor-pointer hover:bg-navy-700/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <InitialsAvatar name={student.name} />
+              <div>
+                <span className="text-white font-medium flex items-center gap-1">
+                  {student.observation && (
+                    <span className="text-orange-400" title="Possui observação">⚠️</span>
+                  )}
+                  {student.name}
+                </span>
+                <div className="text-xs text-gray-400 space-y-0.5">
+                  {student.school && <div>{student.school}</div>}
+                  {student.routeId && (
+                    <div className="text-primary-400">
+                      📍 {getRouteName(student.routeId)}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          );
-        })}
+            <Icon name="chevron-right" size={20} className="text-gray-500" />
+          </div>
+        ))}
         {students.length === 0 && <p className="text-center text-gray-500 mt-10">Nenhum aluno cadastrado.</p>}
       </div>
 
