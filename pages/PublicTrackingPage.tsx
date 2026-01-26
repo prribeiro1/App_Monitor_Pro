@@ -94,6 +94,12 @@ export const PublicTrackingPage: React.FC = () => {
     // Validate share code and get driver info
     useEffect(() => {
         const validateCode = async () => {
+            console.log('🔍 Debug Rastreamento:', {
+                shareCode,
+                supabaseUrl: (supabase as any).supabaseUrl,
+                timestamp: new Date().toISOString()
+            });
+
             if (!shareCode) {
                 setError('Código de rastreamento não informado');
                 setLoading(false);

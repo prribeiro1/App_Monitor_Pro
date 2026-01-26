@@ -10,13 +10,16 @@ export const PublicStudentRegister: React.FC = () => {
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
+        birthDate: '', // Added birthDate
         guardianName: '',
-        responsibleCpf: '', // Added CPF
+        responsibleCpf: '',
         contact: '',
         responsibleEmail: '',
         school: '',
         shift: 'morning',
         address: '',
+        monthlyFees: '', // Added fees
+        dueDay: '',      // Added due day
         observation: ''
     });
 
@@ -32,18 +35,20 @@ export const PublicStudentRegister: React.FC = () => {
 
         try {
             // Inserir o aluno diretamente no Supabase
-            // Usamos snake_case para as colunas do banco
             const { error: insertError } = await supabase.from('students').insert({
                 id: crypto.randomUUID(),
-                user_id: driverId, // Vincula ao condutor dono do link
+                user_id: driverId,
                 name: formData.name,
+                birth_date: formData.birthDate, // Map birth date
                 guardian_name: formData.guardianName,
-                responsible_cpf: formData.responsibleCpf, // Added CPF
+                responsible_cpf: formData.responsibleCpf,
                 contact: formData.contact,
                 responsible_email: formData.responsibleEmail,
                 school: formData.school,
                 shift: formData.shift,
                 address: formData.address,
+                monthly_fees: formData.monthlyFees ? parseFloat(formData.monthlyFees) : 0, // Map fees
+                due_day: formData.dueDay ? parseInt(formData.dueDay) : null, // Map due day
                 observation: formData.observation,
                 active: true,
                 updated_at: new Date().toISOString(),
@@ -101,45 +106,61 @@ export const PublicStudentRegister: React.FC = () => {
                         </div>
                     )}
 
-                    <div>
-                        <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Nome da Criança</label>
-                        <input
-                            type="text"
-                            required
-                            className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
-                            placeholder="Nome completo do aluno"
-                            value={formData.name}
-                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Responsável</label>
-                        <input
-                            type="text"
-                            required
-                            className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
-                            placeholder="Seu nome completo"
-                            value={formData.guardianName}
-                            onChange={e => setFormData({ ...formData, guardianName: e.target.value })}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">CPF do Responsável</label>
-                        <input
-                            type="text"
-                            required
-                            className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
-                            placeholder="000.000.000-00"
-                            value={formData.responsibleCpf}
-                            onChange={e => setFormData({ ...formData, responsibleCpf: e.target.value })}
-                        />
-                    </div>
-
+                    {/* Dados Básicos */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Celular (WhatsApp)</label>
+                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Nome da Criança</label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
+                                placeholder="Nome completo"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Nascimento</label>
+                            <input
+                                type="date"
+                                required
+                                className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
+                                value={formData.birthDate}
+                                onChange={e => setFormData({ ...formData, birthDate: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Responsável e CPF */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-1">
+                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Responsável</label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
+                                placeholder="Pai/Mãe"
+                                value={formData.guardianName}
+                                onChange={e => setFormData({ ...formData, guardianName: e.target.value })}
+                            />
+                        </div>
+                        <div className="col-span-1">
+                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">CPF</label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition text-sm"
+                                placeholder="000.000.000-00"
+                                value={formData.responsibleCpf}
+                                onChange={e => setFormData({ ...formData, responsibleCpf: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Contato e Período */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">WhatsApp</label>
                             <input
                                 type="tel"
                                 required
@@ -163,47 +184,79 @@ export const PublicStudentRegister: React.FC = () => {
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">E-mail</label>
-                        <input
-                            type="email"
-                            className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
-                            placeholder="seu@email.com"
-                            value={formData.responsibleEmail}
-                            onChange={e => setFormData({ ...formData, responsibleEmail: e.target.value })}
-                        />
+                    {/* Financeiro */}
+                    <div className="grid grid-cols-2 gap-4 bg-primary-500/5 p-4 rounded-2xl border border-primary-500/20">
+                        <div>
+                            <label className="block text-gray-400 text-[10px] font-bold mb-1 uppercase">Vencimento (Dia)</label>
+                            <input
+                                type="number"
+                                min="1"
+                                max="31"
+                                className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg focus:border-primary-500 outline-none transition"
+                                placeholder="10"
+                                value={formData.dueDay}
+                                onChange={e => setFormData({ ...formData, dueDay: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-400 text-[10px] font-bold mb-1 uppercase">Mensalidade (R$)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg focus:border-primary-500 outline-none transition"
+                                placeholder="0,00"
+                                value={formData.monthlyFees}
+                                onChange={e => setFormData({ ...formData, monthlyFees: e.target.value })}
+                            />
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Escola</label>
-                        <input
-                            type="text"
-                            required
-                            className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
-                            placeholder="Nome da escola"
-                            value={formData.school}
-                            onChange={e => setFormData({ ...formData, school: e.target.value })}
-                        />
+                    {/* Email e Escola */}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">E-mail</label>
+                            <input
+                                type="email"
+                                className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
+                                placeholder="seu@email.com"
+                                value={formData.responsibleEmail}
+                                onChange={e => setFormData({ ...formData, responsibleEmail: e.target.value })}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Escola</label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
+                                placeholder="Nome da instituição"
+                                value={formData.school}
+                                onChange={e => setFormData({ ...formData, school: e.target.value })}
+                            />
+                        </div>
                     </div>
 
+                    {/* Endereço */}
                     <div>
                         <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Endereço Completo</label>
                         <textarea
                             required
                             rows={3}
                             className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition resize-none"
-                            placeholder="Rua, número, bairro e pontos de referência"
+                            placeholder="Rua, número, bairro..."
                             value={formData.address}
                             onChange={e => setFormData({ ...formData, address: e.target.value })}
                         />
                     </div>
 
+                    {/* Observações */}
                     <div>
-                        <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Observações (Saúde, etc)</label>
+                        <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Observações Médicas ou de Retirada</label>
                         <textarea
                             rows={2}
                             className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition resize-none"
-                            placeholder="Ex: Alergias, quem pode retirar, restrições..."
+                            placeholder="Alergias, restrições ou recados..."
                             value={formData.observation}
                             onChange={e => setFormData({ ...formData, observation: e.target.value })}
                         />
@@ -222,7 +275,7 @@ export const PublicStudentRegister: React.FC = () => {
                         ) : (
                             <>
                                 <Icon name="send" size={20} />
-                                Finalizar Cadastro
+                                Finalizar e Enviar Cadastro
                             </>
                         )}
                     </button>
