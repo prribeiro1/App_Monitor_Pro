@@ -63,9 +63,9 @@ export const TrackingControl: React.FC<TrackingControlProps> = ({ routeId }) => 
     };
 
     const getTrackingUrl = () => {
-        // Your Vercel app URL
-        const baseUrl = 'https://app-monitor-pro.vercel.app';
-        return `${baseUrl}/#/track/${shareCode}`;
+        // 🛠️ MONITOR PRO FIX: Usar URLs limpas e dinâmicas
+        const baseUrl = window.location.origin;
+        return `${baseUrl}/track/${shareCode}`;
     };
 
     const copyToClipboard = async () => {

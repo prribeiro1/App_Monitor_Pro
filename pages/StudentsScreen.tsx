@@ -185,13 +185,14 @@ export const StudentsScreen: React.FC = () => {
     return todayDate.getDate() === day && (todayDate.getMonth() + 1) === month;
   };
 
-  // 🆕 Compartilhar link de cadastro com pais
+  // 🛠️ MONITOR PRO FIX: Usar URLs limpas para evitar choque com Landing Page
   const handleShareInvite = async () => {
     const user = await authService.getCurrentUser();
     if (!user) return;
 
-    const PRODUCTION_URL = 'https://app-monitor-pro.vercel.app';
-    const shareUrl = `${PRODUCTION_URL}/#/cadastro-aluno/${user.id}`;
+    // Detectar origem dinamicamente para funcionar em links de Preview
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}/cadastro-aluno/${user.id}`;
     const message = `Olá! 🚐 Para facilitar o cadastro do seu filho no Monitor Escolar PRO, clique no link abaixo e preencha a ficha:\n\n${shareUrl}`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');

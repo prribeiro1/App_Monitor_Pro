@@ -147,17 +147,17 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
                 return;
             }
 
-            const PRODUCTION_URL = 'https://app-monitor-pro.vercel.app';
+            const baseUrl = window.location.origin;
             let link = '';
 
             if (data) {
-                link = `${PRODUCTION_URL}/#/sign-contract/${data.id}`;
+                link = `${baseUrl}/sign-contract/${data.id}`;
             }
 
             // Enviar direto para WhatsApp do responsável se tiver telefone cadastrado
             const responsiblePhone = student.responsiblePhone?.replace(/\D/g, '');
             const message = `Olá! Segue o link para visualizar e assinar o contrato de transporte escolar do(a) ${student.name}:\n\n${link}`;
-            
+
             if (responsiblePhone && responsiblePhone.length >= 10) {
                 // Abrir WhatsApp direto para o número do responsável
                 window.open(`https://wa.me/55${responsiblePhone}?text=${encodeURIComponent(message)}`, '_blank');
