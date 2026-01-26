@@ -518,19 +518,33 @@ function App() {
 
   if (!session) {
     const isNativeApp = Capacitor.isNativePlatform();
+
+    // 🔍 Detectar se é uma rota pública para evitar redirecionamento indevido
+    const currentPath = window.location.hash;
+    const isPublicRoute = currentPath.includes('/track/') ||
+      currentPath.includes('/cadastro-aluno/') ||
+      currentPath.includes('/sign-contract/');
+
     return (
-      <HashRouter>
-        <Routes>
-          <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
-          <Route path="/landing" element={<LandingScreen />} />
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/register" element={<RegisterScreen />} />
-          <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
-          <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
-          <Route path="/" element={isNativeApp ? <Navigate to="/login" /> : <LandingScreen />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </HashRouter>
+      <I18nProvider>
+        <HashRouter>
+          <Routes>
+            <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
+            <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
+            <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
+
+            <Route path="/landing" element={<LandingScreen />} />
+            <Route path="/login" element={<LoginScreen />} />
+            <Route path="/register" element={<RegisterScreen />} />
+
+            <Route path="/" element={
+              isPublicRoute ? null : (isNativeApp ? <Navigate to="/login" /> : <LandingScreen />)
+            } />
+
+            <Route path="*" element={isPublicRoute ? null : <Navigate to="/" />} />
+          </Routes>
+        </HashRouter>
+      </I18nProvider>
     );
   }
 
@@ -601,6 +615,11 @@ function App() {
           }}
         >
           <Routes>
+            {/* Priorizar Rotas Públicas (mesmo logado) */}
+            <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
+            <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
+            <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
+
             <Route path="/dashboard" element={<DashboardWrapper />} />
             {canViewRoutes && <Route path="/routes" element={<RoutesScreen canUseGps={canViewGps} />} />}
             {canViewRoutes && <Route path="/routes/history" element={<RouteHistoryScreen />} />}
@@ -639,9 +658,6 @@ function App() {
                 />
               </div>
             } />
-            <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
-            <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
-            <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
         </Layout>

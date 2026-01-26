@@ -101,14 +101,19 @@ export const PublicTrackingPage: React.FC = () => {
             }
 
             try {
+                // Clean and normalize share code
+                const normalizedCode = shareCode.trim().toUpperCase();
+                console.log('[Tracking] Validating code:', normalizedCode);
+
                 // Look up the share code
                 const { data: linkData, error: linkError } = await supabase
                     .from('tracking_links')
                     .select('user_id, is_active')
-                    .eq('share_code', shareCode.toUpperCase())
+                    .eq('share_code', normalizedCode)
                     .single();
 
                 if (linkError || !linkData) {
+                    console.error('[Tracking] Code not found or error:', linkError);
                     setError('Código de rastreamento inválido');
                     setLoading(false);
                     return;
@@ -144,8 +149,8 @@ export const PublicTrackingPage: React.FC = () => {
 
                 setLoading(false);
             } catch (e) {
-                console.error('Error validating code:', e);
-                setError('Erro ao verificar código');
+                console.error('[Tracking] Error validating code:', e);
+                setError('Erro ao verificar código de rastreamento');
                 setLoading(false);
             }
         };
@@ -181,7 +186,7 @@ export const PublicTrackingPage: React.FC = () => {
                 },
                 (payload) => {
                     const event = payload.new;
-                    
+
                     // Criar notificação baseada no tipo de evento
                     let message = '';
                     let type: 'proximity' | 'pickup' | 'dropoff' = 'proximity';

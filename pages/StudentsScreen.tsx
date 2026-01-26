@@ -6,6 +6,17 @@ import { Icon } from '../components/Icon';
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
 import { authService, supabase } from '../services/auth';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Corrigir ícone padrão do Leaflet no build
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
+});
 
 export const StudentsScreen: React.FC = () => {
   const { language } = useI18n();
@@ -40,10 +51,63 @@ export const StudentsScreen: React.FC = () => {
 
   // 🆕 NOVA ESTRUTURA (sem pontos)
   const [address, setAddress] = useState('');
+  const [addressSearch, setAddressSearch] = useState(''); // Estado para o campo de busca
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
   const [routeOrder, setRouteOrder] = useState('');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showAddressMap, setShowAddressMap] = useState(false);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+
+  // 🆕 Componente para capturar clique no mapa para localização manual
+  const MapEvents = () => {
+    useMapEvents({
+      click(e) {
+        setLatitude(e.latlng.lat);
+        setLongitude(e.latlng.lng);
+      },
+    });
+    return null;
+  };
+
+  // 🆕 Buscar sugestões de endereço (Photon API - Mais estável)
+  const handleAddressSearch = async (value: string) => {
+    setAddressSearch(value);
+    if (value.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsSearchingAddress(true);
+    try {
+      // Usando Photon para busca rápida em português
+      const resp = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(value)}&limit=5&lang=pt`);
+      const data = await resp.json();
+      setSuggestions(data.features || []);
+    } catch (err) {
+      console.error('Erro ao buscar endereços:', err);
+    } finally {
+      setIsSearchingAddress(false);
+    }
+  };
+
+  const handleSelectSuggestion = (sug: any) => {
+    const { name, street, housenumber, city, state } = sug.properties;
+
+    // Montagem amigável do endereço
+    let fullAddr = name || '';
+    if (street && street !== name) fullAddr = `${street}${housenumber ? `, ${housenumber}` : ''}${name ? ` (${name})` : ''}`;
+    if (city) fullAddr += ` - ${city}`;
+    if (state) fullAddr += `, ${state}`;
+
+    setAddress(fullAddr);
+    setAddressSearch(''); // Limpa busca
+    setLatitude(sug.geometry.coordinates[1]);
+    setLongitude(sug.geometry.coordinates[0]);
+    setSuggestions([]);
+    setShowAddressMap(true); // Abre mapa para confirmação
+  };
 
   // 🆕 Capturar localização GPS
   const handleGetLocation = () => {
@@ -81,7 +145,8 @@ export const StudentsScreen: React.FC = () => {
     const user = await authService.getCurrentUser();
     if (!user) return;
 
-    const shareUrl = `${window.location.origin}/#/cadastro-aluno/${user.id}`;
+    const PRODUCTION_URL = 'https://app-monitor-pro.vercel.app';
+    const shareUrl = `${PRODUCTION_URL}/#/cadastro-aluno/${user.id}`;
     const message = `Olá! 🚐 Para facilitar o cadastro do seu filho no Monitor Escolar PRO, clique no link abaixo e preencha a ficha:\n\n${shareUrl}`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
@@ -188,6 +253,8 @@ export const StudentsScreen: React.FC = () => {
     setLatitude(undefined);
     setLongitude(undefined);
     setRouteOrder('');
+    setShowAddressMap(false);
+    setSuggestions([]);
 
     if (routes.length > 0) {
       setSelectedRouteId(routes[0].id);
@@ -214,6 +281,8 @@ export const StudentsScreen: React.FC = () => {
     setLatitude(student.latitude);
     setLongitude(student.longitude);
     setRouteOrder(student.routeOrder ? student.routeOrder.toString() : '');
+    setShowAddressMap(!!(student.latitude && student.longitude));
+    setSuggestions([]);
 
     setSelectedStudent(null);
     setIsModalOpen(true);
@@ -530,15 +599,132 @@ export const StudentsScreen: React.FC = () => {
                 </select>
               </div>
 
-              {/* 🆕 Endereço */}
+              {/* 🆕 Busca de Endereço (Autocomplete) */}
+              <div className="relative">
+                <label className="block text-sm text-gray-400 mb-1">Buscar Endereço (Rua, Número...)</label>
+                <div className="relative flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={addressSearch}
+                      onChange={e => handleAddressSearch(e.target.value)}
+                      placeholder="Ex: Rua Direita, 100, São Paulo"
+                      className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl focus:border-primary-500 outline-none transition"
+                    />
+                    {isSearchingAddress && (
+                      <div className="absolute right-3 top-3">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lista de Sugestões Photon */}
+                {suggestions.length > 0 && (
+                  <div className="absolute z-[101] left-0 right-0 bg-navy-800 border-2 border-primary-500/50 rounded-xl shadow-2xl mt-2 max-h-52 overflow-y-auto backdrop-blur-md">
+                    {suggestions.map((sug, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectSuggestion(sug)}
+                        className="w-full text-left p-4 text-sm text-gray-200 border-b border-navy-700 hover:bg-primary-600/20 active:bg-primary-600/40 transition-colors last:border-0"
+                      >
+                        <div className="flex gap-3">
+                          <Icon name="map-pin" size={16} className="text-primary-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-bold">{sug.properties.name || sug.properties.street}</p>
+                            <p className="text-[10px] text-gray-500">{sug.properties.city}{sug.properties.state ? `, ${sug.properties.state}` : ''}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Endereço Final (Editável) */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Endereço (opcional)</label>
+                <label className="block text-sm text-gray-400 mb-1">Endereço Confirmado</label>
                 <textarea
                   value={address}
                   onChange={e => setAddress(e.target.value)}
-                  placeholder="Ex: Rua das Flores, 123 - Centro"
-                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg h-20"
+                  placeholder="Selecione acima ou digite aqui..."
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl h-16 text-sm resize-none"
                 />
+              </div>
+
+              {/* 🆕 Localização GPS no Mapa */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-400">Ponto no Mapa</label>
+                    {latitude && longitude && (
+                      <span className="flex items-center gap-1 text-[10px] text-green-500 font-bold bg-green-500/10 px-2 py-0.5 rounded-full">
+                        <Icon name="check" size={10} /> Localizado
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddressMap(!showAddressMap)}
+                    className="text-primary-400 text-xs font-bold px-2 py-1 hover:bg-primary-500/10 rounded transition"
+                  >
+                    {showAddressMap ? 'Ocultar Mapa' : (latitude ? 'Ajustar Local' : 'Abrir Mapa')}
+                  </button>
+                </div>
+
+                {showAddressMap && (
+                  <div className="space-y-2">
+                    <div className="h-60 bg-navy-900 rounded-xl overflow-hidden border-2 border-navy-700 relative z-0">
+                      <MapContainer
+                        center={[latitude || -23.5505, longitude || -46.6333]}
+                        zoom={16}
+                        style={{ height: '100%', width: '100%' }}
+                      >
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        <MapEvents />
+                        {latitude && longitude && (
+                          <Marker position={[latitude, longitude]} draggable={true}
+                            eventHandlers={{
+                              dragend: (e) => {
+                                const marker = e.target;
+                                const position = marker.getLatLng();
+                                setLatitude(position.lat);
+                                setLongitude(position.lng);
+                              }
+                            }}
+                          />
+                        )}
+                      </MapContainer>
+
+                      {/* Botão Flutuante para Confirmar */}
+                      {latitude && longitude && (
+                        <div className="absolute bottom-4 left-0 right-0 flex justify-center z-[1000] px-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddressMap(false);
+                              alert('Localização confirmada! ✅');
+                            }}
+                            className="bg-green-600 text-white px-6 py-2 rounded-full font-bold shadow-2xl flex items-center gap-2 hover:bg-green-500 transition-all scale-110"
+                          >
+                            <Icon name="check" size={18} />
+                            Confirmar Este Ponto
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="absolute top-2 left-2 bg-navy-900/80 p-2 rounded text-[10px] text-gray-400 z-[1000] pointer-events-none">
+                        Arraste o pino ou clique no mapa
+                      </div>
+                    </div>
+                    {latitude && (
+                      <p className="text-[10px] text-primary-400 text-center font-mono">
+                        GPS: {latitude.toFixed(6)}, {longitude?.toFixed(6)}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* 🆕 Localização GPS */}
