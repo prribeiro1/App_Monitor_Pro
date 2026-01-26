@@ -514,15 +514,10 @@ function App() {
     }
   };
 
-  // 1. Definição da "Trava" de Segurança sugerida pelo usuário
-  const isPublicRoute = window.location.hash.includes('/cadastro-aluno/') ||
-    window.location.hash.includes('/track/') ||
-    window.location.hash.includes('/sign-contract/');
-
   const isNativeApp = Capacitor.isNativePlatform();
 
-  // Se carregando sessão, mostra loader (exceto se for rota pública, para não piscar)
-  if (loadingSession && !isPublicRoute) {
+  // Se carregando sessão, mostra loader
+  if (loadingSession) {
     return <div className="min-h-screen bg-navy-900 flex items-center justify-center text-white">Carregando...</div>;
   }
 
@@ -573,10 +568,10 @@ function App() {
           <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
 
           {/* B. ÁREA RESTRITA */}
-          <Route
-            path="/*"
-            element={
-              session ? (
+          {session ? (
+            <Route
+              path="/*"
+              element={
                 <Layout
                   onBackup={performBackup}
                   onImport={performImport}
@@ -650,12 +645,12 @@ function App() {
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </Layout>
-              ) : (
-                // Se não está logado e NÃO é rota pública, decide entre Login (APK) ou Landing (WEB)
-                <Navigate to={isNativeApp ? "/login" : "/landing"} replace />
-              )
-            }
-          />
+              }
+            />
+          ) : (
+            // Se não está logado, redireciona para Login (APK) ou Landing (WEB)
+            <Route path="*" element={<Navigate to={isNativeApp ? "/login" : "/landing"} replace />} />
+          )}
         </Routes>
 
         {isUpdateRequired && (

@@ -105,16 +105,25 @@ export const PublicTrackingPage: React.FC = () => {
                 const normalizedCode = shareCode.trim().toUpperCase();
                 console.log('[Tracking] Validating code:', normalizedCode);
 
-                // Look up the share code
+                // Look up the share code - usando eq ao invés de ilike para match exato
                 const { data: linkData, error: linkError } = await supabase
                     .from('tracking_links')
                     .select('user_id, is_active')
-                    .ilike('share_code', normalizedCode) // Use ilike for case insensitivity
-                    .maybeSingle(); // Better for single row lookup in terms of error handling
+                    .eq('share_code', normalizedCode) // Match exato (case-sensitive no banco)
+                    .maybeSingle();
 
-                if (linkError || !linkData) {
-                    console.error('[Tracking] Code not found or error:', linkError);
-                    setError('Código de rastreamento inválido');
+                console.log('[Tracking] Query result:', { linkData, linkError });
+
+                if (linkError) {
+                    console.error('[Tracking] Database error:', linkError);
+                    setError('Erro ao validar código. Tente novamente.');
+                    setLoading(false);
+                    return;
+                }
+
+                if (!linkData) {
+                    console.error('[Tracking] Code not found:', normalizedCode);
+                    setError('Código de rastreamento inválido ou expirado');
                     setLoading(false);
                     return;
                 }
