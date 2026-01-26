@@ -103,27 +103,27 @@ export const PublicTrackingPage: React.FC = () => {
             try {
                 // Clean and normalize share code
                 const normalizedCode = shareCode.trim().toUpperCase();
-                console.log('[Tracking] Validating code:', normalizedCode);
+                console.log('[Tracking] Tentando validar código:', normalizedCode);
 
-                // Look up the share code - usando eq ao invés de ilike para match exato
+                // Look up the share code
                 const { data: linkData, error: linkError } = await supabase
                     .from('tracking_links')
                     .select('user_id, is_active')
-                    .eq('share_code', normalizedCode) // Match exato (case-sensitive no banco)
+                    .eq('share_code', normalizedCode)
                     .maybeSingle();
 
-                console.log('[Tracking] Query result:', { linkData, linkError });
+                console.log('[Tracking] Resultado da busca:', { linkData, linkError, code: normalizedCode });
 
                 if (linkError) {
-                    console.error('[Tracking] Database error:', linkError);
-                    setError('Erro ao validar código. Tente novamente.');
+                    console.error('[Tracking] Erro de banco de dados:', linkError);
+                    setError(`Erro de banco: ${linkError.message} (Code: ${linkError.code})`);
                     setLoading(false);
                     return;
                 }
 
                 if (!linkData) {
-                    console.error('[Tracking] Code not found:', normalizedCode);
-                    setError('Código de rastreamento inválido ou expirado');
+                    console.error('[Tracking] Código não encontrado no banco:', normalizedCode);
+                    setError('O código informado não existe ou expirou. Verifique se o motorista iniciou o rastreamento.');
                     setLoading(false);
                     return;
                 }

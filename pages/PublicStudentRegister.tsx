@@ -11,6 +11,7 @@ export const PublicStudentRegister: React.FC = () => {
     const [formData, setFormData] = useState({
         name: '',
         guardianName: '',
+        responsibleCpf: '', // Added CPF
         contact: '',
         responsibleEmail: '',
         school: '',
@@ -37,6 +38,7 @@ export const PublicStudentRegister: React.FC = () => {
                 user_id: driverId, // Vincula ao condutor dono do link
                 name: formData.name,
                 guardian_name: formData.guardianName,
+                responsible_cpf: formData.responsibleCpf, // Added CPF
                 contact: formData.contact,
                 responsible_email: formData.responsibleEmail,
                 school: formData.school,
@@ -52,7 +54,9 @@ export const PublicStudentRegister: React.FC = () => {
             setSuccess(true);
         } catch (err: any) {
             console.error('Erro ao cadastrar:', err);
-            setError(err.message || 'Erro ao enviar cadastro. Verifique sua conexão e tente novamente.');
+            const msg = err.message || 'Erro ao enviar cadastro. Verifique sua conexão e tente novamente.';
+            setError(msg);
+            alert('Erro ao enviar: ' + msg); // Immediate feedback
         } finally {
             setLoading(false);
         }
@@ -118,6 +122,18 @@ export const PublicStudentRegister: React.FC = () => {
                             placeholder="Seu nome completo"
                             value={formData.guardianName}
                             onChange={e => setFormData({ ...formData, guardianName: e.target.value })}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">CPF do Responsável</label>
+                        <input
+                            type="text"
+                            required
+                            className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
+                            placeholder="000.000.000-00"
+                            value={formData.responsibleCpf}
+                            onChange={e => setFormData({ ...formData, responsibleCpf: e.target.value })}
                         />
                     </div>
 

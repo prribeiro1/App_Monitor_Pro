@@ -148,11 +148,11 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
             }
 
             // 🛠️ MONITOR PRO FIX: APK = localhost, então forçamos a branch
-            const baseUrl = 'https://app-monitor-pro-git-fea-7f0621-paulo-ricardos-projects-e065d0ea.vercel.app';
+            const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
             let link = '';
 
             if (data) {
-                link = `${baseUrl}/sign-contract/${data.id}`;
+                link = `${baseUrl}/#/sign-contract/${data.id}`;
             }
 
             // Enviar direto para WhatsApp do responsável se tiver telefone cadastrado

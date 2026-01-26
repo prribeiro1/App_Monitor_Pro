@@ -192,8 +192,8 @@ export const StudentsScreen: React.FC = () => {
 
     // 🛠️ MONITOR PRO FIX: No APK, window.location.origin é localhost. 
     // Forçamos o link da branch para o teste de hoje.
-    const baseUrl = 'https://app-monitor-pro-git-fea-7f0621-paulo-ricardos-projects-e065d0ea.vercel.app';
-    const shareUrl = `${baseUrl}/cadastro-aluno/${user.id}`;
+    const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    const shareUrl = `${baseUrl}/#/cadastro-aluno/${user.id}`;
     const message = `Olá! 🚐 Para facilitar o cadastro do seu filho no Monitor Escolar PRO, clique no link abaixo e preencha a ficha:\n\n${shareUrl}`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');

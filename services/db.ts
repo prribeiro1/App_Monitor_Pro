@@ -222,6 +222,8 @@ export const dbService = {
     try { await cloudSync.saveUserSettings(settings); } catch (e) { }
   },
 
+  getContractSignature: (studentId: string) => getItem<any>('contract_signatures', studentId),
+  saveContractSignature: (studentId: string, signature: string) => putItem('contract_signatures', { studentId, signature }),
   deleteContractSignature: (studentId: string) => deleteItem('contract_signatures', studentId),
 
   // Reminders
