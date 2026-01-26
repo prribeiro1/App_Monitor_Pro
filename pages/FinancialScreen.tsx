@@ -625,7 +625,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                         {/* Botão Adicionar Gasto */}
                         <button
                             onClick={() => setShowExpenseModal(true)}
-                            className="bg-red-600/20 text-red-400 hover:bg-red-600/30 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 transition"
+                            className="bg-red-600/20 text-red-400 hover:bg-red-600/30 px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition"
                         >
                             <Icon name="minus-circle" size={16} />
                             Adicionar Gasto

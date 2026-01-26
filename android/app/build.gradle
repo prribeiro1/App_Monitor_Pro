@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.monitorescolar.pro"
+    namespace "com.monitorescolar.pro.dev"
     compileSdk rootProject.ext.compileSdkVersion
     
     compileOptions {
@@ -10,11 +10,11 @@ android {
     }
     
     defaultConfig {
-        applicationId "com.monitorescolar.pro"
+        applicationId "com.monitorescolar.pro.dev"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 17
-        versionName "1.2.9"
+        versionName "1.2.9-dev"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

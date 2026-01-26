@@ -5,6 +5,9 @@ import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate, useParam
 import { Icon, IconName } from './components/Icon';
 import { DashboardScreen } from './pages/DashboardScreen';
 import { RoutesScreen } from './pages/RoutesScreen';
+import { RouteOrganizerScreen } from './pages/RouteOrganizerScreen';
+import { RouteStartScreen } from './pages/RouteStartScreen';
+import { RouteHistoryScreen } from './pages/RouteHistoryScreen';
 import { StudentsScreen } from './pages/StudentsScreen';
 import { AttendanceScreen } from './pages/AttendanceScreen';
 import { IncidentsScreen } from './pages/IncidentsScreen';
@@ -25,6 +28,7 @@ import { OnboardingBankScreen } from './pages/OnboardingBankScreen';
 import { WelcomeScreen } from './pages/WelcomeScreen';
 import { PublicSignaturePage } from './pages/PublicSignaturePage';
 import { PublicTrackingPage } from './pages/PublicTrackingPage';
+import { PublicStudentRegister } from './pages/PublicStudentRegister';
 import { dbService } from './services/db';
 import { UserSettings, Student } from './types';
 import { backupRepository } from './services/BackupRepository';
@@ -376,14 +380,18 @@ function App() {
   const [isUpdateRequired, setIsUpdateRequired] = useState(false);
 
   const fetchSettings = async () => {
+    console.log("⚙️ Carregando settings...");
     const s = await dbService.getUserSettings();
+    console.log("⚙️ Settings carregados:", s);
     setSettings(s);
 
     // Só redireciona se realmente não tiver nada no local E nada no servidor
     const { data: { user } } = await supabase.auth.getUser();
     const serverTier = user?.user_metadata?.subscription_tier;
+    console.log("📊 Server tier:", serverTier);
 
     if (s && !s.subscriptionTier && !serverTier && !isSuperUser) {
+      console.log("⚠️ Redirecionando para /change-plan");
       window.location.hash = '/change-plan';
     }
   };
@@ -397,20 +405,42 @@ function App() {
   };
 
   useEffect(() => {
+    console.log("🔄 App.tsx: Verificando sessão...");
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("🔐 Sessão encontrada:", session ? `✅ Usuário: ${session.user.email}` : "❌ Nenhuma sessão");
       setSession(session);
       setLoadingSession(false);
       if (session) {
+        console.log("⚙️ Carregando settings do IndexedDB primeiro...");
+        // 🔧 CORREÇÃO: Carrega settings ANTES do sync
+        fetchSettings();
+
+        console.log("☁️ Iniciando pullFromCloud em background...");
         checkAppVersion();
-        dbService.pullFromCloud(); // Sincroniza dados da nuvem ao abrir
+        // 🔧 CORREÇÃO: Sync em background, não bloqueia o app
+        dbService.pullFromCloud().then(() => {
+          console.log("✅ pullFromCloud concluído!");
+          fetchSettings(); // Atualiza settings após sync
+        }).catch((err) => {
+          console.error("❌ Erro no pullFromCloud (app continua funcionando):", err);
+          // App continua funcionando mesmo com erro no sync
+        });
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("🔄 Auth state changed:", _event, session ? `Usuário: ${session.user.email}` : "Sem sessão");
       setSession(session);
       if (_event === 'SIGNED_IN') {
+        console.log("✅ SIGNED_IN detectado, carregando settings...");
+        fetchSettings(); // Carrega settings primeiro
+
+        console.log("☁️ Iniciando pullFromCloud em background...");
         dbService.pullFromCloud().then(() => {
-          fetchSettings();
+          console.log("✅ pullFromCloud após SIGNED_IN concluído!");
+          fetchSettings(); // Atualiza após sync
+        }).catch((err) => {
+          console.error("❌ Erro no pullFromCloud após SIGNED_IN (app continua):", err);
         });
       }
     });
@@ -496,6 +526,7 @@ function App() {
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/register" element={<RegisterScreen />} />
           <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
+          <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
           <Route path="/" element={isNativeApp ? <Navigate to="/login" /> : <LandingScreen />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
@@ -572,6 +603,9 @@ function App() {
           <Routes>
             <Route path="/dashboard" element={<DashboardWrapper />} />
             {canViewRoutes && <Route path="/routes" element={<RoutesScreen canUseGps={canViewGps} />} />}
+            {canViewRoutes && <Route path="/routes/history" element={<RouteHistoryScreen />} />}
+            {canViewRoutes && <Route path="/routes/organize/:routeId" element={<RouteOrganizerScreen />} />}
+            {canViewRoutes && <Route path="/routes/start/:routeId" element={<RouteStartScreen />} />}
             {canViewRoutes && <Route path="/routes/navigate/:id" element={<RouteHandler />} />}
             {canViewStudents && <Route path="/students" element={<StudentsScreen />} />}
             {canViewAttendance && <Route path="/attendance" element={<AttendanceScreen />} />}
@@ -607,6 +641,7 @@ function App() {
             } />
             <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
             <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
+            <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
         </Layout>

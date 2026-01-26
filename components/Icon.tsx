@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type IconName = 'bus' | 'map-pin' | 'users' | 'user' | 'clipboard' | 'alert-triangle' | 'bar-chart' | 'plus' | 'trash' | 'edit' | 'edit-3' | 'check' | 'x' | 'log-out' | 'menu' | 'google' | 'save' | 'cloud-upload' | 'road' | 'pencil' | 'face' | 'phone' | 'download' | 'map' | 'chevron-up' | 'chevron-down' | 'dollar-sign' | 'lock' | 'message-circle' | 'settings' | 'tool' | 'check-circle' | 'file-text' | 'arrow-left' | 'smartphone' | 'share-2' | 'info' | 'refresh-cw' | 'book' | 'file-minus' | 'shield-off' | 'home' | 'search' | 'bell' | 'upload-cloud' | 'download-cloud' | 'alert-circle' | 'cloud' | 'chevron-right' | 'loader' | 'wifi-off' | 'cloud-off' | 'zap' | 'arrow-right';
+export type IconName = 'bus' | 'map-pin' | 'users' | 'user' | 'clipboard' | 'alert-triangle' | 'bar-chart' | 'plus' | 'trash' | 'trash-2' | 'edit' | 'edit-3' | 'check' | 'x' | 'log-out' | 'menu' | 'google' | 'save' | 'cloud-upload' | 'road' | 'pencil' | 'face' | 'phone' | 'download' | 'map' | 'chevron-up' | 'chevron-down' | 'dollar-sign' | 'lock' | 'message-circle' | 'settings' | 'tool' | 'check-circle' | 'file-text' | 'arrow-left' | 'smartphone' | 'share-2' | 'info' | 'refresh-cw' | 'book' | 'file-minus' | 'shield-off' | 'home' | 'search' | 'bell' | 'upload-cloud' | 'download-cloud' | 'alert-circle' | 'cloud' | 'chevron-right' | 'loader' | 'wifi-off' | 'cloud-off' | 'zap' | 'arrow-right' | 'eye' | 'eye-off' | 'clock' | 'history' | 'plus-circle' | 'minus-circle' | 'folder' | 'navigation' | 'list' | 'calendar';
 
 interface IconProps {
   name: IconName;
@@ -63,7 +63,18 @@ const icons: Record<IconName, React.ReactNode> = {
   'wifi-off': <><path d="M1 1l22 22" /><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" /><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" /><path d="M10.71 5.05A16 16 0 0 1 22.58 9" /><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><path d="M12 20h.01" /></>,
   'cloud-off': <><path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3" /><path d="M1 1l22 22" /></>,
   zap: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
-  'arrow-right': <path d="M5 12h14M12 5l7 7-7 7" />
+  'arrow-right': <path d="M5 12h14M12 5l7 7-7 7" />,
+  eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>,
+  'eye-off': <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></>,
+  clock: <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
+  history: <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
+  'plus-circle': <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></>,
+  'minus-circle': <><circle cx="12" cy="12" r="10" /><line x1="8" y1="12" x2="16" y2="12" /></>,
+  folder: <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />,
+  'trash-2': <path d="M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6" />,
+  navigation: <polygon points="3 11 22 2 13 21 11 13 3 11" />,
+  list: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
+  calendar: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>
 };
 
 export const Icon: React.FC<IconProps> = ({ name, size = 24, className = '', strokeWidth = 2 }) => {

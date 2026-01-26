@@ -1,34 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Icon as LeafletIcon } from 'leaflet';
 import { Icon } from '../components/Icon';
 import { Geolocation } from '@capacitor/geolocation';
 import { dbService } from '../services/db';
-import { Route, Stop } from '../types';
+import { Route, Student, RouteSession, RouteEvent } from '../types';
+import { notificationService } from '../services/notificationService';
+import { proximityMonitorService } from '../services/proximityMonitorService';
 import 'leaflet/dist/leaflet.css';
 import { TrackingControl } from '../components/TrackingControl';
 
 interface RouteNavigationScreenProps {
-    routeId: string;
-    onBack: () => void;
+    routeId?: string;
+    onBack?: () => void;
 }
 
-interface StudentInfo {
-    id: string;
-    name: string;
-    phone: string;
-    guardianName?: string;
-}
-
-interface RoutePoint {
-    id: string;
-    name: string;
-    address?: string;
-    students: string[];
-    studentData: StudentInfo[]; // Dados completos dos alunos
-    lat: number;
-    lng: number;
+interface StudentPoint {
+    student: Student;
     order: number;
+    visited: boolean;
 }
 
 // Componente auxiliar para centralizar o mapa
@@ -40,64 +31,87 @@ const RecenterMap = ({ lat, lng }: { lat: number, lng: number }) => {
     return null;
 };
 
-export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ routeId, onBack }) => {
-    const [points, setPoints] = useState<RoutePoint[]>([]);
-    const [routeName, setRouteName] = useState('');
-    const [currentPointIndex, setCurrentPointIndex] = useState(0);
-    const [visitedPoints, setVisitedPoints] = useState<Set<number>>(new Set());
-    const [skippedPoints, setSkippedPoints] = useState<number[]>([]); // Pontos pulados para voltar depois
+export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ routeId: propRouteId, onBack: propOnBack }) => {
+    const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+
+    const routeId = propRouteId || id;
+    const sessionId = searchParams.get('sessionId');
+    const onBack = propOnBack || (() => navigate('/routes'));
+
+    const [route, setRoute] = useState<Route | null>(null);
+    const [session, setSession] = useState<RouteSession | null>(null);
+    const [students, setStudents] = useState<Student[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [visitedStudents, setVisitedStudents] = useState<Set<string>>(new Set());
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
-    const [showSkippedPanel, setShowSkippedPanel] = useState(false);
+    const [activeAlert, setActiveAlert] = useState<{ student: Student, distance: number } | null>(null);
 
     useEffect(() => {
-        loadData();
-        startTracking();
-    }, []);
+        if (routeId) {
+            loadData();
+            startTracking();
+        }
+
+        // 🆕 Registrar callback de alerta de proximidade
+        proximityMonitorService.onAlert((student, distance) => {
+            setActiveAlert({ student, distance });
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        });
+    }, [routeId, sessionId]);
 
     const loadData = async () => {
-        const [routes, stops, students] = await Promise.all([
+        if (!routeId) return;
+
+        const [routes, allStudents, sessions] = await Promise.all([
             dbService.getRoutes(),
-            dbService.getStops(),
-            dbService.getStudents()
+            dbService.getStudents(),
+            dbService.getRouteSessions()
         ]);
 
-        const route = routes.find(r => r.id === routeId);
-        if (route) setRouteName(route.name);
+        const foundRoute = routes.find(r => r.id === routeId);
+        if (foundRoute) setRoute(foundRoute);
 
-        const routeStops = stops
-            .filter(s => s.routeId === routeId && s.latitude && s.longitude)
-            .sort((a, b) => a.order - b.order);
+        // Buscar sessão se foi passada
+        let currentSession: RouteSession | null = null;
+        if (sessionId) {
+            currentSession = sessions.find(s => s.id === sessionId) || null;
+            setSession(currentSession);
+        }
 
-        const mappedPoints: RoutePoint[] = routeStops.map(stop => {
-            const stopStudents = students.filter(s => s.stopId === stop.id);
-            return {
-                id: stop.id,
-                name: stop.name,
-                address: `Lat: ${stop.latitude?.toFixed(4)}, Lng: ${stop.longitude?.toFixed(4)}`,
-                students: stopStudents.map(s => s.name),
-                studentData: stopStudents.map(s => ({
-                    id: s.id,
-                    name: s.name,
-                    phone: s.responsiblePhone || s.contact || '',
-                    guardianName: s.guardianName
-                })),
-                lat: stop.latitude!,
-                lng: stop.longitude!,
-                order: stop.order
-            };
-        });
+        // Filtrar alunos da rota (excluindo faltantes se houver sessão)
+        let routeStudents = allStudents
+            .filter(s => s.routeId === routeId && s.active)
+            .sort((a, b) => (a.routeOrder || a.order || 0) - (b.routeOrder || b.order || 0));
 
-        setPoints(mappedPoints);
+        // Se há sessão, remover alunos faltantes
+        if (currentSession && currentSession.skippedStudents.length > 0) {
+            routeStudents = routeStudents.filter(s => !currentSession.skippedStudents.includes(s.id));
+        }
+
+        setStudents(routeStudents);
     };
 
     const startTracking = async () => {
         try {
             await Geolocation.watchPosition({ enableHighAccuracy: true }, (position) => {
                 if (position) {
-                    setUserLocation({
+                    const newLocation = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
-                    });
+                    };
+                    setUserLocation(newLocation);
+
+                    // 🆕 Monitorar proximidade automaticamente
+                    if (session && students.length > 0) {
+                        proximityMonitorService.checkProximity(
+                            newLocation,
+                            students,
+                            session.id,
+                            session.userId
+                        );
+                    }
                 }
             });
         } catch (e) {
@@ -118,61 +132,85 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
     });
 
     const getPointIcon = (index: number) => {
-        if (visitedPoints.has(index)) return createIcon('#10b981'); // Verde - Visitado
-        if (skippedPoints.includes(index)) return createIcon('#f59e0b'); // Amarelo - Pulado
-        if (index === currentPointIndex) return createIcon('#3b82f6'); // Azul - Atual
+        if (visitedStudents.has(students[index]?.id)) return createIcon('#10b981'); // Verde - Visitado
+        if (index === currentIndex) return createIcon('#3b82f6'); // Azul - Atual
         return createIcon('#6b7280'); // Cinza - Pendente
     };
 
-    // Encontra o próximo ponto não visitado e não pulado
-    const findNextPoint = () => {
-        for (let i = currentPointIndex + 1; i < points.length; i++) {
-            if (!visitedPoints.has(i) && !skippedPoints.includes(i)) {
-                return i;
+    const handleNotifyArrival = async () => {
+        const student = students[currentIndex];
+        if (!student) return;
+
+        try {
+            await notificationService.notifyArriving({
+                studentName: student.name,
+                responsiblePhone: student.responsiblePhone || '',
+                distance: userLocation && student.latitude && student.longitude
+                    ? calculateDistance(userLocation.lat, userLocation.lng, student.latitude, student.longitude)
+                    : undefined
+            });
+
+            // Registrar evento
+            if (session) {
+                const event: RouteEvent = {
+                    id: crypto.randomUUID(),
+                    sessionId: session.id,
+                    studentId: student.id,
+                    userId: session.userId,
+                    eventType: 'notification_sent',
+                    timestamp: new Date().toISOString(),
+                    latitude: userLocation?.lat,
+                    longitude: userLocation?.lng,
+                    createdAt: new Date().toISOString()
+                };
+                await dbService.saveRouteEvent(event);
+            }
+        } catch (error) {
+            console.error('Erro ao enviar notificação:', error);
+        }
+    };
+
+    const handleMarkAsVisited = async () => {
+        const student = students[currentIndex];
+        if (!student) return;
+
+        setVisitedStudents(prev => new Set(prev).add(student.id));
+
+        // Registrar evento
+        if (session) {
+            const event: RouteEvent = {
+                id: crypto.randomUUID(),
+                sessionId: session.id,
+                studentId: student.id,
+                userId: session.userId,
+                eventType: session.type === 'pickup' ? 'picked_up' : 'dropped_off',
+                timestamp: new Date().toISOString(),
+                latitude: userLocation?.lat,
+                longitude: userLocation?.lng,
+                createdAt: new Date().toISOString()
+            };
+            await dbService.saveRouteEvent(event);
+        }
+
+        // Avançar para próximo
+        if (currentIndex < students.length - 1) {
+            setCurrentIndex(currentIndex + 1);
+        } else {
+            // Finalizar sessão
+            if (session) {
+                session.status = 'completed';
+                session.endTime = new Date().toISOString();
+                await dbService.saveRouteSession(session);
             }
         }
-        return -1; // Não há mais pontos
-    };
-
-    const handleMarkAsVisited = () => {
-        setVisitedPoints(prev => new Set(prev).add(currentPointIndex));
-
-        // Remove dos pulados se estava lá
-        setSkippedPoints(prev => prev.filter(idx => idx !== currentPointIndex));
-
-        const nextPoint = findNextPoint();
-        if (nextPoint !== -1) {
-            setCurrentPointIndex(nextPoint);
-        } else if (skippedPoints.length > 0) {
-            // Se não há mais pontos normais, vai para o primeiro pulado
-            setCurrentPointIndex(skippedPoints[0]);
-        }
-    };
-
-    const handleSkipPoint = () => {
-        // Adiciona aos pulados se ainda não estava
-        if (!skippedPoints.includes(currentPointIndex)) {
-            setSkippedPoints(prev => [...prev, currentPointIndex]);
-        }
-
-        const nextPoint = findNextPoint();
-        if (nextPoint !== -1) {
-            setCurrentPointIndex(nextPoint);
-        } else if (skippedPoints.length > 0) {
-            // Se pulou todos, mostra mensagem ou vai para primeiro pulado
-            setShowSkippedPanel(true);
-        }
-    };
-
-    const handleGoToSkipped = (pointIndex: number) => {
-        setCurrentPointIndex(pointIndex);
-        setShowSkippedPanel(false);
     };
 
     const launchNavigation = () => {
-        const point = points[currentPointIndex];
-        if (point) {
-            window.open(`google.navigation:q=${point.lat},${point.lng}`, '_system');
+        const student = students[currentIndex];
+        if (student && student.latitude && student.longitude) {
+            window.open(`google.navigation:q=${student.latitude},${student.longitude}`, '_system');
+        } else {
+            alert('Este aluno não possui localização GPS cadastrada.');
         }
     };
 
@@ -188,60 +226,22 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
         return R * c;
     };
 
-    // Distância atual até o ponto
-    const getDistanceToCurrentPoint = (): number | null => {
-        const point = points[currentPointIndex];
-        if (!point || !userLocation) return null;
-        return calculateDistance(userLocation.lat, userLocation.lng, point.lat, point.lng);
+    // Distância atual até o aluno
+    const getDistanceToCurrentStudent = (): number | null => {
+        const student = students[currentIndex];
+        if (!student || !student.latitude || !student.longitude || !userLocation) return null;
+        return calculateDistance(userLocation.lat, userLocation.lng, student.latitude, student.longitude);
     };
 
-    // Função para notificar os responsáveis via WhatsApp
-    const notifyArrival = () => {
-        const point = points[currentPointIndex];
-        if (!point || point.studentData.length === 0) {
-            alert('Nenhum aluno cadastrado neste ponto.');
-            return;
-        }
-
-        // Filtra alunos que têm telefone
-        const studentsWithPhone = point.studentData.filter(s => s.phone);
-
-        if (studentsWithPhone.length === 0) {
-            alert('Nenhum telefone cadastrado para os alunos deste ponto.');
-            return;
-        }
-
-        // Calcula a distância
-        const distance = getDistanceToCurrentPoint();
-        const distanceText = distance
-            ? (distance < 1000 ? `${Math.round(distance)}m` : `${(distance / 1000).toFixed(1)}km`)
-            : '';
-
-        // Se há mais de um aluno, pergunta se quer avisar todos
-        if (studentsWithPhone.length > 1) {
-            const names = studentsWithPhone.map(s => s.name).join(', ');
-            if (!confirm(`Avisar os responsáveis de: ${names}?\n\n(${studentsWithPhone.length} mensagens serão enviadas)`)) {
-                return;
-            }
-        }
-
-        // Envia mensagem para cada responsável
-        studentsWithPhone.forEach((student, index) => {
-            const cleanPhone = student.phone.replace(/\D/g, '');
-            const message = `Olá! 🚐\nEstou chegando para buscar/deixar ${student.name}${distanceText ? ` (aprox. ${distanceText})` : ''}.\nPor favor, esteja pronto(a)!`;
-
-            // Pequeno delay entre aberturas para não sobrecarregar
-            setTimeout(() => {
-                window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
-            }, index * 500);
-        });
-    };
+    // Filtrar apenas alunos com GPS para o mapa
+    const studentsWithGPS = students.filter(s => s.latitude && s.longitude);
 
     const center = userLocation ? [userLocation.lat, userLocation.lng] as [number, number] :
-        (points[0] ? [points[0].lat, points[0].lng] as [number, number] : [-23.5505, -46.6333]);
+        (studentsWithGPS[0] ? [studentsWithGPS[0].latitude!, studentsWithGPS[0].longitude!] as [number, number] : [-23.5505, -46.6333]);
 
-    const isRouteComplete = visitedPoints.size === points.length;
-    const pendingCount = points.length - visitedPoints.size;
+    const isRouteComplete = visitedStudents.size === students.length;
+    const pendingCount = students.length - visitedStudents.size;
+    const currentStudent = students[currentIndex];
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
@@ -258,9 +258,72 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                 <button onClick={onBack} style={{ padding: '8px', background: 'transparent', border: 'none', color: 'white' }}>
                     <Icon name="arrow-left" size={24} />
                 </button>
-                <h1 style={{ fontWeight: 'bold', fontSize: '18px', margin: 0 }}>{routeName}</h1>
+                <h1 style={{ fontWeight: 'bold', fontSize: '18px', margin: 0 }}>
+                    {route?.name || 'Navegação'}
+                </h1>
                 <div style={{ width: '40px' }} />
             </div>
+
+            {/* 🆕 Alerta de Proximidade (Motorista) */}
+            {activeAlert && (
+                <div style={{
+                    position: 'fixed',
+                    top: '80px',
+                    left: '20px',
+                    right: '20px',
+                    backgroundColor: '#1e293b',
+                    borderRadius: '16px',
+                    padding: '16px',
+                    border: '2px solid #3b82f6',
+                    zIndex: 2000,
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    animation: 'slideDown 0.3s ease-out'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '24px' }}>🚐</span>
+                            <div>
+                                <h4 style={{ color: 'white', fontWeight: 'bold', margin: 0 }}>Chegando em {activeAlert.student.name}</h4>
+                                <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>Distância: {Math.round(activeAlert.distance)}m</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setActiveAlert(null)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
+                            <Icon name="x" size={20} />
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            notificationService.sendCustomNotification(
+                                activeAlert.student.responsiblePhone || '',
+                                `Olá! 🚐 Estou chegando para buscar ${activeAlert.student.name} (aprox. 500m). Por favor, esteja pronto(a)!`
+                            );
+                            setActiveAlert(null);
+                        }}
+                        disabled={!activeAlert.student.responsiblePhone}
+                        style={{
+                            backgroundColor: '#25D366',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '12px',
+                            padding: '12px',
+                            fontWeight: 'bold',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            cursor: 'pointer',
+                            opacity: activeAlert.student.responsiblePhone ? 1 : 0.5
+                        }}
+                    >
+                        <Icon name="message-circle" size={20} />
+                        Avisar via WhatsApp
+                    </button>
+                </div>
+            )}
 
             {/* Map Container */}
             <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
@@ -269,19 +332,33 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                     {userLocation && <RecenterMap lat={userLocation.lat} lng={userLocation.lng} />}
 
                     {/* Linha da Rota */}
-                    <Polyline positions={points.map(p => [p.lat, p.lng])} color="#3b82f6" weight={4} opacity={0.7} />
+                    {studentsWithGPS.length > 1 && (
+                        <Polyline
+                            positions={studentsWithGPS.map(s => [s.latitude!, s.longitude!])}
+                            color="#3b82f6"
+                            weight={4}
+                            opacity={0.7}
+                        />
+                    )}
 
-                    {/* Marcadores */}
-                    {points.map((p, idx) => (
-                        <Marker key={p.id} position={[p.lat, p.lng]} icon={getPointIcon(idx)}>
-                            <Popup>
-                                <strong>{idx + 1}. {p.name}</strong><br />
-                                {p.students.length} alunos
-                                {visitedPoints.has(idx) && <><br /><span style={{ color: 'green' }}>✓ Visitado</span></>}
-                                {skippedPoints.includes(idx) && <><br /><span style={{ color: 'orange' }}>⏭ Pulado</span></>}
-                            </Popup>
-                        </Marker>
-                    ))}
+                    {/* Marcadores dos Alunos */}
+                    {studentsWithGPS.map((student, idx) => {
+                        const globalIndex = students.findIndex(s => s.id === student.id);
+                        return (
+                            <Marker
+                                key={student.id}
+                                position={[student.latitude!, student.longitude!]}
+                                icon={getPointIcon(globalIndex)}
+                            >
+                                <Popup>
+                                    <strong>{globalIndex + 1}. {student.name}</strong><br />
+                                    {student.school && <>{student.school}<br /></>}
+                                    {student.address && <>{student.address}<br /></>}
+                                    {visitedStudents.has(student.id) && <span style={{ color: 'green' }}>✓ Visitado</span>}
+                                </Popup>
+                            </Marker>
+                        );
+                    })}
 
                     {/* User Location */}
                     {userLocation && (
@@ -290,77 +367,9 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                         </Marker>
                     )}
                 </MapContainer>
-
-                {/* Badge de Pontos Pulados */}
-                {skippedPoints.length > 0 && (
-                    <button
-                        onClick={() => setShowSkippedPanel(!showSkippedPanel)}
-                        style={{
-                            position: 'absolute',
-                            top: '10px',
-                            right: '10px',
-                            zIndex: 1000,
-                            backgroundColor: '#f59e0b',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '20px',
-                            padding: '8px 16px',
-                            fontWeight: 'bold',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <Icon name="clock" size={16} />
-                        {skippedPoints.length} pulado(s)
-                    </button>
-                )}
-
-                {/* Painel de Pontos Pulados */}
-                {showSkippedPanel && skippedPoints.length > 0 && (
-                    <div style={{
-                        position: 'absolute',
-                        top: '50px',
-                        right: '10px',
-                        zIndex: 1000,
-                        backgroundColor: 'white',
-                        borderRadius: '12px',
-                        padding: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                        maxHeight: '200px',
-                        overflowY: 'auto',
-                        minWidth: '200px'
-                    }}>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: 'bold', color: '#374151' }}>
-                            Pontos Pulados
-                        </h4>
-                        {skippedPoints.map(idx => (
-                            <button
-                                key={idx}
-                                onClick={() => handleGoToSkipped(idx)}
-                                style={{
-                                    display: 'block',
-                                    width: '100%',
-                                    textAlign: 'left',
-                                    padding: '8px 12px',
-                                    marginBottom: '4px',
-                                    backgroundColor: '#fef3c7',
-                                    border: '1px solid #f59e0b',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    fontSize: '13px'
-                                }}
-                            >
-                                {idx + 1}. {points[idx]?.name}
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
 
-            {/* Barra de Controle Inferior - SEMPRE VISÍVEL */}
+            {/* Barra de Controle Inferior */}
             <div style={{
                 backgroundColor: 'white',
                 padding: '16px',
@@ -368,7 +377,7 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                 boxShadow: '0 -4px 6px -1px rgba(0,0,0,0.1)',
                 flexShrink: 0
             }}>
-                <TrackingControl routeId={routeId} />
+                {routeId && <TrackingControl routeId={routeId} />}
 
                 {isRouteComplete ? (
                     <div style={{ textAlign: 'center', padding: '16px' }}>
@@ -377,7 +386,7 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                             Rota Concluída!
                         </h3>
                         <p style={{ color: '#6b7280', margin: 0 }}>
-                            Todos os {points.length} pontos foram visitados.
+                            Todos os {students.length} aluno(s) foram atendidos.
                         </p>
                         <button
                             onClick={onBack}
@@ -395,18 +404,20 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                             Voltar
                         </button>
                     </div>
-                ) : points[currentPointIndex] ? (
+                ) : currentStudent ? (
                     <div>
-                        {/* Info do Ponto Atual */}
+                        {/* Info do Aluno Atual */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                             <div>
                                 <h3 style={{ fontWeight: 'bold', fontSize: '18px', color: '#1f2937', margin: '0 0 4px 0' }}>
-                                    {currentPointIndex + 1}. {points[currentPointIndex].name}
+                                    {currentIndex + 1}. {currentStudent.name}
                                 </h3>
                                 <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                                    {points[currentPointIndex].students.length > 0
-                                        ? points[currentPointIndex].students.join(', ')
-                                        : 'Nenhum aluno vinculado'}
+                                    {currentStudent.school && <>{currentStudent.school}<br /></>}
+                                    {currentStudent.address && <>{currentStudent.address}</>}
+                                    {!currentStudent.address && !currentStudent.latitude && (
+                                        <span style={{ color: '#f59e0b' }}>⚠️ Sem endereço cadastrado</span>
+                                    )}
                                 </p>
                             </div>
                             <span style={{
@@ -417,52 +428,56 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                 padding: '4px 10px',
                                 borderRadius: '20px'
                             }}>
-                                {visitedPoints.size}/{points.length}
+                                {visitedStudents.size}/{students.length}
                             </span>
                         </div>
 
                         {/* Botões de Ação */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '6px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                             <button
                                 onClick={launchNavigation}
+                                disabled={!currentStudent.latitude || !currentStudent.longitude}
                                 style={{
                                     backgroundColor: '#2563eb',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '12px',
-                                    padding: '12px 4px',
+                                    padding: '14px 8px',
                                     fontWeight: 'bold',
-                                    fontSize: '12px',
+                                    fontSize: '13px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    gap: '4px'
+                                    gap: '4px',
+                                    opacity: (!currentStudent.latitude || !currentStudent.longitude) ? 0.5 : 1
                                 }}
                             >
-                                <Icon name="navigation" size={18} />
+                                <Icon name="navigation" size={20} />
                                 <span>GPS</span>
                             </button>
                             <button
-                                onClick={notifyArrival}
+                                onClick={handleNotifyArrival}
+                                disabled={!currentStudent.responsiblePhone}
                                 style={{
                                     backgroundColor: '#25D366',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '12px',
-                                    padding: '12px 4px',
+                                    padding: '14px 8px',
                                     fontWeight: 'bold',
-                                    fontSize: '12px',
+                                    fontSize: '13px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    gap: '4px'
+                                    gap: '4px',
+                                    opacity: !currentStudent.responsiblePhone ? 0.5 : 1
                                 }}
                             >
-                                <Icon name="message-circle" size={18} />
+                                <Icon name="message-circle" size={20} />
                                 <span>Avisar</span>
                             </button>
                             <button
@@ -472,9 +487,9 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '12px',
-                                    padding: '12px 4px',
+                                    padding: '14px 8px',
                                     fontWeight: 'bold',
-                                    fontSize: '12px',
+                                    fontSize: '13px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -483,42 +498,21 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
                                     gap: '4px'
                                 }}
                             >
-                                <Icon name="check" size={18} />
-                                <span>Cheguei</span>
-                            </button>
-                            <button
-                                onClick={handleSkipPoint}
-                                style={{
-                                    backgroundColor: '#f59e0b',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '12px',
-                                    padding: '12px 4px',
-                                    fontWeight: 'bold',
-                                    fontSize: '12px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '4px'
-                                }}
-                            >
-                                <Icon name="skip-forward" size={18} />
-                                <span>Pular</span>
+                                <Icon name="check" size={20} />
+                                <span>{session?.type === 'pickup' ? 'Embarcou' : 'Desembarcou'}</span>
                             </button>
                         </div>
 
-                        {/* Info de Pontos Pendentes */}
+                        {/* Info de Alunos Pendentes */}
                         {pendingCount > 1 && (
                             <p style={{ textAlign: 'center', fontSize: '12px', color: '#9ca3af', marginTop: '12px', marginBottom: 0 }}>
-                                {pendingCount - 1} ponto(s) restante(s) após este
+                                {pendingCount - 1} aluno(s) restante(s) após este
                             </p>
                         )}
                     </div>
                 ) : (
                     <p style={{ textAlign: 'center', color: '#6b7280', padding: '16px 0', margin: 0 }}>
-                        Nenhum ponto com GPS cadastrado nesta rota.
+                        Nenhum aluno cadastrado nesta rota.
                     </p>
                 )}
             </div>

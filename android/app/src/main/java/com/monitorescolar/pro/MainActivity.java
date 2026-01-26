@@ -1,4 +1,4 @@
-package com.monitorescolar.pro;
+package com.monitorescolar.pro.dev;
 
 import com.getcapacitor.BridgeActivity;
 

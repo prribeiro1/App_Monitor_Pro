@@ -56,6 +56,13 @@ interface DriverLocation {
     timestamp: number;
 }
 
+interface Notification {
+    id: string;
+    message: string;
+    timestamp: Date;
+    type: 'proximity' | 'pickup' | 'dropoff';
+}
+
 // Component to update map view when location changes
 const MapUpdater: React.FC<{ location: DriverLocation | null }> = ({ location }) => {
     const map = useMap();
@@ -79,7 +86,10 @@ export const PublicTrackingPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const [isOnline, setIsOnline] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [studentName, setStudentName] = useState<string>('');
     const channelRef = useRef<any>(null);
+    const eventsChannelRef = useRef<any>(null);
 
     // Validate share code and get driver info
     useEffect(() => {
@@ -158,6 +168,56 @@ export const PublicTrackingPage: React.FC = () => {
 
         channelRef.current = channel;
 
+        // 🆕 Subscribe to route events (notificações)
+        const eventsChannel = supabase
+            .channel('route_events')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'route_events',
+                    filter: `user_id=eq.${driverUserId}`
+                },
+                (payload) => {
+                    const event = payload.new;
+                    
+                    // Criar notificação baseada no tipo de evento
+                    let message = '';
+                    let type: 'proximity' | 'pickup' | 'dropoff' = 'proximity';
+
+                    if (event.event_type === 'notification_sent') {
+                        message = '🚐 Condutor chegando em breve!';
+                        type = 'proximity';
+                    } else if (event.event_type === 'picked_up') {
+                        message = `✅ ${studentName} embarcou`;
+                        type = 'pickup';
+                    } else if (event.event_type === 'dropped_off') {
+                        message = `🏠 ${studentName} desembarcou`;
+                        type = 'dropoff';
+                    }
+
+                    if (message) {
+                        const notification: Notification = {
+                            id: event.id,
+                            message,
+                            timestamp: new Date(event.timestamp),
+                            type
+                        };
+
+                        setNotifications(prev => [notification, ...prev].slice(0, 5)); // Manter últimas 5
+
+                        // Remover notificação após 10 segundos
+                        setTimeout(() => {
+                            setNotifications(prev => prev.filter(n => n.id !== notification.id));
+                        }, 10000);
+                    }
+                }
+            )
+            .subscribe();
+
+        eventsChannelRef.current = eventsChannel;
+
         // Set offline after 30 seconds of no updates
         const offlineTimer = setInterval(() => {
             if (lastUpdate && Date.now() - lastUpdate.getTime() > 30000) {
@@ -167,9 +227,10 @@ export const PublicTrackingPage: React.FC = () => {
 
         return () => {
             channel.unsubscribe();
+            eventsChannel.unsubscribe();
             clearInterval(offlineTimer);
         };
-    }, [driverUserId]);
+    }, [driverUserId, studentName]);
 
     // Loading state
     if (loading) {
@@ -258,6 +319,42 @@ export const PublicTrackingPage: React.FC = () => {
                     </Marker>
                     <MapUpdater location={driverLocation} />
                 </MapContainer>
+
+                {/* 🆕 Notificações em Tempo Real */}
+                {notifications.length > 0 && (
+                    <div className="absolute top-4 left-4 right-4 z-[1000] space-y-2">
+                        {notifications.map((notification) => (
+                            <div
+                                key={notification.id}
+                                className={`
+                                    p-4 rounded-xl shadow-2xl border-2 animate-slide-down
+                                    ${notification.type === 'proximity' ? 'bg-blue-500 border-blue-400' : ''}
+                                    ${notification.type === 'pickup' ? 'bg-green-500 border-green-400' : ''}
+                                    ${notification.type === 'dropoff' ? 'bg-purple-500 border-purple-400' : ''}
+                                `}
+                                style={{
+                                    animation: 'slideDown 0.3s ease-out'
+                                }}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="text-2xl">
+                                        {notification.type === 'proximity' && '🚐'}
+                                        {notification.type === 'pickup' && '✅'}
+                                        {notification.type === 'dropoff' && '🏠'}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-white font-bold text-lg">
+                                            {notification.message}
+                                        </p>
+                                        <p className="text-white/80 text-xs">
+                                            {notification.timestamp.toLocaleTimeString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Info Panel */}

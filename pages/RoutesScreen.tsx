@@ -14,6 +14,7 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
   const [routes, setRoutes] = useState<Route[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
+  const [draggedStudentId, setDraggedStudentId] = useState<string | null>(null);
 
   const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
   const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
@@ -30,25 +31,45 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
 
   const toggleRoute = (id: string) => setExpandedRoutes(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const moveStudent = async (student: Student, direction: 'up' | 'down') => {
-    const siblings = students.filter(s => s.routeId === student.routeId);
-    const index = siblings.findIndex(s => s.id === student.id);
+  const handleDragStart = (e: React.DragEvent, studentId: string) => {
+    setDraggedStudentId(studentId);
+    e.dataTransfer.setData('studentId', studentId);
+  };
 
-    if (direction === 'up' && index > 0) {
-      const prev = siblings[index - 1];
-      const tempOrder = student.routeOrder || student.order || 0;
-      student.routeOrder = prev.routeOrder || prev.order || 0;
-      prev.routeOrder = tempOrder;
-      await Promise.all([dbService.saveStudent(student), dbService.saveStudent(prev)]);
-      fetchData();
-    } else if (direction === 'down' && index < siblings.length - 1) {
-      const next = siblings[index + 1];
-      const tempOrder = student.routeOrder || student.order || 0;
-      student.routeOrder = next.routeOrder || next.order || 0;
-      next.routeOrder = tempOrder;
-      await Promise.all([dbService.saveStudent(student), dbService.saveStudent(next)]);
-      fetchData();
-    }
+  const handleDragOver = (e: React.DragEvent, studentId: string) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetStudentId: string) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('studentId');
+    if (draggedId === targetStudentId) return;
+
+    const studentToMove = students.find(s => s.id === draggedId);
+    const targetStudent = students.find(s => s.id === targetStudentId);
+    if (!studentToMove || !targetStudent || studentToMove.routeId !== targetStudent.routeId) return;
+
+    const routeId = studentToMove.routeId;
+    const routeStudents = students
+      .filter(s => s.routeId === routeId)
+      .sort((a, b) => (a.routeOrder || a.order || 0) - (b.routeOrder || b.order || 0));
+
+    const oldIndex = routeStudents.findIndex(s => s.id === draggedId);
+    const newIndex = routeStudents.findIndex(s => s.id === targetStudentId);
+
+    const newOrder = [...routeStudents];
+    newOrder.splice(oldIndex, 1);
+    newOrder.splice(newIndex, 0, studentToMove);
+
+    // Salvar nova ordem
+    const updates = newOrder.map((s, idx) => {
+      s.routeOrder = idx + 1;
+      return dbService.saveStudent(s);
+    });
+
+    await Promise.all(updates);
+    setDraggedStudentId(null);
+    fetchData();
   };
 
   const handleRouteSubmit = async (e: React.FormEvent) => {
@@ -78,9 +99,18 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
     <div className="p-4 pb-24">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-white">{t('routes_title')}</h2>
-        <button onClick={() => { setRouteName(''); setEditingRouteId(null); setIsRouteModalOpen(true); }} className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition">
-          <Icon name="plus" size={18} /> {t('routes_new')}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => window.location.hash = '/routes/history'}
+            className="bg-navy-700 hover:bg-navy-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition"
+            title="Ver histórico de rotas"
+          >
+            <Icon name="clock" size={18} />
+          </button>
+          <button onClick={() => { setRouteName(''); setEditingRouteId(null); setIsRouteModalOpen(true); }} className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition">
+            <Icon name="plus" size={18} /> {t('routes_new')}
+          </button>
+        </div>
       </div>
 
       {routes.length === 0 ? (
@@ -125,27 +155,18 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
                     ) : (
                       <div className="p-3 grid gap-2">
                         {routeStudents.map((student, idx) => (
-                          <div 
-                            key={student.id} 
+                          <div
+                            key={student.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, student.id)}
+                            onDragOver={(e) => handleDragOver(e, student.id)}
+                            onDrop={(e) => handleDrop(e, student.id)}
                             onClick={() => window.location.hash = `/students?open=${student.id}`}
-                            className="bg-navy-800 p-3 rounded-lg border border-navy-700 flex items-center justify-between group cursor-pointer hover:bg-navy-700/50 transition-colors"
+                            className={`bg-navy-800 p-3 rounded-lg border flex items-center justify-between group cursor-move hover:bg-navy-700/50 transition-colors ${draggedStudentId === student.id ? 'opacity-30' : 'border-navy-700'}`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="flex flex-col gap-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); moveStudent(student, 'up'); }} 
-                                  disabled={idx === 0} 
-                                  className="text-gray-500 hover:text-white disabled:opacity-30"
-                                >
-                                  <Icon name="chevron-up" size={16} />
-                                </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); moveStudent(student, 'down'); }} 
-                                  disabled={idx === routeStudents.length - 1} 
-                                  className="text-gray-500 hover:text-white disabled:opacity-30"
-                                >
-                                  <Icon name="chevron-down" size={16} />
-                                </button>
+                              <div className="flex flex-col gap-1 mr-1">
+                                <Icon name="menu" size={16} className="text-gray-600" />
                               </div>
                               <InitialsAvatar name={student.name} />
                               <div>
@@ -170,23 +191,23 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
                         ))}
                       </div>
                     )}
-                    
+
                     {/* Botões de Ação da Rota */}
                     <div className="p-3 border-t border-navy-700 flex gap-2">
                       <button
-                        onClick={() => window.location.hash = `/routes/navigate/${route.id}`}
+                        onClick={() => window.location.hash = `/routes/start/${route.id}`}
                         className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition"
                         disabled={routeStudents.length === 0}
                       >
                         <Icon name="navigation" size={20} /> Iniciar Rota
                       </button>
                       <button
-                        onClick={() => alert('Tela de organização em desenvolvimento')}
-                        className="bg-accent-600 hover:bg-accent-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition"
+                        onClick={() => window.location.hash = `/routes/organize/${route.id}`}
+                        className="flex-1 bg-accent-600 hover:bg-accent-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition"
                         title="Organizar ordem dos alunos"
                         disabled={routeStudents.length === 0}
                       >
-                        <Icon name="list" size={20} />
+                        <Icon name="list" size={20} /> Organizar
                       </button>
                     </div>
                   </div>

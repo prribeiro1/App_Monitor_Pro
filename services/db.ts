@@ -347,14 +347,20 @@ export const dbService = {
   // Cloud Pull (Sync from Server to Local)
   pullFromCloud: async (): Promise<void> => {
     try {
+      console.log("🔄 db.ts: Iniciando pullFromCloud...");
       const cloudData = await cloudSync.pullAllData();
-      if (!cloudData) return;
+      if (!cloudData) {
+        console.warn("⚠️ pullAllData retornou null, abortando sync");
+        return;
+      }
 
+      console.log("✅ Dados recebidos da nuvem, iniciando restore no IndexedDB...");
       const db = await openDB();
       const stores = ['routes', 'stops', 'students', 'attendance', 'payments', 'user_settings', 'maintenance_items', 'maintenance_logs', 'incidents', 'reminders', 'vehicle_documents', 'route_sessions', 'route_events'];
       const tx = db.transaction(stores, 'readwrite');
 
       const restore = (storeName: string, items: any[]) => {
+        console.log(`  📦 Restaurando ${storeName}: ${items?.length || 0} itens`);
         const store = tx.objectStore(storeName);
         store.clear();
         if (items) items.forEach(item => store.put(item));
@@ -374,19 +380,25 @@ export const dbService = {
       restore('route_events', cloudData.routeEvents || []); // 🆕
 
       if (cloudData.userSettings) {
+        console.log("  ⚙️ Restaurando user_settings");
         tx.objectStore('user_settings').put(cloudData.userSettings);
       }
 
       return new Promise((resolve, reject) => {
         tx.oncomplete = () => {
+          console.log("✅ Sync completo! Disparando evento db-synced");
           // Dispara evento para avisar a UI que novos dados chegaram
           window.dispatchEvent(new Event('db-synced'));
           resolve();
         };
-        tx.onerror = () => reject(tx.error);
+        tx.onerror = () => {
+          console.error("❌ Erro na transação do IndexedDB:", tx.error);
+          reject(tx.error);
+        };
       });
     } catch (e) {
-      console.error("Erro no Pull Cloud:", e);
+      console.error("❌❌❌ Erro no Pull Cloud:", e);
+      throw e; // Re-lança o erro para ser capturado no App.tsx
     }
   },
 

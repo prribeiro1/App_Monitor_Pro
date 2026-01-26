@@ -5,6 +5,7 @@ import { Stop, Student, Route } from '../types';
 import { Icon } from '../components/Icon';
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
+import { authService, supabase } from '../services/auth';
 
 export const StudentsScreen: React.FC = () => {
   const { language } = useI18n();
@@ -36,7 +37,7 @@ export const StudentsScreen: React.FC = () => {
   const [observation, setObservation] = useState('');
   const [monthlyFees, setMonthlyFees] = useState('');
   const [dueDay, setDueDay] = useState('');
-  
+
   // 🆕 NOVA ESTRUTURA (sem pontos)
   const [address, setAddress] = useState('');
   const [latitude, setLatitude] = useState<number | undefined>();
@@ -67,6 +68,25 @@ export const StudentsScreen: React.FC = () => {
     );
   };
 
+  // 🆕 Verifica se é aniversário do aluno
+  const isBirthday = (student: Student) => {
+    if (!student.birthDate) return false;
+    const todayDate = new Date();
+    const [year, month, day] = student.birthDate.split('-').map(Number);
+    return todayDate.getDate() === day && (todayDate.getMonth() + 1) === month;
+  };
+
+  // 🆕 Compartilhar link de cadastro com pais
+  const handleShareInvite = async () => {
+    const user = await authService.getCurrentUser();
+    if (!user) return;
+
+    const shareUrl = `${window.location.origin}/#/cadastro-aluno/${user.id}`;
+    const message = `Olá! 🚐 Para facilitar o cadastro do seu filho no Monitor Escolar PRO, clique no link abaixo e preencha a ficha:\n\n${shareUrl}`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   const fetchData = async () => {
     const [st, sp, rt] = await Promise.all([
       dbService.getStudents(),
@@ -74,7 +94,18 @@ export const StudentsScreen: React.FC = () => {
       dbService.getRoutes()
     ]);
 
-    st.sort((a, b) => (a.routeOrder || a.order || 0) - (b.routeOrder || b.order || 0));
+    // 🆕 Ordenar por Rota primeiro, depois por Ordem na Rota
+    st.sort((a, b) => {
+      // 1. Pegar nomes das rotas para agrupamento visual (ou 'Z' para sem rota ficarem por último)
+      const routeA = rt.find(r => r.id === a.routeId)?.name || 'ZZZZ';
+      const routeB = rt.find(r => r.id === b.routeId)?.name || 'ZZZZ';
+
+      if (routeA !== routeB) return routeA.localeCompare(routeB);
+
+      // 2. Dentro da mesma rota, usar a ordem definida
+      return (a.routeOrder || a.order || 0) - (b.routeOrder || b.order || 0);
+    });
+
     sp.sort((a, b) => a.order - b.order);
 
     setStudents(st);
@@ -123,7 +154,7 @@ export const StudentsScreen: React.FC = () => {
       monthlyFees: monthlyFees ? parseFloat(monthlyFees.replace(',', '.')) : 0,
       dueDay: dueDay ? parseInt(dueDay) : 0,
       order: existing?.order || Date.now(),
-      
+
       // 🆕 NOVA ESTRUTURA (obrigatório)
       routeId: selectedRouteId,
       address: address || undefined,
@@ -151,7 +182,7 @@ export const StudentsScreen: React.FC = () => {
     setMonthlyFees('');
     setDueDay('');
     setEditingId(null);
-    
+
     // 🆕 Limpar novos campos
     setAddress('');
     setLatitude(undefined);
@@ -225,12 +256,21 @@ export const StudentsScreen: React.FC = () => {
     <div className="p-4 pb-20">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-white">Alunos</h2>
-        <button
-          onClick={() => { resetForm(); setIsModalOpen(true); }}
-          className="bg-primary-600 hover:bg-primary-500 text-white p-3 rounded-full shadow-lg"
-        >
-          <Icon name="plus" />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleShareInvite}
+            title="Convidar Pais (WhatsApp)"
+            className="bg-navy-700 hover:bg-navy-600 text-primary-400 p-3 rounded-full shadow-lg border border-navy-600"
+          >
+            <Icon name="share-2" />
+          </button>
+          <button
+            onClick={() => { resetForm(); setIsModalOpen(true); }}
+            className="bg-primary-600 hover:bg-primary-500 text-white p-3 rounded-full shadow-lg"
+          >
+            <Icon name="plus" />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -238,7 +278,7 @@ export const StudentsScreen: React.FC = () => {
           <div
             key={student.id}
             onClick={() => setSelectedStudent(student)}
-            className="bg-navy-800 p-4 rounded-xl border border-navy-700 flex items-center justify-between cursor-pointer hover:bg-navy-700/50 transition-colors"
+            className="bg-navy-800 p-3 rounded-xl border border-navy-700 flex items-center justify-between cursor-pointer hover:bg-navy-700/50 transition-colors"
           >
             <div className="flex items-center gap-3">
               <InitialsAvatar name={student.name} />
@@ -254,6 +294,11 @@ export const StudentsScreen: React.FC = () => {
                   {student.routeId && (
                     <div className="text-primary-400">
                       📍 {getRouteName(student.routeId)}
+                    </div>
+                  )}
+                  {isBirthday(student) && (
+                    <div className="text-pink-400 flex items-center gap-1 font-bold text-[10px] animate-pulse">
+                      🎂 Hoje é aniversário!
                     </div>
                   )}
                 </div>
@@ -474,9 +519,9 @@ export const StudentsScreen: React.FC = () => {
               {/* Rota */}
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Rota *</label>
-                <select 
-                  value={selectedRouteId} 
-                  onChange={e => handleRouteChange(e.target.value)} 
+                <select
+                  value={selectedRouteId}
+                  onChange={e => handleRouteChange(e.target.value)}
                   className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
                   required
                 >
@@ -523,22 +568,6 @@ export const StudentsScreen: React.FC = () => {
                     Lat: {latitude.toFixed(6)}, Lng: {longitude.toFixed(6)}
                   </p>
                 )}
-              </div>
-
-              {/* 🆕 Ordem na Rota */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Ordem na Rota (opcional)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={routeOrder}
-                  onChange={e => setRouteOrder(e.target.value)}
-                  placeholder="Ex: 1, 2, 3... (deixe vazio para automático)"
-                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Deixe vazio para ordenar automaticamente ou use a tela "Organizar Rota"
-                </p>
               </div>
 
               <hr className="border-navy-700" />

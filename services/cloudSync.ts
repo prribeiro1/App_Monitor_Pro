@@ -294,9 +294,12 @@ export const cloudSync = {
     pullAllData: async (): Promise<any> => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return null;
+            if (!user) {
+                console.error("❌ pullAllData: Usuário não encontrado");
+                return null;
+            }
 
-            console.log("Iniciando PULL de dados da nuvem para usuário:", user.id);
+            console.log("✅ Iniciando PULL de dados da nuvem para usuário:", user.id);
 
             const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes, vehicleDocsRes, routeSessionsRes, routeEventsRes] = await Promise.all([
                 supabase.from('students').select('*'),
@@ -313,6 +316,37 @@ export const cloudSync = {
                 supabase.from('route_sessions').select('*'), // 🆕
                 supabase.from('route_events').select('*') // 🆕
             ]);
+
+            // 🔍 LOG DETALHADO DE CADA QUERY
+            console.log("📊 Resultados das queries:");
+            console.log("  students:", studentsRes.error ? `❌ ${studentsRes.error.message}` : `✅ ${studentsRes.data?.length || 0} registros`);
+            console.log("  routes:", routesRes.error ? `❌ ${routesRes.error.message}` : `✅ ${routesRes.data?.length || 0} registros`);
+            console.log("  stops:", stopsRes.error ? `❌ ${stopsRes.error.message}` : `✅ ${stopsRes.data?.length || 0} registros`);
+            console.log("  attendance:", attendanceRes.error ? `❌ ${attendanceRes.error.message}` : `✅ ${attendanceRes.data?.length || 0} registros`);
+            console.log("  payments:", paymentsRes.error ? `❌ ${paymentsRes.error.message}` : `✅ ${paymentsRes.data?.length || 0} registros`);
+            console.log("  user_settings:", settingsRes.error ? `❌ ${settingsRes.error.message}` : `✅ OK`);
+            console.log("  maintenance_items:", maintRes.error ? `❌ ${maintRes.error.message}` : `✅ ${maintRes.data?.length || 0} registros`);
+            console.log("  maintenance_logs:", logsRes.error ? `❌ ${logsRes.error.message}` : `✅ ${logsRes.data?.length || 0} registros`);
+            console.log("  incidents:", incidentRes.error ? `❌ ${incidentRes.error.message}` : `✅ ${incidentRes.data?.length || 0} registros`);
+            console.log("  reminders:", reminderRes.error ? `❌ ${reminderRes.error.message}` : `✅ ${reminderRes.data?.length || 0} registros`);
+            console.log("  vehicle_documents:", vehicleDocsRes.error ? `❌ ${vehicleDocsRes.error.message}` : `✅ ${vehicleDocsRes.data?.length || 0} registros`);
+            console.log("  route_sessions:", routeSessionsRes.error ? `❌ ${routeSessionsRes.error.message}` : `✅ ${routeSessionsRes.data?.length || 0} registros`);
+            console.log("  route_events:", routeEventsRes.error ? `❌ ${routeEventsRes.error.message}` : `✅ ${routeEventsRes.data?.length || 0} registros`);
+
+            // 🚨 SE HOUVER ERRO EM ALGUMA QUERY, LOGAR E CONTINUAR
+            if (studentsRes.error) console.error("❌ Erro em students:", studentsRes.error);
+            if (routesRes.error) console.error("❌ Erro em routes:", routesRes.error);
+            if (stopsRes.error) console.error("❌ Erro em stops:", stopsRes.error);
+            if (attendanceRes.error) console.error("❌ Erro em attendance:", attendanceRes.error);
+            if (paymentsRes.error) console.error("❌ Erro em payments:", paymentsRes.error);
+            if (settingsRes.error) console.error("❌ Erro em user_settings:", settingsRes.error);
+            if (maintRes.error) console.error("❌ Erro em maintenance_items:", maintRes.error);
+            if (logsRes.error) console.error("❌ Erro em maintenance_logs:", logsRes.error);
+            if (incidentRes.error) console.error("❌ Erro em incidents:", incidentRes.error);
+            if (reminderRes.error) console.error("❌ Erro em reminders:", reminderRes.error);
+            if (vehicleDocsRes.error) console.error("❌ Erro em vehicle_documents:", vehicleDocsRes.error);
+            if (routeSessionsRes.error) console.error("❌ Erro em route_sessions:", routeSessionsRes.error);
+            if (routeEventsRes.error) console.error("❌ Erro em route_events:", routeEventsRes.error);
 
             return {
                 students: studentsRes.data?.map(s => ({
@@ -445,7 +479,9 @@ export const cloudSync = {
                 } : null
             };
         } catch (error) {
-            console.error("Erro crítico ao puxar dados da nuvem:", error);
+            console.error("❌❌❌ Erro crítico ao puxar dados da nuvem:", error);
+            console.error("Stack trace:", error);
+            alert("ERRO AO CARREGAR DADOS: " + (error as any).message);
             return null;
         }
     },

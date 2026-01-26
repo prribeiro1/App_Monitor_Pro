@@ -1,24 +1,20 @@
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { Device } from '@capacitor/device';
 
-// --- CONFIGURAÇÃO DO SUPABASE ---
-// ⚠️⚠️⚠️ ATENÇÃO: HARDCODED PARA DESENVOLVIMENTO ⚠️⚠️⚠️
-// TODO: ANTES DE FAZER MERGE NA MAIN, REVERTER PARA USAR .env
-// Branch: feature/feedback-condutores
-// Projeto: DESENVOLVIMENTO (bkwrflgrfhsgeowjynou)
-const SUPABASE_URL = 'https://bkwrflgrfhsgeowjynou.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrd3JmbGdyZmhzZ2Vvd2p5bm91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNDEyNjEsImV4cCI6MjA4NDkxNzI2MX0.w4Y8o4hQ3Sq2NZTcVasqQUE85QcPjdlJc2zUzYxLzzM';
+// --- CONFIGURAÇÃO DINÂMICA DO SUPABASE ---
+// O Vite carrega automaticamente o .env correto baseado no modo (dev ou build)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// ALERTA VISUAL NO CONSOLE
-console.warn('⚠️⚠️⚠️ ATENÇÃO: USANDO PROJETO DE DESENVOLVIMENTO HARDCODED! ⚠️⚠️⚠️');
-console.warn('🔴 NÃO FAZER MERGE NA MAIN SEM REVERTER!');
-console.warn('📝 Arquivo: services/auth.ts');
-
-// Log para debug
-console.log('🔧 Supabase Config:');
+// Log para conferência
+console.log('🔧 Monitor Pro - Inicializando...');
+console.log('   Modo:', import.meta.env.MODE);
 console.log('   URL:', SUPABASE_URL);
-console.log('   Environment: development (hardcoded)');
-console.log('   Mode:', import.meta.env.MODE);
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error('❌ ERRO: Variáveis de ambiente não encontradas! Verifique os arquivos .env');
+}
+
 
 // Sufixo para "esconder" o e-mail
 const EMAIL_SUFFIX = '@monitorescolar.app';
@@ -46,7 +42,7 @@ export const authService = {
 
             // 2. Trava de Dispositivo (Device Lock) - APENAS EM APPS NATIVOS
             const isNativeApp = window.Capacitor?.isNativePlatform?.() || false;
-            
+
             if (isNativeApp) {
                 const deviceId = (await Device.getId()).identifier;
                 const userDeviceId = data.user.user_metadata?.device_id;

@@ -70,19 +70,22 @@ export const AttendanceScreen: React.FC = () => {
 
   // Grouping Logic: Route -> Students
   const getRouteIdForStudent = (student: Student): string | undefined => {
+    // 🆕 NOVA ESTRUTURA: Aluno tem routeId direto
+    if (student.routeId) return student.routeId;
+    
+    // ⚠️ FALLBACK: Compatibilidade com estrutura antiga (stopId)
     const stop = stops.find(s => s.id === student.stopId);
     return stop?.routeId;
   };
 
   const groupedByRoute = routes.sort((a, b) => (a.order || 0) - (b.order || 0)).reduce((acc, route) => {
     const routeStudents = students.filter(s => getRouteIdForStudent(s) === route.id);
-    const stopOrder = stops.reduce((map, s) => ({ ...map, [s.id]: s.order }), {} as Record<string, number>);
 
-    // Sort by Stop Order then by Student Order (or Name if no order)
+    // 🆕 NOVA ESTRUTURA: Ordenar por routeOrder (ou order como fallback)
     routeStudents.sort((a, b) => {
-      const stopDiff = (stopOrder[a.stopId] || 0) - (stopOrder[b.stopId] || 0);
-      if (stopDiff !== 0) return stopDiff;
-      return (a.order || 0) - (b.order || 0);
+      const orderA = a.routeOrder ?? a.order ?? 0;
+      const orderB = b.routeOrder ?? b.order ?? 0;
+      return orderA - orderB;
     });
 
     acc[route.id] = {
@@ -157,7 +160,9 @@ export const AttendanceScreen: React.FC = () => {
                 <div className="space-y-3 pl-1">
                   {group.students.map(student => {
                     const status = attendance[student.id];
-                    const stopName = stops.find(s => s.id === student.stopId)?.name || '...';
+                    
+                    // 🆕 NOVA ESTRUTURA: Mostrar endereço ou nome do stop (fallback)
+                    const locationText = student.address || stops.find(s => s.id === student.stopId)?.name || '';
 
                     return (
                       <div key={student.id} className="bg-navy-800 p-3 rounded-2xl border border-navy-700 shadow-sm flex items-center justify-between">
@@ -170,9 +175,11 @@ export const AttendanceScreen: React.FC = () => {
                                 🎂 Aniversário Hoje
                               </p>
                             )}
-                            <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                              <Icon name="map-pin" size={8} /> {stopName}
-                            </p>
+                            {locationText && (
+                              <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                                <Icon name="map-pin" size={8} /> {locationText}
+                              </p>
+                            )}
                             {student.observation && (
                               <p className="text-[10px] text-yellow-400 flex items-center gap-1 mt-0.5">
                                 <Icon name="alert-circle" size={10} /> {student.observation}

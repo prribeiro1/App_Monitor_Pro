@@ -66,11 +66,12 @@ export const ReportsScreen: React.FC = () => {
         const stopMap = stops.reduce((acc, s) => ({ ...acc, [s.id]: s }), {} as Record<string, Stop>);
 
         students.forEach(student => {
-            const stop = stopMap[student.stopId];
-            if (!stop) return;
-            const routeId = stop.routeId;
-            // Safety check if route was deleted but stop/student remains
-            if (!grouped[routeId]) return;
+            const routeId = student.routeId || 'sem_rota';
+            // Safety check
+            if (!grouped[routeId] && routeId !== 'sem_rota') return;
+            if (routeId === 'sem_rota' && !grouped['sem_rota']) {
+                grouped['sem_rota'] = { routeName: 'Sem Rota Definida', students: [] };
+            }
 
             let presentRecs: AttendanceRecord[] = [];
             let absentRecs: AttendanceRecord[] = [];
@@ -96,11 +97,6 @@ export const ReportsScreen: React.FC = () => {
                     i.studentId === student.id && i.date === date
                 );
             }
-
-            // Only add if there is activity OR we want to show everyone (Monitor decision: show everyone for attendance check)
-            // For Monthly report, user usually wants to see stats.
-            // For Daily report, if no attendance, maybe show as "Pendente"? 
-            // Current Logic: Always add student to list, counts will be 0 if no record.
 
             grouped[routeId].students.push({
                 student,
@@ -399,11 +395,9 @@ export const ReportsScreen: React.FC = () => {
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); openDetails(stats); }}
                                                 className="p-2 bg-navy-700 hover:bg-primary-600 text-primary-200 hover:text-white rounded-full transition"
+                                                title="Ver Detalhes/Calendário"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                                    <circle cx="12" cy="12" r="3"></circle>
-                                                </svg>
+                                                <Icon name="eye" size={20} />
                                             </button>
                                         </div>
                                     ))}
