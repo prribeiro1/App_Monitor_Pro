@@ -6,7 +6,7 @@ import { Icon } from '../components/Icon';
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
 import { authService, supabase } from '../services/auth';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -59,9 +59,32 @@ export const StudentsScreen: React.FC = () => {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showAddressMap, setShowAddressMap] = useState(false);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [mapInitialized, setMapInitialized] = useState(false); // 🆕 Garantir centralização única
 
-  // 🆕 Componente para capturar clique no mapa para localização manual
+  // 🆕 Componente para capturar clique no mapa e centralização automática
   const MapEvents = () => {
+    const map = useMap(); // Usar hook do leaflet
+
+    useEffect(() => {
+      if (showAddressMap && !mapInitialized) {
+        // Tentar centralizar na posição do usuário ao abrir pela primeira vez
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude: lat, longitude: lng } = pos.coords;
+            map.setView([lat, lng], 16);
+            setMapInitialized(true);
+            // Se ainda não tiver latitude/longitude setada, usa a do GPS
+            if (!latitude || !longitude) {
+              setLatitude(lat);
+              setLongitude(lng);
+            }
+          },
+          (err) => console.warn('Erro ao obter GPS para o mapa:', err),
+          { enableHighAccuracy: true }
+        );
+      }
+    }, [showAddressMap, mapInitialized, map]);
+
     useMapEvents({
       click(e) {
         setLatitude(e.latlng.lat);
@@ -81,10 +104,32 @@ export const StudentsScreen: React.FC = () => {
 
     setIsSearchingAddress(true);
     try {
-      // Usando Photon para busca rápida em português
+      // Tentativa 1: Photon (Mais rápido)
       const resp = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(value)}&limit=5&lang=pt`);
       const data = await resp.json();
-      setSuggestions(data.features || []);
+
+      if (data.features && data.features.length > 0) {
+        setSuggestions(data.features);
+      } else {
+        // Fallback: Nominatim (Caso Photon venha vazio)
+        console.log('Photon sem resultados, tentando Nominatim...');
+        const nomResp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=5&addressdetails=1&countrycodes=br`);
+        const nomData = await nomResp.json();
+
+        // Converter formato Nominatim para o esperado (GeoJSON features)
+        const converted = nomData.map((item: any) => ({
+          properties: {
+            name: item.display_name,
+            street: item.address?.road || item.display_name,
+            city: item.address?.city || item.address?.town,
+            state: item.address?.state
+          },
+          geometry: {
+            coordinates: [parseFloat(item.lon), parseFloat(item.lat)]
+          }
+        }));
+        setSuggestions(converted);
+      }
     } catch (err) {
       console.error('Erro ao buscar endereços:', err);
     } finally {

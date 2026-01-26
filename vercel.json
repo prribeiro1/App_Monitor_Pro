@@ -1,6 +1,18 @@
 {
     "rewrites": [
         {
+            "source": "/cadastro-aluno/:id",
+            "destination": "/redirect.html"
+        },
+        {
+            "source": "/track/:code",
+            "destination": "/redirect.html"
+        },
+        {
+            "source": "/sign-contract/:id",
+            "destination": "/redirect.html"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

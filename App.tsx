@@ -514,17 +514,17 @@ function App() {
     }
   };
 
-  if (loadingSession) return <div className="min-h-screen bg-navy-900 flex items-center justify-center text-white">Carregando...</div>;
+  // Se carregando sessão, mostra loader simples pro app inteiro
+  if (loadingSession) {
+    return <div className="min-h-screen bg-navy-900 flex items-center justify-center text-white">Carregando...</div>;
+  }
 
-  if (!session) {
-    const isNativeApp = Capacitor.isNativePlatform();
+  // 🛠️ MONITOR PRO FIX: Verificar se é uma rota pública ANTES de qualquer redirecionamento
+  const isPublicRoute = window.location.hash.includes('/cadastro-aluno/') ||
+    window.location.hash.includes('/track/') ||
+    window.location.hash.includes('/sign-contract/');
 
-    // 🔍 Detectar se é uma rota pública para evitar redirecionamento indevido
-    const currentPath = window.location.hash;
-    const isPublicRoute = currentPath.includes('/track/') ||
-      currentPath.includes('/cadastro-aluno/') ||
-      currentPath.includes('/sign-contract/');
-
+  if (!session && isPublicRoute) {
     return (
       <I18nProvider>
         <HashRouter>
@@ -532,27 +532,36 @@ function App() {
             <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
             <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
             <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
-
-            <Route path="/landing" element={<LandingScreen />} />
-            <Route path="/login" element={<LoginScreen />} />
-            <Route path="/register" element={<RegisterScreen />} />
-
-            <Route path="/" element={
-              isPublicRoute ? null : (isNativeApp ? <Navigate to="/login" /> : <LandingScreen />)
-            } />
-
-            <Route path="*" element={isPublicRoute ? null : <Navigate to="/" />} />
+            {/* Fallback caso a rota mude enquanto carrega */}
+            <Route path="*" element={<div className="min-h-screen bg-navy-900 text-white flex items-center justify-center">Carregando rota pública...</div>} />
           </Routes>
         </HashRouter>
       </I18nProvider>
     );
   }
 
-  const metadata = session.user.user_metadata || {};
+  // Se não tem sessão e não é rota pública, vai para landing/login
+  if (!session) {
+    const isNativeApp = Capacitor.isNativePlatform();
+    return (
+      <I18nProvider>
+        <HashRouter>
+          <Routes>
+            <Route path="/landing" element={<LandingScreen />} />
+            <Route path="/login" element={<LoginScreen />} />
+            <Route path="/register" element={<RegisterScreen />} />
+            <Route path="*" element={isNativeApp ? <Navigate to="/login" /> : <LandingScreen />} />
+          </Routes>
+        </HashRouter>
+      </I18nProvider>
+    );
+  }
+
+  // Permissões e Metadata (calculados apenas se session existir)
+  const metadata = session?.user?.user_metadata || {};
   const role = metadata.role || 'monitor';
   const permissions = metadata.permissions || {};
-  const currentUsername = authService.getUsernameFromEmail(session.user.email);
-  // SuperUsers: apenas 'teste' e 'google_test'
+  const currentUsername = session ? authService.getUsernameFromEmail(session.user.email) : '';
   const isSuperUser = role === 'admin' || currentUsername === 'teste' || currentUsername === 'google_test';
 
   const checkPermission = (feature: string, defaultAccess = true) => {
@@ -561,10 +570,7 @@ function App() {
     return permissions[key] !== undefined ? permissions[key] : defaultAccess;
   };
 
-  // Plano atual (checa Metadata do Auth E Settings Logal do IndexedDB)
   const userTier = metadata.subscription_tier || settings?.subscriptionTier || 'basic';
-
-  // Lógica de Trial (7 dias)
   const trialStartedAt = metadata.trial_started_at;
   const isTrialActive = trialStartedAt
     ? (new Date().getTime() - new Date(trialStartedAt).getTime()) < (7 * 24 * 60 * 60 * 1000)
@@ -572,7 +578,6 @@ function App() {
 
   const isPro = userTier !== 'basic' || isTrialActive || isSuperUser;
   const isProPlus = userTier === 'pro_plus' || isTrialActive || isSuperUser;
-
   const currentTier = isSuperUser ? 'pro_plus' : (isTrialActive ? 'pro_plus' : userTier);
 
   const canViewFinancial = checkPermission('financial', isPro);
@@ -589,78 +594,99 @@ function App() {
   return (
     <I18nProvider>
       <HashRouter>
-        <Layout
-          onBackup={performBackup}
-          onImport={performImport}
-          onLogout={handleLogout}
-          onDeleteAccount={handleDeleteAccount}
-          isBackupLoading={backupLoading}
-          settings={settings}
-          onSaveSettings={handleSaveSettings}
-          session={session}
-          permissions={{
-            dashboard: true,
-            routes: canViewRoutes,
-            students: canViewStudents,
-            attendance: canViewAttendance,
-            incidents: canViewIncidents,
-            reports: canViewReports,
-            financial: canViewFinancial,
-            reminders: canViewReminders,
-            maintenance: canViewMaintenance,
-            contracts: canViewContracts,
-            gps: canViewGps,
-            team: isSuperUser,
-            tier: currentTier
-          }}
-        >
-          <Routes>
-            {/* Priorizar Rotas Públicas (mesmo logado) */}
-            <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
-            <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
-            <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
+        <Routes>
+          {/* 1. ROTAS PÚBLICAS (Sempre acessíveis, com ou sem login) */}
+          <Route path="/landing" element={<LandingScreen />} />
+          <Route path="/login" element={<LoginScreen />} />
+          <Route path="/register" element={<RegisterScreen />} />
+          <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
+          <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
+          <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
 
-            <Route path="/dashboard" element={<DashboardWrapper />} />
-            {canViewRoutes && <Route path="/routes" element={<RoutesScreen canUseGps={canViewGps} />} />}
-            {canViewRoutes && <Route path="/routes/history" element={<RouteHistoryScreen />} />}
-            {canViewRoutes && <Route path="/routes/organize/:routeId" element={<RouteOrganizerScreen />} />}
-            {canViewRoutes && <Route path="/routes/start/:routeId" element={<RouteStartScreen />} />}
-            {canViewRoutes && <Route path="/routes/navigate/:id" element={<RouteHandler />} />}
-            {canViewStudents && <Route path="/students" element={<StudentsScreen />} />}
-            {canViewAttendance && <Route path="/attendance" element={<AttendanceScreen />} />}
-            {canViewIncidents && <Route path="/incidents" element={<IncidentsScreen />} />}
-            {canViewReports && <Route path="/reports" element={<ReportsScreen />} />}
-            {canViewReminders && <Route path="/reminders" element={<RemindersScreen />} />}
-            {canViewMaintenance && <Route path="/maintenance" element={<MaintenanceScreen />} />}
-            {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
-            {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} isTrial={isTrialActive} isAdmin={isSuperUser} />} />}
-            {isSuperUser && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => {
-              const updated: UserSettings = { ...settings!, asaasConfig: config };
-              await dbService.saveUserSettings(updated);
-              fetchSettings();
-            }} initialConfig={settings?.asaasConfig} />} />}
-            {isProPlus && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
-            {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => {
-              fetchSettings();
-              window.location.hash = '/automatic-billing';
-            }} onSkip={() => {
-              window.location.hash = '/dashboard';
-            }} />} />}
-            {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
-            <Route path="/change-plan" element={
-              <div className="fixed inset-0 bg-navy-900 z-50 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-                <WelcomeScreen
+          {/* 2. ROTAS PRIVADAS (Requerem Layout e Sessão) */}
+          <Route
+            path="/*"
+            element={
+              session ? (
+                <Layout
+                  onBackup={performBackup}
+                  onImport={performImport}
+                  onLogout={handleLogout}
+                  onDeleteAccount={handleDeleteAccount}
+                  isBackupLoading={backupLoading}
                   settings={settings}
-                  onComplete={() => {
-                    fetchSettings();
-                    window.location.hash = '/dashboard';
+                  onSaveSettings={handleSaveSettings}
+                  session={session}
+                  permissions={{
+                    dashboard: true,
+                    routes: canViewRoutes,
+                    students: canViewStudents,
+                    attendance: canViewAttendance,
+                    incidents: canViewIncidents,
+                    reports: canViewReports,
+                    financial: canViewFinancial,
+                    reminders: canViewReminders,
+                    maintenance: canViewMaintenance,
+                    contracts: canViewContracts,
+                    gps: canViewGps,
+                    team: isSuperUser,
+                    tier: currentTier
                   }}
-                />
-              </div>
-            } />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
-          </Routes>
-        </Layout>
+                >
+                  <Routes>
+                    <Route path="/dashboard" element={<DashboardWrapper />} />
+                    {canViewRoutes && <Route path="/routes" element={<RoutesScreen canUseGps={canViewGps} />} />}
+                    {canViewRoutes && <Route path="/routes/history" element={<RouteHistoryScreen />} />}
+                    {canViewRoutes && <Route path="/routes/organize/:routeId" element={<RouteOrganizerScreen />} />}
+                    {canViewRoutes && <Route path="/routes/start/:routeId" element={<RouteStartScreen />} />}
+                    {canViewRoutes && <Route path="/routes/navigate/:id" element={<RouteHandler />} />}
+                    {canViewStudents && <Route path="/students" element={<StudentsScreen />} />}
+                    {canViewAttendance && <Route path="/attendance" element={<AttendanceScreen />} />}
+                    {canViewIncidents && <Route path="/incidents" element={<IncidentsScreen />} />}
+                    {canViewReports && <Route path="/reports" element={<ReportsScreen />} />}
+                    {canViewReminders && <Route path="/reminders" element={<RemindersScreen />} />}
+                    {canViewMaintenance && <Route path="/maintenance" element={<MaintenanceScreen />} />}
+                    {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
+                    {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} isTrial={isTrialActive} isAdmin={isSuperUser} />} />}
+
+                    {isSuperUser && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => {
+                      const updated: UserSettings = { ...settings!, asaasConfig: config };
+                      await dbService.saveUserSettings(updated);
+                      fetchSettings();
+                    }} initialConfig={settings?.asaasConfig} />} />}
+
+                    {isProPlus && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
+                    {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => {
+                      fetchSettings();
+                      window.location.hash = '/automatic-billing';
+                    }} onSkip={() => {
+                      window.location.hash = '/dashboard';
+                    }} />} />}
+
+                    {isSuperUser && <Route path="/team" element={<TeamScreen />} />}
+
+                    <Route path="/change-plan" element={
+                      <div className="fixed inset-0 bg-navy-900 z-50 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+                        <WelcomeScreen
+                          settings={settings}
+                          onComplete={() => {
+                            fetchSettings();
+                            window.location.hash = '/dashboard';
+                          }}
+                        />
+                      </div>
+                    } />
+
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </Layout>
+              ) : (
+                <Navigate to="/landing" replace />
+              )
+            }
+          />
+        </Routes>
 
         {isUpdateRequired && (
           <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 text-center">

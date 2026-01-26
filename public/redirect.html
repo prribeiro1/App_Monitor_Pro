@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Redirecionando...</title>
+    <script>
+        const currentPath = window.location.pathname + window.location.search;
+        const cleanPath = currentPath.startsWith('/') ? currentPath.substring(1) : currentPath;
+        window.location.replace(cleanPath ? '/#/' + cleanPath : '/');
+    </script>
+</head>
+
+<body style="background:#111225;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;">
+    <p>Carregando...</p>
+</body>
+
+</html>

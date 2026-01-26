@@ -109,8 +109,8 @@ export const PublicTrackingPage: React.FC = () => {
                 const { data: linkData, error: linkError } = await supabase
                     .from('tracking_links')
                     .select('user_id, is_active')
-                    .eq('share_code', normalizedCode)
-                    .single();
+                    .ilike('share_code', normalizedCode) // Use ilike for case insensitivity
+                    .maybeSingle(); // Better for single row lookup in terms of error handling
 
                 if (linkError || !linkData) {
                     console.error('[Tracking] Code not found or error:', linkError);
@@ -132,7 +132,7 @@ export const PublicTrackingPage: React.FC = () => {
                     .from('driver_locations')
                     .select('*')
                     .eq('user_id', linkData.user_id)
-                    .single();
+                    .maybeSingle(); // Use maybeSingle to avoid errors if no location exists yet
 
                 if (locData && locData.is_tracking_active) {
                     setDriverLocation({
