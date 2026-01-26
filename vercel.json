@@ -3,11 +3,11 @@
     "trailingSlash": false,
     "rewrites": [
         {
-            "source": "/cadastro-aluno/:id",
+            "source": "/cadastro-aluno/(.*)",
             "destination": "/index.html"
         },
         {
-            "source": "/track/:code",
+            "source": "/track/(.*)",
             "destination": "/index.html"
         },
         {

@@ -190,8 +190,9 @@ export const StudentsScreen: React.FC = () => {
     const user = await authService.getCurrentUser();
     if (!user) return;
 
-    // Detectar origem dinamicamente para funcionar em links de Preview
-    const baseUrl = window.location.origin;
+    // 🛠️ MONITOR PRO FIX: No APK, window.location.origin é localhost. 
+    // Forçamos o link da branch para o teste de hoje.
+    const baseUrl = 'https://app-monitor-pro-git-fea-7f0621-paulo-ricardos-projects-e065d0ea.vercel.app';
     const shareUrl = `${baseUrl}/cadastro-aluno/${user.id}`;
     const message = `Olá! 🚐 Para facilitar o cadastro do seu filho no Monitor Escolar PRO, clique no link abaixo e preencha a ficha:\n\n${shareUrl}`;
 

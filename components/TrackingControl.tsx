@@ -63,8 +63,8 @@ export const TrackingControl: React.FC<TrackingControlProps> = ({ routeId }) => 
     };
 
     const getTrackingUrl = () => {
-        // 🛠️ MONITOR PRO FIX: Usar URLs limpas e dinâmicas
-        const baseUrl = window.location.origin;
+        // 🛠️ MONITOR PRO FIX: No APK o origin é localhost, então forçamos a branch
+        const baseUrl = 'https://app-monitor-pro-git-fea-7f0621-paulo-ricardos-projects-e065d0ea.vercel.app';
         return `${baseUrl}/track/${shareCode}`;
     };
 
