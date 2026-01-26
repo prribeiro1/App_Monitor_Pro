@@ -148,9 +148,16 @@ export const PublicTrackingPage: React.FC = () => {
                 }
 
                 setLoading(false);
-            } catch (e) {
-                console.error('[Tracking] Error validating code:', e);
-                setError('Erro ao verificar código de rastreamento');
+            } catch (e: any) {
+                console.error('[Tracking] Critical error validating code:', e);
+                // Feedback mais específico para o usuário
+                if (e?.message?.includes('JSON object')) {
+                    setError('Erro de comunicação com o servidor. Tente novamente.');
+                } else if (e?.message?.includes('permission')) {
+                    setError('Acesso negado ao rastreamento. Contate o suporte.');
+                } else {
+                    setError('Erro ao verificar código de rastreamento');
+                }
                 setLoading(false);
             }
         };

@@ -514,47 +514,16 @@ function App() {
     }
   };
 
-  // Se carregando sessão, mostra loader simples pro app inteiro
-  if (loadingSession) {
-    return <div className="min-h-screen bg-navy-900 flex items-center justify-center text-white">Carregando...</div>;
-  }
-
-  // 🛠️ MONITOR PRO FIX: Verificar se é uma rota pública ANTES de qualquer redirecionamento
+  // 1. Definição da "Trava" de Segurança sugerida pelo usuário
   const isPublicRoute = window.location.hash.includes('/cadastro-aluno/') ||
     window.location.hash.includes('/track/') ||
     window.location.hash.includes('/sign-contract/');
 
-  if (!session && isPublicRoute) {
-    return (
-      <I18nProvider>
-        <HashRouter>
-          <Routes>
-            <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
-            <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
-            <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
-            {/* Fallback caso a rota mude enquanto carrega */}
-            <Route path="*" element={<div className="min-h-screen bg-navy-900 text-white flex items-center justify-center">Carregando rota pública...</div>} />
-          </Routes>
-        </HashRouter>
-      </I18nProvider>
-    );
-  }
+  const isNativeApp = Capacitor.isNativePlatform();
 
-  // Se não tem sessão e não é rota pública, vai para landing/login
-  if (!session) {
-    const isNativeApp = Capacitor.isNativePlatform();
-    return (
-      <I18nProvider>
-        <HashRouter>
-          <Routes>
-            <Route path="/landing" element={<LandingScreen />} />
-            <Route path="/login" element={<LoginScreen />} />
-            <Route path="/register" element={<RegisterScreen />} />
-            <Route path="*" element={isNativeApp ? <Navigate to="/login" /> : <LandingScreen />} />
-          </Routes>
-        </HashRouter>
-      </I18nProvider>
-    );
+  // Se carregando sessão, mostra loader (exceto se for rota pública, para não piscar)
+  if (loadingSession && !isPublicRoute) {
+    return <div className="min-h-screen bg-navy-900 flex items-center justify-center text-white">Carregando...</div>;
   }
 
   // Permissões e Metadata (calculados apenas se session existir)
@@ -595,15 +564,15 @@ function App() {
     <I18nProvider>
       <HashRouter>
         <Routes>
-          {/* 1. ROTAS PÚBLICAS (Sempre acessíveis, com ou sem login) */}
-          <Route path="/landing" element={<LandingScreen />} />
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/register" element={<RegisterScreen />} />
+          {/* A. ROTAS PÚBLICAS (Sempre acessíveis, com ou sem login) */}
+          <Route path="/landing" element={session ? <Navigate to="/dashboard" replace /> : <LandingScreen />} />
+          <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <LoginScreen />} />
+          <Route path="/register" element={session ? <Navigate to="/dashboard" replace /> : <RegisterScreen />} />
           <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
           <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
           <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
 
-          {/* 2. ROTAS PRIVADAS (Requerem Layout e Sessão) */}
+          {/* B. ÁREA RESTRITA */}
           <Route
             path="/*"
             element={
@@ -634,7 +603,7 @@ function App() {
                   }}
                 >
                   <Routes>
-                    <Route path="/dashboard" element={<DashboardWrapper />} />
+                    <Route path="/dashboard" element={<DashboardScreen onNavigate={(path) => window.location.hash = path} />} />
                     {canViewRoutes && <Route path="/routes" element={<RoutesScreen canUseGps={canViewGps} />} />}
                     {canViewRoutes && <Route path="/routes/history" element={<RouteHistoryScreen />} />}
                     {canViewRoutes && <Route path="/routes/organize/:routeId" element={<RouteOrganizerScreen />} />}
@@ -682,7 +651,8 @@ function App() {
                   </Routes>
                 </Layout>
               ) : (
-                <Navigate to="/landing" replace />
+                // Se não está logado e NÃO é rota pública, decide entre Login (APK) ou Landing (WEB)
+                <Navigate to={isNativeApp ? "/login" : "/landing"} replace />
               )
             }
           />
