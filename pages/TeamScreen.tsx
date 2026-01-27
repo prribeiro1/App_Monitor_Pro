@@ -13,7 +13,8 @@ const PERMISSION_LABELS: Record<string, string> = {
     can_view_reminders: 'Lembretes',
     can_view_maintenance: 'Manutenção',
     can_view_contracts: 'Contratos',
-    can_view_gps: 'GPS (Navegação)'
+    can_view_gps: 'GPS (Navegação)',
+    can_view_asaas: 'Cobrança Automática (Asaas)'
 };
 
 export const TeamScreen: React.FC = () => {
@@ -33,7 +34,8 @@ export const TeamScreen: React.FC = () => {
         can_view_reminders: true,
         can_view_maintenance: false,
         can_view_contracts: false,
-        can_view_gps: false
+        can_view_gps: false,
+        can_view_asaas: false
     });
 
     const handleToggle = (key: keyof typeof permissions) => {
@@ -111,7 +113,8 @@ export const TeamScreen: React.FC = () => {
                                     can_view_financial: false,
                                     can_view_maintenance: false,
                                     can_view_contracts: false,
-                                    can_view_gps: false
+                                    can_view_gps: false,
+                                    can_view_asaas: false
                                 }));
                             }}
                             className={`flex-1 py-3 rounded-xl border font-bold transition flex items-center justify-center gap-2 ${tier === 'basic' ? 'bg-orange-500/20 border-orange-500 text-orange-500' : 'bg-navy-900 border-navy-600 text-gray-400'}`}
@@ -127,7 +130,8 @@ export const TeamScreen: React.FC = () => {
                                     can_view_financial: true,
                                     can_view_maintenance: true,
                                     can_view_contracts: true,
-                                    can_view_gps: true
+                                    can_view_gps: true,
+                                    can_view_asaas: true
                                 }));
                             }}
                             className={`flex-1 py-3 rounded-xl border font-bold transition flex items-center justify-center gap-2 ${tier === 'pro' ? 'bg-primary-500/20 border-primary-500 text-primary-500' : 'bg-navy-900 border-navy-600 text-gray-400'}`}

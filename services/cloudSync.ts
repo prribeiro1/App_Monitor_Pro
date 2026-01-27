@@ -553,5 +553,14 @@ export const cloudSync = {
             console.warn("⚠️ Erro ao deletar conta do Auth (username pode permanecer reservado):", error);
             return false;
         }
+    },
+
+    // Buscar constantes do app (preços, links, etc)
+    getAppConstants: async (): Promise<any> => {
+        const { data, error } = await supabase.from('app_constants').select('*');
+        if (error) return null;
+
+        // Transforma o array em um objeto chave-valor
+        return data.reduce((acc, item) => ({ ...acc, [item.key]: item.value }), {});
     }
 };

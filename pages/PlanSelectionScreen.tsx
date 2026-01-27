@@ -1,20 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icon } from '../components/Icon';
-import { SubscriptionTier } from '../types';
+import { SubscriptionTier, PlanPrices } from '../types';
+import { cloudSync } from '../services/cloudSync';
 
 interface PlanSelectionScreenProps {
-  onSelectPlan: (tier: SubscriptionTier) => void;
+  onSelectPlan: (tier: SubscriptionTier, price: number) => void;
 }
 
 export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSelectPlan }) => {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionTier | null>(null);
+  const [prices, setPrices] = useState<PlanPrices>({
+    basic: { monthly: 8.90, annual: 69.90 },
+    pro: { monthly: 14.90, annual: 149.90 },
+    pro_plus: { monthly: 24.90, annual: 249.90 }
+  });
+  const [whatsappLink, setWhatsappLink] = useState('https://wa.me/5522999837547');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadConstants = async () => {
+      try {
+        const constants = await cloudSync.getAppConstants();
+        if (constants) {
+          if (constants.plan_prices) setPrices(constants.plan_prices);
+          if (constants.contact_links?.whatsapp_team) setWhatsappLink(constants.contact_links.whatsapp_team);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar preços dinâmicos:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadConstants();
+  }, []);
 
   const plans = [
     {
       id: 'basic' as SubscriptionTier,
       name: 'Básico',
-      price: 8.90,
-      priceAnnual: 69.90,
+      price: prices.basic.monthly,
+      priceAnnual: prices.basic.annual,
       color: 'from-gray-600 to-gray-700',
       icon: 'check-circle' as const,
       features: [
@@ -34,8 +59,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
     {
       id: 'pro' as SubscriptionTier,
       name: 'Pro',
-      price: 14.90,
-      priceAnnual: 149.90,
+      price: prices.pro.monthly,
+      priceAnnual: prices.pro.annual,
       color: 'from-blue-600 to-blue-700',
       icon: 'star' as const,
       badge: 'Mais Popular',
@@ -57,8 +82,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
     {
       id: 'pro_plus' as SubscriptionTier,
       name: 'Pro+',
-      price: 24.90,
-      priceAnnual: 249.90,
+      price: prices.pro_plus.monthly,
+      priceAnnual: prices.pro_plus.annual,
       color: 'from-yellow-500 to-orange-600',
       icon: 'zap' as const,
       badge: 'Recomendado',
@@ -78,7 +103,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
 
   const handleContinue = () => {
     if (selectedPlan) {
-      onSelectPlan(selectedPlan);
+      const plan = plans.find(p => p.id === selectedPlan);
+      onSelectPlan(selectedPlan, plan?.price || 0);
     }
   };
 
@@ -94,18 +120,6 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 pb-24">
-        {/* Info Card */}
-        <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <Icon name="info" className="text-blue-400 mt-1" size={20} />
-            <div className="text-sm text-gray-300">
-              <p className="font-semibold text-blue-400 mb-1">💡 Dica</p>
-              <p className="text-xs">
-                Você pode mudar de plano a qualquer momento. Comece com o Básico e faça upgrade quando precisar!
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Plans */}
         <div className="space-y-4">
@@ -113,11 +127,10 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
             <div
               key={plan.id}
               onClick={() => setSelectedPlan(plan.id)}
-              className={`relative rounded-2xl p-5 border-2 transition-all cursor-pointer ${
-                selectedPlan === plan.id
+              className={`relative rounded-2xl p-5 border-2 transition-all cursor-pointer ${selectedPlan === plan.id
                   ? 'border-primary-500 bg-primary-500/10 shadow-lg shadow-primary-500/20'
                   : 'border-navy-700 bg-navy-800 hover:border-navy-600'
-              }`}
+                }`}
             >
               {/* Badge */}
               {plan.badge && (
@@ -142,11 +155,10 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
                 </div>
 
                 {/* Radio */}
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                  selectedPlan === plan.id
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedPlan === plan.id
                     ? 'border-primary-500 bg-primary-500'
                     : 'border-gray-600'
-                }`}>
+                  }`}>
                   {selectedPlan === plan.id && (
                     <Icon name="check" size={16} className="text-white" />
                   )}
@@ -173,7 +185,7 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
                     <span className="text-sm text-gray-300">{feature}</span>
                   </div>
                 ))}
-                
+
                 {plan.notIncluded.length > 0 && (
                   <>
                     {plan.notIncluded.map((feature, index) => (
@@ -189,6 +201,25 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
           ))}
         </div>
 
+        {/* Whatsapp Team Button */}
+        <div className="mt-8">
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-navy-800 border-2 border-dashed border-navy-600 hover:border-primary-500 transition-all group"
+          >
+            <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-500 group-hover:scale-110 transition">
+              <Icon name="message-circle" size={24} />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-bold text-sm">Plano para Equipes?</p>
+              <p className="text-gray-400 text-xs text-balance">Consulte valores para frotas de 3 a 5 motoristas.</p>
+            </div>
+            <Icon name="external-link" size={16} className="text-gray-600 ml-auto" />
+          </a>
+        </div>
+
         {/* Info Footer */}
         <div className="mt-6 text-center text-xs text-gray-500">
           <p>Todos os planos incluem 7 dias de teste grátis</p>
@@ -200,10 +231,12 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
       <div className="bg-navy-800 p-4 border-t border-navy-700" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <button
           onClick={handleContinue}
-          disabled={!selectedPlan}
+          disabled={!selectedPlan || loading}
           className="w-full bg-primary-600 hover:bg-primary-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2"
         >
-          {selectedPlan ? (
+          {loading ? (
+            <Icon name="loader" className="animate-spin" />
+          ) : selectedPlan ? (
             <>
               Continuar com {plans.find(p => p.id === selectedPlan)?.name}
               <Icon name="arrow-right" size={20} />

@@ -198,3 +198,14 @@ export interface RouteEvent {
   notes?: string;
   createdAt?: string;
 }
+
+export interface PlanPrices {
+  basic: { monthly: number; annual: number };
+  pro: { monthly: number; annual: number };
+  pro_plus: { monthly: number; annual: number };
+}
+
+export interface AppConstants {
+  plan_prices: PlanPrices;
+  contact_links: { whatsapp_team: string };
+}

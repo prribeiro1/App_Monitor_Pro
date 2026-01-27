@@ -20,7 +20,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
     setStep('plan');
   };
 
-  const handlePlanSelected = async (tier: SubscriptionTier) => {
+  const handlePlanSelected = async (tier: SubscriptionTier, price?: number) => {
     if (tier === 'basic') {
       setSelectedPlan(tier);
       const updatedSettings: UserSettings = { ...settings!, subscriptionTier: tier };
@@ -67,7 +67,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
       if (!customerId) throw new Error("Não foi possível obter um ID de cliente no Asaas.");
 
       // 2. Criar Assinatura do App (Sem Split, pois é pra nós)
-      const value = tier === 'pro_plus' ? 24.90 : 14.90;
+      const value = price || (tier === 'pro_plus' ? 24.90 : 14.90);
       const description = `Plano ${tier.toUpperCase()} - Monitor Pro`;
 
       const subscription = await asaasService.createSubscription({

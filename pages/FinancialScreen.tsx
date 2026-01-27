@@ -25,9 +25,10 @@ interface FinancialScreenProps {
     onUpdateSettings: () => void;
     isTrial?: boolean;
     isAdmin?: boolean;
+    canViewAsaas?: boolean;
 }
 
-export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUpdateSettings, isTrial, isAdmin }) => {
+export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUpdateSettings, isTrial, isAdmin, canViewAsaas }) => {
     const { t, language } = useI18n();
     const [students, setStudents] = useState<Student[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
@@ -565,8 +566,8 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                 </div>
             </div>
 
-            {/* Asaas Quick Access - Apenas para Pro+ */}
-            {(settings?.subscriptionTier === 'pro_plus' || isTrial || isAdmin) && (
+            {/* Asaas Quick Access - Apenas se tiver permissão e for Pro+ */}
+            {canViewAsaas && (settings?.subscriptionTier === 'pro_plus' || isTrial || isAdmin) && (
                 <div className="mb-6">
                     <a
                         href="#/automatic-billing"

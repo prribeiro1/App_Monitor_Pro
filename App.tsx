@@ -554,6 +554,7 @@ function App() {
   const canViewIncidents = checkPermission('incidents', true);
   const canViewStudents = checkPermission('students', true);
   const canViewRoutes = checkPermission('routes', true);
+  const canViewAsaas = checkPermission('asaas', isProPlus);
 
   return (
     <I18nProvider>
@@ -593,6 +594,7 @@ function App() {
                     maintenance: canViewMaintenance,
                     contracts: canViewContracts,
                     gps: canViewGps,
+                    asaas: canViewAsaas,
                     team: isSuperUser,
                     tier: currentTier
                   }}
@@ -611,16 +613,16 @@ function App() {
                     {canViewReminders && <Route path="/reminders" element={<RemindersScreen />} />}
                     {canViewMaintenance && <Route path="/maintenance" element={<MaintenanceScreen />} />}
                     {canViewContracts && <Route path="/contracts" element={<ContractScreen settings={settings} />} />}
-                    {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} isTrial={isTrialActive} isAdmin={isSuperUser} />} />}
+                    {canViewFinancial && <Route path="/financial" element={<FinancialScreen settings={settings} onUpdateSettings={fetchSettings} isTrial={isTrialActive} isAdmin={isSuperUser} canViewAsaas={canViewAsaas} />} />}
 
-                    {isSuperUser && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => {
+                    {isSuperUser && canViewAsaas && <Route path="/asaas-config" element={<AsaasConfigScreen onSave={async (config) => {
                       const updated: UserSettings = { ...settings!, asaasConfig: config };
                       await dbService.saveUserSettings(updated);
                       fetchSettings();
                     }} initialConfig={settings?.asaasConfig} />} />}
 
-                    {isProPlus && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
-                    {isProPlus && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => {
+                    {canViewAsaas && <Route path="/automatic-billing" element={<AutomaticBillingScreen />} />}
+                    {canViewAsaas && <Route path="/onboarding-bank" element={<OnboardingBankScreen settings={settings} onComplete={() => {
                       fetchSettings();
                       window.location.hash = '/automatic-billing';
                     }} onSkip={() => {
