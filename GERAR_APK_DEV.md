@@ -30,9 +30,9 @@
 
 ## 🔧 Como Gerar o APK
 
-### 1. Build do Projeto
+### 1. Build do Projeto (USAR ESTE COMANDO PARA DEV)
 ```bash
-npm run build
+npm run build:test
 ```
 
 ### 2. Sincronizar com Android

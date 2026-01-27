@@ -11,8 +11,8 @@
 Execute os comandos na ordem:
 
 ```bash
-# 1. Build do projeto
-npm run build
+# 1. Build do projeto usando o banco de DESENVOLVIMENTO
+npm run build:test
 
 # 2. Sync com Android
 npx cap sync android

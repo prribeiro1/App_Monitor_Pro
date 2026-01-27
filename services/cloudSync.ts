@@ -531,7 +531,7 @@ export const cloudSync = {
             console.log("🗑️ Deletando conta do Auth...");
 
             const response = await fetch(
-                'https://nrkwrmksqhykfvgmfpcw.supabase.co/functions/v1/delete-account',
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
                 {
                     method: 'POST',
                     headers: {
