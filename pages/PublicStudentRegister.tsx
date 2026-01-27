@@ -16,7 +16,7 @@ export const PublicStudentRegister: React.FC = () => {
         contact: '',
         responsibleEmail: '',
         school: '',
-        shift: 'morning',
+        shift: 'manha',
         address: '',
         monthlyFees: '', // Added fees
         dueDay: '',      // Added due day
@@ -43,6 +43,7 @@ export const PublicStudentRegister: React.FC = () => {
                 guardian_name: formData.guardianName,
                 responsible_cpf: formData.responsibleCpf,
                 contact: formData.contact,
+                responsible_phone: formData.contact, // Fix: Map to responsible_phone for the app to show it
                 responsible_email: formData.responsibleEmail,
                 school: formData.school,
                 shift: formData.shift,
@@ -177,9 +178,9 @@ export const PublicStudentRegister: React.FC = () => {
                                 value={formData.shift}
                                 onChange={e => setFormData({ ...formData, shift: e.target.value })}
                             >
-                                <option value="morning">Manhã</option>
-                                <option value="afternoon">Tarde</option>
-                                <option value="full">Integral/Ambos</option>
+                                <option value="manha">Manhã</option>
+                                <option value="tarde">Tarde</option>
+                                <option value="integral">Integral/Ambos</option>
                             </select>
                         </div>
                     </div>

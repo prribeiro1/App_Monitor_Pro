@@ -262,6 +262,7 @@ export const StudentsScreen: React.FC = () => {
       responsibleCpf: responsibleCpf || undefined,
       responsibleEmail: responsibleEmail || undefined,
       responsiblePhone: responsiblePhone || undefined,
+      contact: responsiblePhone || undefined, // Keep contact in sync with responsiblePhone
       observation: observation || undefined,
       monthlyFees: monthlyFees ? parseFloat(monthlyFees.replace(',', '.')) : 0,
       dueDay: dueDay ? parseInt(dueDay) : 0,
