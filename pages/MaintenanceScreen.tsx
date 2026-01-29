@@ -298,6 +298,38 @@ export const MaintenanceScreen: React.FC = () => {
         }
     }
 
+    // --- RENDER HELPERS ---
+    const DocumentThumbnail: React.FC<{ doc: VehicleDocument }> = ({ doc }) => {
+        const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+        const isImage = doc.type.startsWith('image/');
+
+        useEffect(() => {
+            if (isImage) {
+                const getThumb = async () => {
+                    try {
+                        const { data } = await supabase.storage
+                            .from('maintenance-docs')
+                            .createSignedUrl(doc.path, 3600); // 1 hour
+                        if (data?.signedUrl) setThumbUrl(data.signedUrl);
+                    } catch (e) {
+                        console.error('Thumb error:', e);
+                    }
+                };
+                getThumb();
+            }
+        }, [doc, isImage]);
+
+        return (
+            <div className="w-10 h-10 rounded bg-navy-800 flex items-center justify-center text-primary-400 shrink-0 overflow-hidden border border-navy-700">
+                {isImage && thumbUrl ? (
+                    <img src={thumbUrl} className="w-full h-full object-cover" alt="thumb" />
+                ) : (
+                    <Icon name={doc.type.includes('pdf') ? 'file-text' : 'image'} size={20} />
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="p-4 pb-20 min-h-screen">
             {/* HEADER WITH 3 BUTTONS */}
@@ -461,9 +493,7 @@ export const MaintenanceScreen: React.FC = () => {
                                 documents.map(doc => (
                                     <div key={doc.id} className="bg-navy-900 p-3 rounded-lg border border-navy-700 flex items-center justify-between">
                                         <div className="flex items-center gap-3 overflow-hidden">
-                                            <div className="w-10 h-10 rounded bg-navy-800 flex items-center justify-center text-primary-400 shrink-0">
-                                                <Icon name={doc.type.includes('pdf') ? 'file-text' : 'image'} size={20} />
-                                            </div>
+                                            <DocumentThumbnail doc={doc} />
                                             <div className="min-w-0">
                                                 <p className="text-white font-medium text-sm truncate">{doc.name}</p>
                                                 <p className="text-xs text-gray-500">{new Date(doc.date).toLocaleDateString()}</p>

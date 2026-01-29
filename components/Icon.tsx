@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type IconName = 'bus' | 'map-pin' | 'users' | 'user' | 'clipboard' | 'alert-triangle' | 'bar-chart' | 'plus' | 'trash' | 'trash-2' | 'edit' | 'edit-3' | 'check' | 'x' | 'log-out' | 'menu' | 'google' | 'save' | 'cloud-upload' | 'road' | 'pencil' | 'face' | 'phone' | 'download' | 'map' | 'chevron-up' | 'chevron-down' | 'dollar-sign' | 'lock' | 'message-circle' | 'settings' | 'tool' | 'check-circle' | 'file-text' | 'arrow-left' | 'smartphone' | 'share-2' | 'info' | 'refresh-cw' | 'book' | 'file-minus' | 'shield-off' | 'home' | 'search' | 'bell' | 'upload-cloud' | 'download-cloud' | 'alert-circle' | 'cloud' | 'chevron-right' | 'loader' | 'wifi-off' | 'cloud-off' | 'zap' | 'arrow-right' | 'eye' | 'eye-off' | 'clock' | 'history' | 'plus-circle' | 'minus-circle' | 'folder' | 'navigation' | 'list' | 'calendar';
+export type IconName = 'bus' | 'map-pin' | 'users' | 'user' | 'clipboard' | 'alert-triangle' | 'bar-chart' | 'plus' | 'trash' | 'trash-2' | 'edit' | 'edit-3' | 'check' | 'x' | 'log-out' | 'menu' | 'google' | 'save' | 'cloud-upload' | 'road' | 'pencil' | 'face' | 'phone' | 'download' | 'map' | 'chevron-up' | 'chevron-down' | 'dollar-sign' | 'lock' | 'message-circle' | 'settings' | 'tool' | 'check-circle' | 'file-text' | 'arrow-left' | 'smartphone' | 'share-2' | 'info' | 'refresh-cw' | 'book' | 'file-minus' | 'shield-off' | 'home' | 'search' | 'bell' | 'upload-cloud' | 'download-cloud' | 'alert-circle' | 'cloud' | 'chevron-right' | 'loader' | 'wifi-off' | 'cloud-off' | 'zap' | 'arrow-right' | 'eye' | 'eye-off' | 'clock' | 'history' | 'plus-circle' | 'minus-circle' | 'folder' | 'navigation' | 'list' | 'calendar' | 'image';
 
 interface IconProps {
   name: IconName;
@@ -74,7 +74,8 @@ const icons: Record<IconName, React.ReactNode> = {
   'trash-2': <path d="M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6" />,
   navigation: <polygon points="3 11 22 2 13 21 11 13 3 11" />,
   list: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
-  calendar: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>
+  calendar: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>,
+  image: <><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></>
 };
 
 export const Icon: React.FC<IconProps> = ({ name, size = 24, className = '', strokeWidth = 2 }) => {
