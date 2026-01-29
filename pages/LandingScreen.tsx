@@ -68,9 +68,11 @@ export const LandingScreen: React.FC = () => {
 
             <nav className="navbar">
                 <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-                    <a href="#" className="flex items-center gap-2 text-xl font-extrabold">
-                        <img src="logo_vp.png" alt="Logo" className="h-10" />
-                        Van <span className="text-blue-500">Pro</span>
+                    <a href="#" className="flex items-center gap-3 text-xl font-extrabold uppercase tracking-tight">
+                        <div className="bg-white p-1 rounded-full border border-white/10 shadow-sm overflow-hidden flex items-center justify-center w-10 h-10">
+                            <img src="logo_vp.png" alt="Logo" className="w-full h-full object-contain" />
+                        </div>
+                        <span>Van <span className="text-blue-500">Pro</span></span>
                     </a>
                     <div className="hidden md:flex gap-8 items-center text-gray-400 font-medium">
                         <a href="#funcionalidades" className="hover:text-white">Funcionalidades</a>
@@ -513,8 +515,8 @@ export const LandingScreen: React.FC = () => {
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-4xl md:text-5xl font-extrabold text-[#1e293b] mb-6">Pronto pra profissionalizar sua van?</h2>
                     <p className="text-xl text-[#0f172a] mb-10 font-medium">Enquanto você continua no caderno, outros condutores já estão organizados.</p>
-                    <div className="bg-white/20 p-6 rounded-2xl inline-block mb-10 border border-black/10">
-                        <p className="text-lg font-bold text-[#1e293b]">⏰ Oferta de lançamento válida só até 26/01.<br />Depois o preço volta ao normal.</p>
+                    <div className="bg-white p-6 rounded-2xl inline-block mb-10 border border-black/10">
+                        <p className="text-lg font-bold text-[#1e293b]">⏰ Profissionalize sua gestão hoje mesmo.<br />Ganhe tempo e evite dores de cabeça.</p>
                     </div>
                     <div>
                         <a href="https://wa.me/5522999837547?text=Quero%20começar" className="bg-[#2563eb] hover:scale-105 text-white font-bold py-4 px-10 rounded-xl text-xl shadow-2xl transition-all inline-flex items-center gap-3">
@@ -530,9 +532,11 @@ export const LandingScreen: React.FC = () => {
             </section>
 
             <footer className="bg-black py-12 text-center border-t border-white/10">
-                <a href="#" className="flex justify-center items-center gap-2 text-2xl font-extrabold mb-6">
-                    <img src="logo_vp.png" alt="Logo" className="h-8" />
-                    Van <span className="text-blue-500">Pro</span>
+                <a href="#" className="flex justify-center items-center gap-3 text-2xl font-extrabold mb-6 uppercase tracking-tight">
+                    <div className="bg-white p-1 rounded-full border border-white/10 shadow-sm overflow-hidden flex items-center justify-center w-10 h-10">
+                        <img src="logo_vp.png" alt="Logo" className="w-full h-full object-contain" />
+                    </div>
+                    <span>Van <span className="text-blue-500">Pro</span></span>
                 </a>
                 <p className="text-gray-600 text-sm mb-4">Feito para Tios e Tias com 💙</p>
                 <p className="text-gray-800 text-xs">© 2025 Van Pro. Todos os direitos reservados.</p>
