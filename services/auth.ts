@@ -7,7 +7,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Log para conferência
-console.log('🔧 Monitor Pro - Inicializando...');
+console.log('🔧 Van Pro - Inicializando...');
 console.log('   Modo:', import.meta.env.MODE);
 console.log('   URL:', SUPABASE_URL);
 

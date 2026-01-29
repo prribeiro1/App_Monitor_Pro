@@ -108,7 +108,7 @@ export const AutomaticBillingScreen: React.FC = () => {
         });
 
         loadData(); // Recarrega lista
-        alert(`✅ Cobrança automática ativada!\n\nAssinatura ID: ${subscription.id}\nPróximo vencimento: ${nextDueDate.toLocaleDateString()}\n\n💰 Split configurado:\n99% para você\n1% para Monitor Pro`);
+        alert(`✅ Cobrança automática ativada!\n\nAssinatura ID: ${subscription.id}\nPróximo vencimento: ${nextDueDate.toLocaleDateString()}\n\n💰 Split configurado:\n99% para você\n1% para Van Pro`);
       } else {
         console.error('Erro na resposta do Asaas:', subscription);
         alert('❌ Erro ao criar assinatura: ' + (subscription.errors?.[0]?.description || JSON.stringify(subscription)));

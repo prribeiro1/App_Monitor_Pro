@@ -185,16 +185,16 @@ export const StudentsScreen: React.FC = () => {
     return todayDate.getDate() === day && (todayDate.getMonth() + 1) === month;
   };
 
-  // 🛠️ MONITOR PRO FIX: Usar URLs limpas para evitar choque com Landing Page
+  // 🛠️ VAN PRO FIX: Usar URLs limpas para evitar choque com Landing Page
   const handleShareInvite = async () => {
     const user = await authService.getCurrentUser();
     if (!user) return;
 
-    // 🛠️ MONITOR PRO FIX: No APK, window.location.origin é localhost. 
+    // 🛠️ VAN PRO FIX: No APK, window.location.origin é localhost. 
     // Forçamos o link da branch para o teste de hoje.
     const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
     const shareUrl = `${baseUrl}/#/cadastro-aluno/${user.id}`;
-    const message = `Olá! 🚐 Para facilitar o cadastro do seu filho no Monitor Escolar PRO, clique no link abaixo e preencha a ficha:\n\n${shareUrl}`;
+    const message = `Olá! 🚐 Para facilitar o cadastro do seu filho no Van Pro, clique no link abaixo e preencha a ficha:\n\n${shareUrl}`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };

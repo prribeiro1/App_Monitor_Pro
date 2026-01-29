@@ -214,7 +214,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                     // Calcular o valor líquido (99% do valor após taxa do Asaas)
                     // No Sandbox a taxa é simulada, no Real o Asaas envia 'netValue' no log.
                     const netValueFull = paymentData.netValue || (paymentData.value - 0.99); // Simula taxa boleto Asaas R$0,99
-                    const conductorNetValue = netValueFull * 0.99; // Tira o 1% do Monitor Pro
+                    const conductorNetValue = netValueFull * 0.99; // Tira o 1% do Van Pro
 
                     await dbService.savePayment({
                         id: `asaas_${paymentData.id}`,

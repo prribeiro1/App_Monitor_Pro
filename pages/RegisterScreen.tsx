@@ -50,7 +50,7 @@ export const RegisterScreen: React.FC = () => {
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-4">Conta Criada!</h2>
                     <p className="text-gray-400 mb-8">
-                        Seja bem-vindo ao Monitor Pro. Agora você pode entrar com seu usuário e senha.
+                        Seja bem-vindo ao Van Pro. Agora você pode entrar com seu usuário e senha.
                     </p>
                     <button
                         onClick={() => window.location.hash = '/login'}

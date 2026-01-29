@@ -310,7 +310,7 @@ export const PublicTrackingPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <span className="text-2xl">🚐</span>
                     <div>
-                        <h1 className="text-white font-bold leading-tight">Monitor PRO</h1>
+                        <h1 className="text-white font-bold leading-tight">Van Pro</h1>
                         <p className="text-gray-400 text-[10px] uppercase tracking-wider">Tempo Real</p>
                     </div>
                 </div>

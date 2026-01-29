@@ -97,7 +97,7 @@ class AsaasService {
         this.config = {
             apiKey: '$aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OmJlYTg2MGU2LWZhOWItNGJkMi1hYjg1LTVhYmZiMmU0OGY0OTo6JGFhY2hfY2I3MGRhYTItZGJiOS00NzZiLWFkZWEtNGM1MjJjNWRlY2Y4',
             environment: 'sandbox',
-            splitPercentage: 1 // 1% fica com você (Monitor Pro)
+            splitPercentage: 1 // 1% fica com você (Van Pro)
         };
         this.baseUrl = this.config.environment === 'production'
             ? 'https://api.asaas.com/v3'

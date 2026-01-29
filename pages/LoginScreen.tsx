@@ -35,9 +35,9 @@ export const LoginScreen: React.FC = () => {
         {/* Logo / Header */}
         <div className="text-center mb-8">
           <div className="bg-transparent w-24 h-24 flex items-center justify-center mx-auto mb-2">
-            <img src="/logo.png" alt="Logo Monitor Pro" className="w-full h-full object-contain" />
+            <img src="/logo_vp.png" alt="Logo Van Pro" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Monitor Pro</h1>
+          <h1 className="text-2xl font-bold text-white">Van Pro</h1>
           <p className="text-gray-400 text-sm mt-2">Área Restrita</p>
         </div>
 
@@ -107,7 +107,7 @@ export const LoginScreen: React.FC = () => {
           <p className="text-gray-500 text-[10px] mt-4 uppercase font-bold tracking-widest">Ou se preferir</p>
 
           <a
-            href="https://wa.me/5522999837547?text=Olá! Gostaria de adquirir um acesso ao Monitor Pro."
+            href="https://wa.me/5522999837547?text=Olá! Gostaria de adquirir um acesso ao Van Pro."
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-green-500/20 text-green-500 hover:bg-green-500/5 transition text-xs font-medium"

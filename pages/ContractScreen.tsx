@@ -147,7 +147,7 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
                 return;
             }
 
-            // 🛠️ MONITOR PRO FIX: APK = localhost, então forçamos a branch
+            // 🛠️ VAN PRO FIX: APK = localhost, então forçamos a branch
             const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
             let link = '';
 

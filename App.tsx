@@ -197,7 +197,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
               <div className="flex items-center gap-2">
                 <Icon name="face" className="text-primary-500" size={28} />
                 <div className="flex flex-col">
-                  <h1 className="text-xl font-bold text-white leading-tight">{settings?.driverNickname || 'Monitor Escolar'}</h1>
+                  <h1 className="text-xl font-bold text-white leading-tight">{settings?.driverNickname || 'Van Pro'}</h1>
                   {tierToDisplay && (tierToDisplay === 'pro' || tierToDisplay === 'pro_plus') && (
                     <div className={`flex items-center gap-1 self-start px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm ${tierToDisplay === 'pro_plus'
                       ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-navy-900'
@@ -337,7 +337,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
                 <div><label className="text-xs text-gray-400 uppercase font-bold">Email de Contato</label><input type="email" value={profEmail} onChange={e => setProfEmail(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mt-1 outline-none focus:border-primary-500 transition" placeholder="seu-email-real@gmail.com" /></div>
                 <div><label className="text-xs text-gray-400 uppercase font-bold">Chave Pix</label><input type="text" value={profPix} onChange={e => setProfPix(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mt-1 outline-none focus:border-primary-500 transition" placeholder="CPF/Email/Celular" /></div>
                 <div><label className="text-xs text-gray-400 uppercase font-bold">Endereço</label><input type="text" value={profAddress} onChange={e => setProfAddress(e.target.value)} className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg mt-1 outline-none focus:border-primary-500 transition" placeholder="Rua, Bairro..." /></div>
-                <SignaturePad label="Minha Assinatura (Monitor)" initialSignature={profSignature} onSave={setProfSignature} />
+                <SignaturePad label="Minha Assinatura (Motorista)" initialSignature={profSignature} onSave={setProfSignature} />
                 <button onClick={handleSaveProfile} className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 rounded-xl shadow-lg mt-2 transition">Salvar Alterações</button>
               </div>
             </div>
@@ -523,7 +523,7 @@ function App() {
 
   // Permissões e Metadata (calculados apenas se session existir)
   const metadata = session?.user?.user_metadata || {};
-  const role = metadata.role || 'monitor';
+  const role = metadata.role || 'driver';
   const permissions = metadata.permissions || {};
   const currentUsername = session ? authService.getUsernameFromEmail(session.user.email) : '';
   const isSuperUser = role === 'admin' || currentUsername === 'teste' || currentUsername === 'google_test';
