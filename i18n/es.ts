@@ -3,7 +3,7 @@ import { TranslationKeys } from './pt-BR';
 
 export const es: Record<TranslationKeys, string> = {
     // General
-    app_name: 'Monitor Escolar PRO',
+    app_name: 'Van Pro',
     loading: 'Cargando...',
     save: 'Guardar',
     cancel: 'Cancelar',

@@ -1,7 +1,7 @@
 // Traduções em Português Brasileiro (padrão)
 export const pt_BR = {
     // Geral
-    app_name: 'Monitor Escolar PRO',
+    app_name: 'Van Pro',
     loading: 'Carregando...',
     save: 'Salvar',
     cancel: 'Cancelar',
@@ -174,7 +174,7 @@ export const pt_BR = {
     profile_email: 'Email de Contato',
     profile_pix: 'Chave Pix',
     profile_address: 'Endereço',
-    profile_signature: 'Minha Assinatura (Monitor)',
+    profile_signature: 'Minha Assinatura (Motorista)',
     profile_save: 'Salvar Alterações',
     profile_updated: 'Perfil atualizado com sucesso!',
 

@@ -282,7 +282,7 @@ export const PublicStudentRegister: React.FC = () => {
                     </button>
 
                     <p className="text-[10px] text-gray-500 text-center mt-4 uppercase tracking-widest font-bold">
-                        Sistema Monitor Escolar PRO
+                        Sistema Van Pro
                     </p>
                 </form>
             </div>
