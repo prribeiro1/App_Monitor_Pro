@@ -13,7 +13,7 @@ interface WelcomeScreenProps {
 }
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComplete }) => {
-  const [step, setStep] = useState<'welcome' | 'plan' | 'bank'>('welcome');
+  const [step, setStep] = useState<'welcome' | 'plan'>('welcome');
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionTier | null>(null);
 
   const handleStart = () => {
@@ -93,11 +93,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
 
         alert("Seu link de assinatura foi gerado! Você será redirecionado para o checkout. Após o pagamento, seu plano será ativado automaticamente.");
 
-        if (tier === 'pro_plus') {
-          setStep('bank');
-        } else {
-          onComplete();
-        }
+        onComplete();
       } else {
         console.error("Assinatura criada mas link ausente:", subscription);
         throw new Error("Assinatura criada, mas o link de pagamento não foi retornado. Por favor, tente novamente em instantes ou contate o suporte.");
@@ -121,15 +117,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
     return <PlanSelectionScreen onSelectPlan={handlePlanSelected} />;
   }
 
-  if (step === 'bank') {
-    return (
-      <OnboardingBankScreen
-        settings={settings}
-        onComplete={handleBankComplete}
-        onSkip={handleBankSkip}
-      />
-    );
-  }
+
 
   // Welcome Screen
   return (
@@ -192,11 +180,11 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
 
             <div className="flex items-start gap-3 text-left">
               <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Icon name="zap" size={20} className="text-purple-400" />
+                <Icon name="file-text" size={20} className="text-purple-400" />
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-1">Cobrança Automática</h3>
-                <p className="text-gray-400 text-sm">Receba automaticamente com split (Pro+)</p>
+                <h3 className="text-white font-semibold mb-1">Contratos e PDFs</h3>
+                <p className="text-gray-400 text-sm">Gere contratos e relatórios profissionais</p>
               </div>
             </div>
           </div>

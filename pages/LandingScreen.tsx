@@ -195,7 +195,7 @@ export const LandingScreen: React.FC = () => {
                         { icon: 'tool', title: 'Manutenção por Km', desc: 'Receba avisos antes do problema acontecer. Cadastre as manutenções e o app te lembra na quilometragem certa.' },
                         { icon: 'clipboard', title: 'Geração de Contratos', desc: 'Contratos prontos e profissionais. Preencha os dados e envie pros responsáveis. Sem dor de cabeça.' },
                         { icon: 'alert-triangle', title: 'Registro de Ocorrências', desc: 'Documentou, tá protegido. Registre qualquer incidente durante o trajeto com data e detalhes.' },
-                        { icon: 'smartphone', title: 'Funciona 100% Offline', desc: 'Sem internet? Sem problema. Seus dados ficam salvos no celular. Use em qualquer lugar.' },
+                        { icon: 'info', title: 'Suporte Humano', desc: 'Atendimento direto pelo WhatsApp. Tiramos suas dúvidas e te ajudamos a configurar tudo.' },
                         { icon: 'cloud-upload', title: 'Backup Seguro', desc: 'Seus dados sempre protegidos. Faça backup e restaure quando precisar. Você no controle.' },
                     ].map((f, i) => (
                         <div key={i} className="bg-[#1E293B] p-8 rounded-2xl border border-white/5 hover:-translate-y-2 transition-transform duration-300">
@@ -253,8 +253,8 @@ export const LandingScreen: React.FC = () => {
                             <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Gestão COMPLETA em um único app</li>
                             <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Funciona 100% offline</li>
                             <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Suporte humano 7 dias por semana</li>
-                            <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Tudo integrado: chamada, rotas, financeiro...</li>
-                            <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Interface simples e fácil de usar</li>
+                            <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Tudo integrado: chamada, rotas, financeiro manual...</li>
+                            <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Link de rastreio para os pais</li>
                         </ul>
                     </div>
                 </div>
@@ -425,19 +425,16 @@ export const LandingScreen: React.FC = () => {
                                 /{planPeriod === 'monthly' ? 'mês' : 'ano'}
                             </span>
                         </div>
-                        <p className="text-xs text-gray-400 mb-6">3 a 5 pessoas</p>
+                        <p className="text-xs text-gray-400 mb-6">Até 5 motoristas</p>
                         <ul className="text-left space-y-3 mb-6 text-gray-400 flex-1 text-sm">
                             <li>✓ <strong className="text-green-400">TUDO do Pro</strong></li>
-                            <li>✓ Até 5 contas</li>
+                            <li>✓ Links de rastreio ilimitados</li>
                             <li>✓ Gestão de equipe</li>
-                            <li>✓ Permissões por usuário</li>
+                            <li>✓ Dashboards para o dono da frota</li>
                         </ul>
                         <p className="text-xs text-gray-500 italic mb-4">Para empresas</p>
                         <a
-                            href={planPeriod === 'monthly'
-                                ? 'https://www.asaas.com/c/vfczaa3ow2lyb43h'
-                                : 'https://www.asaas.com/c/l9zlw3gsbehwj1k8'
-                            }
+                            href="https://wa.me/5522999837547?text=Quero%20o%20plano%20Equipe"
                             target="_blank"
                             className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition"
                         >

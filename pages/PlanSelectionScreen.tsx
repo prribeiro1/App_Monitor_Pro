@@ -74,29 +74,6 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
         'Lembretes automáticos',
         'Suporte prioritário'
       ],
-      notIncluded: [
-        'Cobrança automática',
-        'Split de pagamento'
-      ]
-    },
-    {
-      id: 'pro_plus' as SubscriptionTier,
-      name: 'Pro+',
-      price: prices.pro_plus.monthly,
-      priceAnnual: prices.pro_plus.annual,
-      color: 'from-yellow-500 to-orange-600',
-      icon: 'zap' as const,
-      badge: 'Recomendado',
-      features: [
-        'Tudo do Pro',
-        '⚡ Cobrança automática',
-        '💰 Split 99% / 1%',
-        '📊 Assinaturas recorrentes',
-        '🔔 Negativação Serasa/SPC',
-        '💳 PIX, Boleto e Cartão',
-        '📈 Dashboard de receita',
-        '🚀 Suporte VIP'
-      ],
       notIncluded: []
     }
   ];
@@ -128,8 +105,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
               key={plan.id}
               onClick={() => setSelectedPlan(plan.id)}
               className={`relative rounded-2xl p-5 border-2 transition-all cursor-pointer ${selectedPlan === plan.id
-                  ? 'border-primary-500 bg-primary-500/10 shadow-lg shadow-primary-500/20'
-                  : 'border-navy-700 bg-navy-800 hover:border-navy-600'
+                ? 'border-primary-500 bg-primary-500/10 shadow-lg shadow-primary-500/20'
+                : 'border-navy-700 bg-navy-800 hover:border-navy-600'
                 }`}
             >
               {/* Badge */}
@@ -156,8 +133,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
 
                 {/* Radio */}
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedPlan === plan.id
-                    ? 'border-primary-500 bg-primary-500'
-                    : 'border-gray-600'
+                  ? 'border-primary-500 bg-primary-500'
+                  : 'border-gray-600'
                   }`}>
                   {selectedPlan === plan.id && (
                     <Icon name="check" size={16} className="text-white" />

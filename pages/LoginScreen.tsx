@@ -34,8 +34,8 @@ export const LoginScreen: React.FC = () => {
 
         {/* Logo / Header */}
         <div className="text-center mb-8">
-          <div className="bg-transparent w-24 h-24 flex items-center justify-center mx-auto mb-2">
-            <img src="/logo_vp.png" alt="Logo Van Pro" className="w-full h-full object-contain" />
+          <div className="bg-white w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-2 overflow-hidden border-2 border-white/10 shadow-lg">
+            <img src="/logo_vp.png" alt="Logo Van Pro" className="w-full h-full object-contain p-3" />
           </div>
           <h1 className="text-2xl font-bold text-white">Van Pro</h1>
           <p className="text-gray-400 text-sm mt-2">Área Restrita</p>

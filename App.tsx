@@ -29,6 +29,8 @@ import { WelcomeScreen } from './pages/WelcomeScreen';
 import { PublicSignaturePage } from './pages/PublicSignaturePage';
 import { PublicTrackingPage } from './pages/PublicTrackingPage';
 import { PublicStudentRegister } from './pages/PublicStudentRegister';
+
+const ENABLE_ASAAS = false; // 🚀 TRAVA GLOBAL DO ASAAS (Mude para true quando tiver o MEI)
 import { dbService } from './services/db';
 import { UserSettings, Student } from './types';
 import { backupRepository } from './services/BackupRepository';
@@ -554,7 +556,7 @@ function App() {
   const canViewIncidents = checkPermission('incidents', true);
   const canViewStudents = checkPermission('students', true);
   const canViewRoutes = checkPermission('routes', true);
-  const canViewAsaas = checkPermission('asaas', isProPlus);
+  const canViewAsaas = ENABLE_ASAAS && checkPermission('asaas', isProPlus);
 
   return (
     <I18nProvider>
