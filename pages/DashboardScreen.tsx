@@ -32,11 +32,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
         dbService.getStops()
       ]);
 
-      // Filtrar alunos válidos (com rota/ponto existente)
+      // Filtrar alunos válidos (com rota existente)
       const validStudents = st.filter(student => {
-        const stop = sp.find(s => s.id === student.stopId);
-        const route = rt.find(r => r.id === stop?.routeId);
-        return student.active && stop && route;
+        const routeId = student.routeId || sp.find(s => s.id === student.stopId)?.routeId;
+        const route = rt.find(r => r.id === routeId);
+        return student.active && route;
       });
 
       setStudents(validStudents);
