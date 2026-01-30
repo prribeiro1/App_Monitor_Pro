@@ -7,6 +7,9 @@ export const cloudSync = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        // Helper para limpar UUIDs vazios que causam erro no Postgres/Supabase
+        const cleanUUID = (id: string | undefined | null) => (id && id.trim() !== '') ? id : null;
+
         const { error } = await supabase
             .from('students')
             .upsert({
@@ -23,14 +26,14 @@ export const cloudSync = {
                 shift: student.shift,
                 due_day: student.dueDay,
                 monthly_fees: student.monthlyFees,
-                stop_id: student.stopId,
-                route_id: student.routeId, // 🆕
-                address: student.address, // 🆕
-                latitude: student.latitude, // 🆕
-                longitude: student.longitude, // 🆕
-                route_order: student.routeOrder, // 🆕
-                estimated_pickup_time: student.estimatedPickupTime, // 🆕
-                estimated_drop_time: student.estimatedDropTime, // 🆕
+                stop_id: cleanUUID(student.stopId),
+                route_id: cleanUUID(student.routeId),
+                address: student.address,
+                latitude: student.latitude,
+                longitude: student.longitude,
+                route_order: student.routeOrder,
+                estimated_pickup_time: student.estimatedPickupTime,
+                estimated_drop_time: student.estimatedDropTime,
                 birth_date: student.birthDate,
                 observation: student.observation,
                 updated_at: new Date().toISOString()
@@ -73,10 +76,12 @@ export const cloudSync = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        const cleanUUID = (id: string | undefined | null) => (id && id.trim() !== '') ? id : null;
+
         const { error } = await supabase.from('stops').upsert({
             id: stop.id,
             user_id: user.id,
-            route_id: stop.routeId,
+            route_id: cleanUUID(stop.routeId),
             name: stop.name,
             order: stop.order,
             latitude: stop.latitude,
@@ -163,10 +168,13 @@ export const cloudSync = {
     saveMaintenanceLog: async (log: MaintenanceLog) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+
+        const cleanUUID = (id: string | undefined | null) => (id && id.trim() !== '') ? id : null;
+
         await supabase.from('maintenance_logs').upsert({
             id: log.id,
             user_id: user.id,
-            item_id: log.itemId,
+            item_id: cleanUUID(log.itemId),
             date: log.date,
             km: log.km,
             cost: log.cost,
@@ -241,10 +249,13 @@ export const cloudSync = {
     saveRouteSession: async (session: any) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+
+        const cleanUUID = (id: string | undefined | null) => (id && id.trim() !== '') ? id : null;
+
         const { error } = await supabase.from('route_sessions').upsert({
             id: session.id,
             user_id: user.id,
-            route_id: session.routeId,
+            route_id: cleanUUID(session.routeId),
             date: session.date,
             type: session.type,
             start_time: session.startTime,
@@ -268,11 +279,14 @@ export const cloudSync = {
     saveRouteEvent: async (event: any) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+
+        const cleanUUID = (id: string | undefined | null) => (id && id.trim() !== '') ? id : null;
+
         const { error } = await supabase.from('route_events').upsert({
             id: event.id,
             user_id: user.id,
-            session_id: event.sessionId,
-            student_id: event.studentId,
+            session_id: cleanUUID(event.sessionId),
+            student_id: cleanUUID(event.studentId),
             event_type: event.eventType,
             timestamp: event.timestamp,
             latitude: event.latitude,

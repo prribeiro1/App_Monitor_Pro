@@ -252,7 +252,7 @@ export const StudentsScreen: React.FC = () => {
 
     const student: Student = {
       id: editingId || crypto.randomUUID(),
-      stopId: '', // Não usa mais pontos
+      stopId: undefined, // 🛠️ VAN PRO FIX: Não enviar "" para evitar erro de UUID no Supabase
       name: studentName,
       active: true,
       birthDate: birthDate || undefined,
@@ -262,14 +262,14 @@ export const StudentsScreen: React.FC = () => {
       responsibleCpf: responsibleCpf || undefined,
       responsibleEmail: responsibleEmail || undefined,
       responsiblePhone: responsiblePhone || undefined,
-      contact: responsiblePhone || undefined, // Keep contact in sync with responsiblePhone
+      contact: responsiblePhone || undefined,
       observation: observation || undefined,
       monthlyFees: monthlyFees ? parseFloat(monthlyFees.replace(',', '.')) : 0,
       dueDay: dueDay ? parseInt(dueDay) : 0,
       order: existing?.order || Date.now(),
 
-      // 🆕 NOVA ESTRUTURA (obrigatório)
-      routeId: selectedRouteId,
+      // 🆕 NOVA ESTRUTURA
+      routeId: selectedRouteId || undefined, // Garantir que não seja ""
       address: address || undefined,
       latitude: latitude,
       longitude: longitude,

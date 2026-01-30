@@ -142,7 +142,13 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
 
             if (error) {
                 console.error('[Contract] Erro Insert:', error);
-                alert('Erro ao criar contrato no banco de dados: ' + error.message + '\n\nVerifique se as colunas required existem no Supabase.');
+
+                // Erro amigável para o usuário
+                let msg = 'Erro ao criar contrato no servidor.';
+                if (error.code === '23503') msg = 'Erro de vínculo: Aluno ou Motorista não encontrado na nuvem.';
+                if (error.code === '22P02') msg = 'Erro de formato (UUID). Favor editar e salvar o aluno novamente.';
+
+                alert(msg + '\n\nDetalhes: ' + error.message);
                 setIsGeneratingLink(false);
                 return;
             }
@@ -159,11 +165,13 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
             const responsiblePhone = student.responsiblePhone?.replace(/\D/g, '');
             const message = `Olá! Segue o link para visualizar e assinar o contrato de transporte escolar do(a) ${student.name}:\n\n${link}`;
 
-            if (responsiblePhone && responsiblePhone.length >= 10) {
+            if (responsiblePhone && (responsiblePhone.length === 10 || responsiblePhone.length === 11)) {
                 // Abrir WhatsApp direto para o número do responsável
                 window.open(`https://wa.me/55${responsiblePhone}?text=${encodeURIComponent(message)}`, '_blank');
             } else {
-                // Se não tiver telefone, usar Share normal
+                // Se não tiver telefone válido, avisar e usar Share como fallback
+                alert("⚠️ Atenção: O WhatsApp do responsável não está cadastrado ou é inválido. Por favor, atualize o cadastro do aluno para enviar via WhatsApp Direto.");
+
                 await Share.share({
                     title: `Assinatura de Contrato - ${student.name}`,
                     text: message,
