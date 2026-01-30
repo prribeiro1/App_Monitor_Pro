@@ -10,6 +10,7 @@ import { notificationService } from '../services/notificationService';
 import { proximityMonitorService } from '../services/proximityMonitorService';
 import 'leaflet/dist/leaflet.css';
 import { TrackingControl } from '../components/TrackingControl';
+import { Browser } from '@capacitor/browser';
 
 interface RouteNavigationScreenProps {
     routeId?: string;
@@ -205,10 +206,16 @@ export const RouteNavigationScreen: React.FC<RouteNavigationScreenProps> = ({ ro
         }
     };
 
-    const launchNavigation = () => {
+    const launchNavigation = async () => {
         const student = students[currentIndex];
         if (student && student.latitude && student.longitude) {
-            window.open(`google.navigation:q=${student.latitude},${student.longitude}`, '_system');
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${student.latitude},${student.longitude}&travelmode=driving`;
+            try {
+                await Browser.open({ url });
+            } catch (error) {
+                console.error('Erro ao abrir navegação:', error);
+                window.open(url, '_system');
+            }
         } else {
             alert('Este aluno não possui localização GPS cadastrada.');
         }

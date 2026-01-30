@@ -3,6 +3,7 @@ import { dbService } from '../services/db';
 import { Route, Stop } from '../types';
 import { Icon } from '../components/Icon';
 import { Geolocation } from '@capacitor/geolocation';
+import { Browser } from '@capacitor/browser';
 
 export const StopsScreen: React.FC<{ canUseGps: boolean }> = ({ canUseGps }) => {
   const [stops, setStops] = useState<Stop[]>([]);
@@ -130,9 +131,14 @@ export const StopsScreen: React.FC<{ canUseGps: boolean }> = ({ canUseGps }) => 
     }
   };
 
-  const openNavigation = (lat: number, lng: number) => {
-    // Use google.navigation intent which works better offline than https links
-    window.open(`google.navigation:q=${lat},${lng}`, '_system');
+  const openNavigation = async (lat: number, lng: number) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    try {
+      await Browser.open({ url });
+    } catch (error) {
+      console.error('Erro ao abrir navegação:', error);
+      window.open(url, '_system');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
