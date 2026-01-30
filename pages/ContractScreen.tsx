@@ -108,15 +108,28 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
     };
 
     const handleGenerateLink = async () => {
-        if (!selectedStudentId || !settings?.driverName) return;
+        // Alerta 1: Função disparada
+        alert("Gerando link... aguarde um instante.");
+
+        if (!selectedStudentId) {
+            alert("Erro: Nenhum aluno selecionado.");
+            return;
+        }
+
+        if (!settings?.driverName) {
+            alert("⚠️ Atenção: Seu nome de motorista não está configurado. Vá em Configurações > Perfil e preencha seu nome para poder gerar contratos.");
+            return;
+        }
+
         const student = students.find(s => s.id === selectedStudentId);
-        if (!student) return;
+        if (!student) {
+            alert("Erro: Aluno não encontrado na lista.");
+            return;
+        }
 
         setIsGeneratingLink(true);
-        // Depuração: Início do processo
-        // alert(`Iniciando geração para: ${student.name}`);
-
         try {
+            // alert("Conectando ao servidor Supabase...");
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 alert("Erro: Usuário não autenticado no Supabase.");
