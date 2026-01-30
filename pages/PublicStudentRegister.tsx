@@ -92,8 +92,8 @@ export const PublicStudentRegister: React.FC = () => {
             <div className="max-w-md mx-auto">
                 {/* Header/Branding */}
                 <div className="text-center mb-8 pt-8">
-                    <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-900/40">
-                        <Icon name="face" size={32} className="text-white" />
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden shadow-lg border-2 border-white/20">
+                        <img src="/logo_vep.png" alt="Logo" className="w-full h-full object-cover" />
                     </div>
                     <h1 className="text-2xl font-bold text-white">Ficha de Cadastro</h1>
                     <p className="text-gray-400 text-sm mt-1">Facilidade para você e segurança para seu filho</p>
@@ -282,7 +282,7 @@ export const PublicStudentRegister: React.FC = () => {
                     </button>
 
                     <p className="text-[10px] text-gray-500 text-center mt-4 uppercase tracking-widest font-bold">
-                        Sistema Van Pro
+                        Sistema Van Escolar Pro
                     </p>
                 </form>
             </div>

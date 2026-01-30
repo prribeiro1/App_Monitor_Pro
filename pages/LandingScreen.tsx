@@ -70,9 +70,9 @@ export const LandingScreen: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
                     <a href="#" className="flex items-center gap-3 text-xl font-extrabold uppercase tracking-tight">
                         <div className="bg-white p-1 rounded-full border border-white/10 shadow-sm overflow-hidden flex items-center justify-center w-10 h-10">
-                            <img src="logo_vp.png" alt="Logo" className="w-full h-full object-contain" />
+                            <img src="logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
                         </div>
-                        <span>Van <span className="text-blue-500">Pro</span></span>
+                        <span>Van Escolar <span className="text-blue-500">Pro</span></span>
                     </a>
                     <div className="hidden md:flex gap-8 items-center text-gray-400 font-medium">
                         <a href="#funcionalidades" className="hover:text-white">Funcionalidades</a>
@@ -101,7 +101,7 @@ export const LandingScreen: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex gap-4">
-                            <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20testar%20o%20Van%20Pro" className="btn btn-primary text-lg">Começar Agora Grátis →</a>
+                            <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20testar%20o%20Van%20Escolar%20Pro" className="btn btn-primary text-lg">Começar Agora Grátis →</a>
                             <button onClick={openVideo} className="btn btn-outline flex items-center justify-center gap-2"><Icon name="play-circle" /> Ver Vídeo</button>
                         </div>
                     </div>
@@ -166,14 +166,14 @@ export const LandingScreen: React.FC = () => {
                     </div>
                 </div>
                 <div className="text-center mt-12">
-                    <p className="text-xl font-bold text-blue-500">Se você marcou pelo menos 2 desses, o Van Pro foi feito pra você.</p>
+                    <p className="text-xl font-bold text-blue-500">Se você marcou pelo menos 2 desses, o Van Escolar Pro foi feito pra você.</p>
                 </div>
             </section>
 
             {/* SECTION: SOLUTION (New) */}
             <section className="py-20 px-4 bg-[#ffcb73] text-[#1e293b]">
                 <div className="max-w-4xl mx-auto text-center">
-                    <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-[#1e293b]">Apresentamos o Van Pro</h2>
+                    <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-[#1e293b]">Apresentamos o Van Escolar Pro</h2>
                     <p className="text-xl leading-relaxed font-medium">
                         O aplicativo mais completo para quem trabalha com transporte escolar. Desenvolvido por quem entende a correria do seu dia a dia. Simples de usar, funciona offline e organiza TUDO em um só lugar.
                     </p>
@@ -250,7 +250,7 @@ export const LandingScreen: React.FC = () => {
                         </ul>
                     </div>
                     <div className="bg-[#1E293B] p-8 rounded-3xl border-2 border-green-500 transform md:scale-105 shadow-2xl shadow-green-900/20">
-                        <h3 className="text-2xl font-bold mb-6 text-green-500 flex items-center gap-3">✅ Van Pro</h3>
+                        <h3 className="text-2xl font-bold mb-6 text-green-500 flex items-center gap-3">✅ Van Escolar Pro</h3>
                         <ul className="space-y-4 text-gray-300">
                             <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Gestão COMPLETA em um único app</li>
                             <li className="flex gap-3"><span className="text-green-500 font-bold">✓</span> Funciona 100% offline</li>
@@ -462,7 +462,7 @@ export const LandingScreen: React.FC = () => {
                                 Funciona sem internet?
                                 <span className="group-open:rotate-180 transition-transform">▼</span>
                             </summary>
-                            <p className="mt-4 text-gray-400">Sim! O Van Pro funciona 100% offline. Seus dados ficam salvos no celular. Você só precisa de internet pra fazer backup ou atualizações.</p>
+                            <p className="mt-4 text-gray-400">Sim! O Van Escolar Pro funciona 100% offline. Seus dados ficam salvos no celular. Você só precisa de internet pra fazer backup ou atualizações.</p>
                         </details>
                         <details className="bg-[#1E293B] p-6 rounded-2xl cursor-pointer group">
                             <summary className="font-bold text-lg list-none flex justify-between items-center text-white">
@@ -476,7 +476,7 @@ export const LandingScreen: React.FC = () => {
                                 É difícil de usar?
                                 <span className="group-open:rotate-180 transition-transform">▼</span>
                             </summary>
-                            <p className="mt-4 text-gray-400">Não! O app foi feito pra ser simples. Se você usa WhatsApp, consegue usar o Van Pro. E qualquer dúvida, nosso suporte te ajuda.</p>
+                            <p className="mt-4 text-gray-400">Não! O app foi feito pra ser simples. Se você usa WhatsApp, consegue usar o Van Escolar Pro. E qualquer dúvida, nosso suporte te ajuda.</p>
                         </details>
                         <details className="bg-[#1E293B] p-6 rounded-2xl cursor-pointer group">
                             <summary className="font-bold text-lg list-none flex justify-between items-center text-white">
@@ -490,7 +490,7 @@ export const LandingScreen: React.FC = () => {
                                 Funciona no meu celular?
                                 <span className="group-open:rotate-180 transition-transform">▼</span>
                             </summary>
-                            <p className="mt-4 text-gray-400">O Van Pro funciona em celulares Android. Em breve teremos versão para iPhone também.</p>
+                            <p className="mt-4 text-gray-400">O Van Escolar Pro funciona em celulares Android. Em breve teremos versão para iPhone também.</p>
                         </details>
                         <details className="bg-[#1E293B] p-6 rounded-2xl cursor-pointer group">
                             <summary className="font-bold text-lg list-none flex justify-between items-center text-white">
@@ -534,12 +534,12 @@ export const LandingScreen: React.FC = () => {
             <footer className="bg-black py-12 text-center border-t border-white/10">
                 <a href="#" className="flex justify-center items-center gap-3 text-2xl font-extrabold mb-6 uppercase tracking-tight">
                     <div className="bg-white p-1 rounded-full border border-white/10 shadow-sm overflow-hidden flex items-center justify-center w-10 h-10">
-                        <img src="logo_vp.png" alt="Logo" className="w-full h-full object-contain" />
+                        <img src="logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>
-                    <span>Van <span className="text-blue-500">Pro</span></span>
+                    <span>Van Escolar <span className="text-blue-500">Pro</span></span>
                 </a>
                 <p className="text-gray-600 text-sm mb-4">Feito para Tios e Tias com 💙</p>
-                <p className="text-gray-800 text-xs">© 2025 Van Pro. Todos os direitos reservados.</p>
+                <p className="text-gray-800 text-xs">© 2025 Van Escolar Pro. Todos os direitos reservados.</p>
             </footer>
 
             <div id="videoModal" className="video-modal" onClick={closeVideo}>

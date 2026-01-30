@@ -68,7 +68,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
 
       // 2. Criar Assinatura do App (Sem Split, pois é pra nós)
       const value = price || (tier === 'pro_plus' ? 24.90 : 14.90);
-      const description = `Plano ${tier.toUpperCase()} - Van Pro`;
+      const description = `Plano ${tier.toUpperCase()} - Van Escolar Pro`;
 
       const subscription = await asaasService.createSubscription({
         customer: customerId,
@@ -139,7 +139,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
 
         {/* Title */}
         <h1 className="text-3xl font-bold text-white mb-3">
-          Bem-vindo ao Van Pro! 🚀
+          Bem-vindo ao Van Escolar Pro! 🚀
         </h1>
         <p className="text-gray-400 mb-8">
           A solução completa para gestão de transporte escolar

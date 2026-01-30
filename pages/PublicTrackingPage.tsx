@@ -214,7 +214,7 @@ export const PublicTrackingPage: React.FC = () => {
                     let type: 'proximity' | 'pickup' | 'dropoff' = 'proximity';
 
                     if (event.event_type === 'notification_sent') {
-                        message = '🚐 Van Pro chegando! Prepare o aluno.';
+                        message = '🚐 Van Escolar Pro chegando! Prepare o aluno.';
                         type = 'proximity';
                     } else if (event.event_type === 'picked_up') {
                         message = '✅ Embarque realizado com sucesso';
@@ -310,7 +310,7 @@ export const PublicTrackingPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <span className="text-2xl">🚐</span>
                     <div>
-                        <h1 className="text-white font-bold leading-tight">Van Pro</h1>
+                        <h1 className="text-white font-bold leading-tight">Van Escolar Pro</h1>
                         <p className="text-gray-400 text-[10px] uppercase tracking-wider">Tempo Real</p>
                     </div>
                 </div>

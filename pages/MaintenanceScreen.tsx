@@ -266,7 +266,7 @@ export const MaintenanceScreen: React.FC = () => {
             const itemsMap = new Map<string, string>();
             items.forEach(i => itemsMap.set(i.id, i.name));
             const doc = new jsPDF();
-            doc.text('Histórico de Manutenção - Van Pro', 14, 20);
+            doc.text('Histórico de Manutenção - Van Escolar Pro', 14, 20);
             let totalCost = 0;
             const tableData = logs.map(log => {
                 totalCost += log.cost;

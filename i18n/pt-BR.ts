@@ -1,7 +1,7 @@
 // Traduções em Português Brasileiro (padrão)
 export const pt_BR = {
     // Geral
-    app_name: 'Van Pro',
+    app_name: 'Van Escolar Pro',
     loading: 'Carregando...',
     save: 'Salvar',
     cancel: 'Cancelar',

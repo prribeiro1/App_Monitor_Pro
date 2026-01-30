@@ -197,9 +197,11 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
           return (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Icon name="face" className="text-primary-500" size={28} />
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-sm">
+                  <img src="/logo_vep.png" alt="Logo" className="w-full h-full object-cover" />
+                </div>
                 <div className="flex flex-col">
-                  <h1 className="text-xl font-bold text-white leading-tight">{settings?.driverNickname || 'Van Pro'}</h1>
+                  <h1 className="text-xl font-bold text-white leading-tight">{settings?.driverNickname || 'Van Escolar Pro'}</h1>
                   {tierToDisplay && (tierToDisplay === 'pro' || tierToDisplay === 'pro_plus') && (
                     <div className={`flex items-center gap-1 self-start px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm ${tierToDisplay === 'pro_plus'
                       ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-navy-900'
