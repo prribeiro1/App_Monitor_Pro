@@ -447,21 +447,14 @@ function App() {
       }
     });
 
-    const scheduleReminder = async () => {
+    const clearSystemReminders = async () => {
       try {
         if (!Capacitor.isNativePlatform()) return;
-        const perm = await LocalNotifications.checkPermissions();
-        if (perm.display !== 'granted') { const req = await LocalNotifications.requestPermissions(); if (req.display !== 'granted') return; }
-        const pending = await LocalNotifications.getPending();
-        if (!pending.notifications.some(n => n.id === 1001)) {
-          await LocalNotifications.schedule({ notifications: [{ title: "⚠️ AVISO IMPORTANTE", body: "Não nos responsabilizamos pela perda de dados. Mantenha seu backup em dia!", id: 1001, schedule: { on: { weekday: 6, hour: 2, minute: 0 }, allowWhileIdle: true } }] });
-        }
-        if (!pending.notifications.some(n => n.id === 1002)) {
-          await LocalNotifications.schedule({ notifications: [{ title: "☁️ Hora do Backup!", body: "Evite prejuízos! Clique aqui para salvar seus dados.", id: 1002, schedule: { on: { weekday: 6, hour: 2, minute: 1 }, allowWhileIdle: true } }] });
-        }
-      } catch (e) { console.error("Error scheduling notification:", e); }
+        await LocalNotifications.cancel({ notifications: [{ id: 1001 }, { id: 1002 }] });
+      } catch (e) { console.error("Error clearing notifications:", e); }
     };
-    scheduleReminder();
+
+    clearSystemReminders();
     fetchSettings();
     return () => subscription.unsubscribe();
   }, []);

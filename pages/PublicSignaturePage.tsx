@@ -22,6 +22,7 @@ export const PublicSignaturePage: React.FC = () => {
     const dueDay = searchParams.get('dia') || '';
 
     const [loading, setLoading] = useState(!!contractId);
+    const [agreed, setAgreed] = useState(false);
     const [signature, setSignature] = useState('');
     const [signed, setSigned] = useState(false);
     const [dbContract, setDbContract] = useState<any>(null);
@@ -60,6 +61,11 @@ export const PublicSignaturePage: React.FC = () => {
     }, [contractId]);
 
     const handleSave = async () => {
+        if (!agreed) {
+            alert("Você precisa concordar com os termos antes de assinar.");
+            return;
+        }
+
         if (!signature) {
             alert("Por favor, assine antes de confirmar.");
             return;
@@ -71,7 +77,13 @@ export const PublicSignaturePage: React.FC = () => {
                     .from('contract_requests')
                     .update({
                         parent_signature: signature,
-                        status: 'signed'
+                        status: 'signed',
+                        signed_at: new Date().toISOString(),
+                        signer_metadata: {
+                            userAgent: navigator.userAgent,
+                            platform: navigator.platform,
+                            language: navigator.language
+                        }
                     })
                     .eq('id', contractId);
 

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Van Pro - Gestão de Transporte Escolar Profissional</title>
+
+    <!-- Meta Pixel Code -->
+    <script>
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                    n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1384113173506701');
+        fbq('track', 'PageView');
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --accent: #FF4D00;
+            --bg-light: #F5F2ED;
+            --bg-dark: #000;
+            --text-dark: #000;
+            --text-light: #fff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* --- UTILS --- */
+        .btn-mitchy {
+            background: var(--accent);
+            color: #fff;
+            padding: 1rem 2rem;
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 2px solid var(--accent);
+        }
+
+        .btn-mitchy:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 77, 0, 0.2);
+        }
+
+        .btn-mitchy.black {
+            background: black;
+            border-color: black;
+        }
+
+        .btn-mitchy.outline {
+            background: transparent;
+            color: black;
+            border-color: black;
+        }
+
+        /* --- HEADER --- */
+        header {
+            backdrop-filter: blur(10px);
+            background: rgba(245, 242, 237, 0.8);
+        }
+
+        .nav-link {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.5rem 1.25rem;
+            border-radius: 100px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--accent);
+        }
+
+        /* --- HERO --- */
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 0.9;
+            letter-spacing: -0.04em;
+            font-weight: 800;
+        }
+
+        .carousel-phone {
+            width: 320px;
+            height: 650px;
+            background: #000;
+            border-radius: 45px;
+            border: 12px solid #1a1a1a;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.3);
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+            height: 100%;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* --- MARQUEE --- */
+        .marquee-container {
+            background: var(--bg-light);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 4rem 0;
+            overflow: hidden;
+        }
+
+        .marquee-content {
+            display: flex;
+            gap: 4rem;
+            animation: marquee-scroll 40s linear infinite;
+            white-space: nowrap;
+            align-items: center;
+        }
+
+        .marquee-item {
+            font-size: clamp(3rem, 6vw, 6rem);
+            font-weight: 800;
+            color: #000;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .dot {
+            width: 25px;
+            height: 25px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        @keyframes marquee-scroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* --- STACKING SECTION --- */
+        .stack-section {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            padding: 120px 0;
+            border-radius: 60px 60px 0 0;
+        }
+
+        .stack-card {
+            position: sticky;
+            top: 100px;
+            height: 500px;
+            background: #111;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 60px;
+            margin-bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            transform-origin: top center;
+            transition: transform 0.5s ease;
+        }
+
+        .stack-card .card-icon {
+            position: absolute;
+            top: 60px;
+            left: 60px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            scale: 1.5;
+        }
+
+        .stack-card h3 {
+            font-size: 3rem;
+            font-weight: 800;
+            tracking-tighter: -0.02em;
+            line-height: 1;
+        }
+
+        /* --- PLANS --- */
+        .plans-section {
+            padding: 120px 0;
+            background: #fff;
+        }
+
+        .plan-card {
+            background: var(--bg-light);
+            border-radius: 40px;
+            padding: 60px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .plan-card.featured {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .plan-card h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .plan-price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+        }
+
+        /* --- VIDEO MODAL --- */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-container {
+            width: 90%;
+            max-width: 1000px;
+            aspect-ratio: 16/9;
+            position: relative;
+        }
+
+        .close-video {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        /* --- WHATSAPP FLOAT --- */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 65px;
+            height: 65px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4);
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-[100] px-8 py-6 flex justify-between items-center transition-all duration-300"
+        id="mainHeader">
+        <div class="text-2xl font-black tracking-tighter">VAN PRO<span class="text-[#FF4D00]">.</span></div>
+        <nav class="hidden lg:flex gap-4">
+            <a href="#funcionalidades" class="nav-link">Funcionalidades</a>
+            <a href="#planos" class="nav-link">Planos</a>
+            <a href="#faq" class="nav-link">Dúvidas</a>
+        </nav>
+        <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20testar%20o%20Monitor%20Pro"
+            class="btn-mitchy !py-3 !px-6 !text-xs">TESTAR GRÁTIS</a>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="max-w-[1400px] mx-auto min-h-screen px-8 pt-40 pb-20 grid lg:grid-cols-2 gap-20 items-center">
+        <div class="hero-left reveal">
+            <h1 class="hero-title mb-6">Chega de bagunça.<br>Sua van no <span class="text-[#FF4D00]">próximo
+                    nível.</span></h1>
+            <p class="text-2xl font-medium text-gray-500 mb-10 max-w-xl">O app mais completo para gestão de transporte
+                escolar. Profissionalize sua rotina hoje.</p>
+            <div class="flex flex-wrap gap-4">
+                <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20o%20link%20do%20app" class="btn-mitchy">
+                    BAIXAR GRÁTIS ↗
+                </a>
+                <button onclick="openVideo()" class="btn-mitchy black">
+                    ASSISTIR VÍDEO <span class="ml-1 opacity-50">▶</span>
+                </button>
+            </div>
+        </div>
+        <div class="hero-right flex justify-end reveal">
+            <div class="carousel-phone">
+                <div class="carousel-track" id="heroCarousel">
+                    <div class="carousel-slide"><img src="screen1.jpg" alt="Screen 1"></div>
+                    <div class="carousel-slide"><img src="screen2.jpg" alt="Screen 2"></div>
+                    <div class="carousel-slide"><img src="screen3.jpg" alt="Screen 3"></div>
+                    <div class="carousel-slide"><img src="screen4.jpg" alt="Screen 4"></div>
+                    <div class="carousel-slide"><img src="screen5.jpg" alt="Screen 5"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marquee Section (Mitchy Reference 1 Style) -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            <div class="marquee-item">
+                <div class="dot"></div> CHAMADA DIGITAL
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> ROTAS COM GPS
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> FINANCEIRO TOTAL
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> CONTRATOS DIGITAIS
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> RELATÓRIOS PDF
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> SUPORTE 24H
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> BACKUP SEGURO
+            </div>
+            <!-- Duplicado para loop infinito -->
+            <div class="marquee-item">
+                <div class="dot"></div> CHAMADA DIGITAL
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> ROTAS COM GPS
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> FINANCEIRO TOTAL
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> CONTRATOS DIGITAIS
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> RELATÓRIOS PDF
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> SUPORTE 24H
+            </div>
+            <div class="marquee-item">
+                <div class="dot"></div> BACKUP SEGURO
+            </div>
+        </div>
+    </div>
+
+    <!-- Stacking Cards Section (Mitchy Reference 2 Style) -->
+    <section id="funcionalidades" class="stack-section px-8">
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20">
+            <div class="sticky h-fit top-[150px]">
+                <span class="text-[#FF4D00] font-bold uppercase tracking-widest text-sm mb-4 block">•
+                    FUNCIONALIDADES</span>
+                <h2 class="text-6xl font-black tracking-tighter leading-[0.9] mb-8">Pronto para destravar <br>estes
+                    benefícios?</h2>
+                <p class="text-gray-400 text-xl max-w-sm">No coração do Van Pro está o compromisso de simplificar sua
+                    vida e garantir que você nunca perca o controle.</p>
+            </div>
+
+            <div class="stack-wrapper">
+                <!-- Card 1 -->
+                <div class="stack-card js-stack-card">
+                    <div class="card-icon text-3xl">📝</div>
+                    <h3 class="mb-4">CHAMADA <br>DIGITAL</h3>
+                    <p class="text-gray-400 text-lg">Registre presenças e faltas com um toque. O fim definitivo do papel
+                        e caneta na sua van.</p>
+                </div>
+                <!-- Card 2 -->
+                <div class="stack-card js-stack-card" style="background: #1a1a1a;">
+                    <div class="card-icon text-3xl">📍</div>
+                    <h3 class="mb-4">ROTAS <br>COM GPS</h3>
+                    <p class="text-gray-400 text-lg">Visualize seus pontos no mapa e otimize o trajeto. Economia de
+                        combustível e tempo real.</p>
+                </div>
+                <!-- Card 3 -->
+                <div class="stack-card js-stack-card" style="background: #222;">
+                    <div class="card-icon text-3xl">💰</div>
+                    <h3 class="mb-4">FINANCEIRO <br>TOTAL</h3>
+                    <p class="text-gray-400 text-lg">Saiba exatamente quanto tem para receber. Controle mensalidades e
+                        cobranças direto no app.</p>
+                </div>
+                <!-- Card 4 -->
+                <div class="stack-card js-stack-card" style="background: var(--accent); color: white;">
+                    <div class="card-icon text-3xl">📄</div>
+                    <h3 class="mb-4">CONTRATOS <br>DIGITAIS</h3>
+                    <p class="opacity-70 text-lg">Gere contratos profissionais direto pelo celular e envie via WhatsApp
+                        para os pais.</p>
+                </div>
+                <!-- Card 5 -->
+                <div class="stack-card js-stack-card" style="background: #000; border-color: #333;">
+                    <div class="card-icon text-3xl">🚐</div>
+                    <h3 class="mb-4">MANUTENÇÃO <br>POR KM</h3>
+                    <p class="text-gray-400 text-lg">Seja avisado na hora certa de trocar o óleo, pneus e freios.
+                        Segurança máxima na frota.</p>
+                </div>
+                <!-- Card 6 -->
+                <div class="stack-card js-stack-card" style="background: #2563eb;">
+                    <div class="card-icon text-3xl">📊</div>
+                    <h3 class="mb-4">RELATÓRIOS <br>EM PDF</h3>
+                    <p class="opacity-70 text-lg">Exporte relatórios completos de alunos, frequência e financeiro com um
+                        clique.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Plans Section -->
+    <section id="planos" class="plans-section px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <span class="text-[#FF4D00] font-bold uppercase tracking-widest text-sm mb-4 block">•
+                    INVESTIMENTO</span>
+                <h2 class="text-5xl font-black tracking-tighter">Planos que cabem no seu bolso</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Básico -->
+                <div class="plan-card">
+                    <h3>Básico</h3>
+                    <div class="plan-price">R$ 6,90<span class="text-sm font-medium text-gray-400">/mês</span></div>
+                    <ul class="space-y-4 mb-10 text-gray-500 font-medium">
+                        <li>• Cadastro de alunos</li>
+                        <li>• Chamada digital</li>
+                        <li>• Funciona offline</li>
+                        <li>• Backup seguro</li>
+                    </ul>
+                    <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20o%20plano%20Básico"
+                        class="btn-mitchy outline w-full justify-center">Assinar</a>
+                </div>
+                <!-- Pro -->
+                <div class="plan-card featured">
+                    <span
+                        class="bg-[#FF4D00] text-white px-4 py-1 rounded-full text-[10px] font-black absolute top-10 right-10">MAIS
+                        POPULAR</span>
+                    <h3>Pro</h3>
+                    <div class="plan-price">R$ 9,90<span class="text-sm font-medium text-gray-400">/mês</span></div>
+                    <ul class="space-y-4 mb-10 text-gray-500 font-medium">
+                        <li>• TUDO do Básico</li>
+                        <li>• Rotas inteligentes GPS</li>
+                        <li>• Controle financeiro Pro</li>
+                        <li>• Manutenção por Km</li>
+                        <li>• Contratos Digitais</li>
+                    </ul>
+                    <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20o%20plano%20Pro"
+                        class="btn-mitchy w-full justify-center">Assinar</a>
+                </div>
+                <!-- Anual -->
+                <div class="plan-card">
+                    <h3>Anual</h3>
+                    <div class="plan-price">R$ 149<span class="text-sm font-medium text-gray-400">/ano</span></div>
+                    <ul class="space-y-4 mb-10 text-gray-500 font-medium">
+                        <li>• Tudo do Plano Pro</li>
+                        <li>• Pagamento único</li>
+                        <li>• Suporte Prioritário</li>
+                        <li>• Economia de R$ 88,00</li>
+                    </ul>
+                    <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20o%20plano%20Anual"
+                        class="btn-mitchy outline w-full justify-center">Assinar</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black text-white pt-40 pb-20 px-8 rounded-t-[60px]">
+        <div class="max-w-[1400px] mx-auto text-center">
+            <h2 class="text-7xl md:text-[10rem] font-black leading-none tracking-tighter mb-20">VAN PRO<span
+                    class="text-[#FF4D00]">.</span></h2>
+            <div class="grid md:grid-cols-2 gap-20 items-end text-left border-t border-white/10 pt-20">
+                <div>
+                    <p class="text-2xl font-bold mb-8">Transformando o transporte escolar no Brasil.</p>
+                    <div class="flex gap-4">
+                        <a href="#" class="text-white/40 font-bold hover:text-white transition">Instagram</a>
+                        <a href="#" class="text-white/40 font-bold hover:text-white transition">TikTok</a>
+                        <a href="#" class="text-white/40 font-bold hover:text-white transition">WhatsApp</a>
+                    </div>
+                </div>
+                <div class="md:text-right">
+                    <p class="text-white/40 font-bold uppercase tracking-widest text-xs mb-4">Suporte 24h</p>
+                    <p class="text-2xl font-bold">+55 22 99983-7547</p>
+                </div>
+            </div>
+            <div class="mt-40 text-white/20 font-bold text-[10px] uppercase tracking-widest flex justify-between">
+                <span>© 2026 Van Pro App</span>
+                <span>Designed for Drivers</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="video-modal" onclick="closeVideo(event)">
+        <div class="video-container">
+            <span class="close-video" onclick="closeVideo(event)">&times;</span>
+            <iframe id="videoFrame" width="100%" height="100%"
+                src="https://www.youtube-nocookie.com/embed/00tGCurv3rs?autoplay=0&rel=0" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- WhatsApp Float -->
+    <a href="https://wa.me/5522999837547" class="whatsapp-float">
+        <svg viewBox="0 0 24 24" style="width: 35px; height: 35px; fill: white;">
+            <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+    </a>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('mainHeader');
+            if (window.scrollY > 50) {
+                header.classList.add('py-4', 'shadow-sm');
+                header.style.background = 'rgba(245, 242, 237, 0.95)';
+            } else {
+                header.classList.remove('py-4', 'shadow-sm');
+                header.style.background = 'rgba(245, 242, 237, 0.8)';
+            }
+        });
+
+        // Hero Reveal
+        gsap.from(".hero-left", { opacity: 0, x: -50, duration: 1, ease: "power3.out" });
+        gsap.from(".hero-right", { opacity: 0, x: 50, duration: 1, ease: "power3.out", delay: 0.2 });
+
+        // Hero Carousel
+        let currentSlide = 0;
+        const track = document.getElementById('heroCarousel');
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % 5;
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }, 3000);
+
+        // Stacking Cards logic (Reference 2 style)
+        const cards = document.querySelectorAll(".js-stack-card");
+        cards.forEach((card, i) => {
+            ScrollTrigger.create({
+                trigger: card,
+                start: "top 100px",
+                pin: true,
+                pinSpacing: false,
+                endTrigger: ".stack-wrapper",
+                end: "bottom 600px"
+            });
+
+            // Scaling effect for past cards
+            if (i !== cards.length - 1) {
+                gsap.to(card, {
+                    scale: 0.9 + (i * 0.01),
+                    filter: "brightness(0.3)",
+                    scrollTrigger: {
+                        trigger: cards[i + 1],
+                        start: "top 400px",
+                        end: "top 100px",
+                        scrub: true,
+                    }
+                });
+            }
+        });
+
+        // Video Modal
+        function openVideo() {
+            document.getElementById('videoModal').style.display = 'flex';
+            const frame = document.getElementById('videoFrame');
+            frame.src = frame.src.replace('autoplay=0', 'autoplay=1');
+        }
+        function closeVideo(event) {
+            if (event.target.id === 'videoModal' || event.target.className === 'close-video') {
+                document.getElementById('videoModal').style.display = 'none';
+                const frame = document.getElementById('videoFrame');
+                frame.src = frame.src.replace('autoplay=1', 'autoplay=0');
+            }
+        }
+    </script>
+</body>
+
+</html>

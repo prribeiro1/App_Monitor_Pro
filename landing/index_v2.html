@@ -22,7 +22,7 @@
         !function (f, b, e, v, n, t, s) {
             if (f.fbq) return; n = f.fbq = function () {
                 n.callMethod ?
-                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+                    n.callMethod.apply(n, arguments) : n.queue.push(arguments)
             };
             if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
             n.queue = []; t = b.createElement(e); t.async = !0;
@@ -59,23 +59,110 @@
         <div class="container hero-grid">
             <div class="hero-text reveal">
                 <div class="hero-tag">
-                    <i data-lucide="sparkles" style="width: 14px;"></i> Nova Versão 2026 disponível
+                    <i data-lucide="sparkles" style="width: 14px;"></i> Nova Versão 2026
                 </div>
-                <h1>Chega de bagunça. Sua van no <span class="gradient-text">próximo nível.</span></h1>
-                <p>O Van Pro organiza toda a sua rotina escolar em um só lugar. Rotas inteligentes, chamada digital e
-                    financeiro automático, tudo no seu celular.</p>
+                <h1>Chega de bagunça. <br>Sua van no <span class="gradient-text">próximo nível.</span></h1>
+                <p style="font-size: 1.5rem; margin-bottom: 30px; font-weight: 500;">O app mais completo para gestão de
+                    transporte escolar. <br>Tudo o que você precisa, onde você estiver.</p>
 
                 <div class="hero-btns">
                     <a href="https://wa.me/5522999837547?text=Oi!%20Quero%20testar%20o%20Van%20Pro"
                         class="btn btn-primary">
-                        Começar Agora Grátis <i data-lucide="arrow-right" style="width: 18px;"></i>
+                        BAIXAR GRÁTIS <i data-lucide="download" style="width: 18px;"></i>
                     </a>
-                    <a href="#funcionalidades" class="btn btn-glass">Ver Funcionalidades</a>
+                    <button onclick="openVideo()" class="btn btn-glass">
+                        <i data-lucide="play-circle" style="width: 18px;"></i> ASSISTIR VÍDEO
+                    </button>
                 </div>
             </div>
             <div class="hero-visual reveal">
-                <!-- Use the generated image here -->
-                <img src="van_pro_mockup_hero_1769724556751.png" alt="Van Pro Dashboard" class="product-mockup">
+                <div class="carousel-container-v2">
+                    <div class="carousel-track-v2" id="heroCarousel">
+                        <div class="carousel-slide-v2"><img src="screen1.jpg" alt="Screen 1"></div>
+                        <div class="carousel-slide-v2"><img src="screen2.jpg" alt="Screen 2"></div>
+                        <div class="carousel-slide-v2"><img src="screen3.jpg" alt="Screen 3"></div>
+                        <div class="carousel-slide-v2"><img src="screen4.jpg" alt="Screen 4"></div>
+                        <div class="carousel-slide-v2"><img src="screen5.jpg" alt="Screen 5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MARQUEE SECTION -->
+    <div class="marquee">
+        <div class="marquee-content">
+            <div class="marquee-item"><i data-lucide="shield-check"></i> Backup Seguro</div>
+            <div class="marquee-item"><i data-lucide="zap"></i> Sincronização em Tempo Real</div>
+            <div class="marquee-item"><i data-lucide="smartphone"></i> App Nativo Android</div>
+            <div class="marquee-item"><i data-lucide="map"></i> Mapas Offline</div>
+            <div class="marquee-item"><i data-lucide="users"></i> Cadastro Ilimitado</div>
+            <div class="marquee-item"><i data-lucide="file-text"></i> Relatórios PDF</div>
+            <!-- Repeat for seamless scroll -->
+            <div class="marquee-item"><i data-lucide="shield-check"></i> Backup Seguro</div>
+            <div class="marquee-item"><i data-lucide="zap"></i> Sincronização em Tempo Real</div>
+            <div class="marquee-item"><i data-lucide="smartphone"></i> App Nativo Android</div>
+            <div class="marquee-item"><i data-lucide="map"></i> Mapas Offline</div>
+            <div class="marquee-item"><i data-lucide="users"></i> Cadastro Ilimitado</div>
+            <div class="marquee-item"><i data-lucide="file-text"></i> Relatórios PDF</div>
+        </div>
+    </div>
+
+    <!-- REVEAL TEXT SECTION -->
+    <section class="reveal-text-section container">
+        <span class="reveal-phrase">Pare de perder tempo com cadernos e planilhas confusas.</span>
+        <span class="reveal-phrase">A Van Pro foi desenhado para ser a ferramenta definitiva do condutor moderno.</span>
+        <span class="reveal-phrase">Controle total na palma da sua mão, mesmo sem sinal de internet.</span>
+    </section>
+
+    <!-- STACKING CARDS SECTION -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="section-head reveal">
+                <h2 style="font-size: 3rem;">O que resolvemos</h2>
+                <p>O Van Pro ataca os problemas reais da sua rotina.</p>
+            </div>
+
+            <div class="stack-container">
+                <!-- Card 1 -->
+                <div class="stack-card js-stack-card">
+                    <div>
+                        <span style="color: var(--accent); font-weight: 800; font-size: 0.9rem;">01. FINANCEIRO</span>
+                        <h3 style="font-size: 3rem; margin-top: 20px;">SAIBA QUANTO <br>TEM PRA RECEBER.</h3>
+                    </div>
+                    <p style="font-size: 1.25rem; color: var(--text-muted);">Controle mensalidades, gerencie atrasos e
+                        tenha previsibilidade total do seu caixa.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="stack-card js-stack-card">
+                    <div>
+                        <span style="color: var(--primary); font-weight: 800; font-size: 0.9rem;">02. LOGÍSTICA</span>
+                        <h3 style="font-size: 3rem; margin-top: 20px;">ROTAS OTIMIZADAS <br>COM GPS.</h3>
+                    </div>
+                    <p style="font-size: 1.25rem; color: var(--text-muted);">Economize até 30% em combustível todos os
+                        meses com trajetos inteligentes.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="stack-card js-stack-card">
+                    <div>
+                        <span style="color: white; font-weight: 800; font-size: 0.9rem;">03. PROFISSIONALISMO</span>
+                        <h3 style="font-size: 3rem; margin-top: 20px;">RELATÓRIOS E <br>CONTRATOS.</h3>
+                    </div>
+                    <p style="font-size: 1.25rem; opacity: 0.8;">Gere PDFs em um clique e envie direto para os pais via
+                        WhatsApp.</p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="stack-card js-stack-card">
+                    <div>
+                        <span style="color: var(--accent); font-weight: 800; font-size: 0.9rem;">04. MANUTENÇÃO</span>
+                        <h3 style="font-size: 3rem; margin-top: 20px;">SEGURANÇA <br>EM PRIMEIRO LUGAR.</h3>
+                    </div>
+                    <p style="font-size: 1.25rem; color: var(--text-muted);">Controle a manutenção preventiva da sua van
+                        e evite paradas inesperadas.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -89,27 +176,92 @@
             </div>
 
             <div class="bento-grid">
-                <div class="bento-item bento-1 reveal">
+                <div class="bento-item bento-1 reveal staggered-reveal" style="--d: 0.1s">
                     <div class="icon-box"><i data-lucide="check-circle-2"></i></div>
                     <h3>Chamada Digital</h3>
-                    <p>Registre presença com um toque. Rápido, organizado e profissional.</p>
+                    <p>Registre presença com um toque. Rápido, organizado e 100% profissional.</p>
                 </div>
-                <div class="bento-item bento-2 reveal">
+                <div class="bento-item bento-2 reveal staggered-reveal" style="--d: 0.2s">
                     <div class="icon-box"><i data-lucide="map-pinned"></i></div>
-                    <h3>Rotas Inteligentes com GPS</h3>
-                    <p>Visualize seus alunos no mapa e otimize seu trajeto. Economize tempo e combustível todos os dias.
-                    </p>
+                    <h3>Rotas Inteligentes</h3>
+                    <p>Otimização de trajeto via satélite. Economize até 30% em combustível todos os meses com trajetos
+                        otimizados.</p>
                 </div>
-                <div class="bento-item bento-3 reveal">
+                <div class="bento-item bento-3 reveal staggered-reveal" style="--d: 0.3s">
                     <div class="icon-box"><i data-lucide="banknote"></i></div>
-                    <h3>Financeiro Automático</h3>
-                    <p>Controle mensalidades e receba alertas de pendências. Saiba exatamente quanto vai entrar no mês.
-                    </p>
+                    <h3>Gestão Financeira</h3>
+                    <p>Controle mensalidades, gerencie atrasos e tenha previsibilidade total do seu caixa.</p>
                 </div>
-                <div class="bento-item bento-4 reveal">
-                    <div class="icon-box"><i data-lucide="wifi-off"></i></div>
-                    <h3>100% Offline</h3>
-                    <p>Sem sinal na rota? Sem problema. O app funciona em qualquer lugar.</p>
+                <div class="bento-item bento-4 reveal staggered-reveal" style="--d: 0.4s">
+                    <div class="icon-box"><i data-lucide="file-signature"></i></div>
+                    <h3>Contratos Digitais</h3>
+                    <p>Gere e envie contratos profissionais direto pelo WhatsApp. Segurança jurídica para você.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS TABS -->
+    <section class="section-padding" style="background: var(--bg-dark);">
+        <div class="container">
+            <div class="section-head reveal">
+                <h2>O controle total em 3 passos</h2>
+                <p>Veja como é simples transformar a gestão da sua van.</p>
+            </div>
+
+            <div class="tabs-container reveal">
+                <button class="tab-btn active" onclick="showTab(0)">1. Cadastro</button>
+                <button class="tab-btn" onclick="showTab(1)">2. Rota</button>
+                <button class="tab-btn" onclick="showTab(2)">3. Relatórios</button>
+            </div>
+
+            <div id="tab0" class="tab-content active reveal">
+                <div class="tab-info">
+                    <h3 style="font-size: 2rem; margin-bottom: 20px;">Importação Instantânea</h3>
+                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 24px;">Cadastre seus alunos
+                        manualmente ou importe via link público. Os pais preenchem, e os dados caem direto no seu app.
+                    </p>
+                    <ul class="pricing-list">
+                        <li><i data-lucide="zap" style="color: var(--primary);"></i> Ficha de cadastro personalizada
+                        </li>
+                        <li><i data-lucide="zap" style="color: var(--primary);"></i> Notificação de novo aluno</li>
+                    </ul>
+                </div>
+                <div class="tab-visual">
+                    <img src="screen1.jpg" alt="Cadastro" class="tab-image">
+                </div>
+            </div>
+
+            <div id="tab1" class="tab-content reveal">
+                <div class="tab-info">
+                    <h3 style="font-size: 2rem; margin-bottom: 20px;">Inteligência de Trajeto</h3>
+                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 24px;">Visualize cada aluno no
+                        mapa. O Van Pro calcula a melhor ordem de coleta para evitar trânsito e quilometragem
+                        desnecessária.</p>
+                    <ul class="pricing-list">
+                        <li><i data-lucide="map" style="color: var(--primary);"></i> Integração Google Maps/Waze</li>
+                        <li><i data-lucide="map" style="color: var(--primary);"></i> Ordem de rota inteligente</li>
+                    </ul>
+                </div>
+                <div class="tab-visual">
+                    <img src="screen2.jpg" alt="Rotas" class="tab-image">
+                </div>
+            </div>
+
+            <div id="tab2" class="tab-content reveal">
+                <div class="tab-info">
+                    <h3 style="font-size: 2rem; margin-bottom: 20px;">PDFs Profissionais</h3>
+                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 24px;">Gere relatórios de
+                        frequência, financeiros ou recibos em segundos. Envie para os pais e demonstre profissionalismo.
+                    </p>
+                    <ul class="pricing-list">
+                        <li><i data-lucide="file-text" style="color: var(--primary);"></i> Exportação em um clique</li>
+                        <li><i data-lucide="file-text" style="color: var(--primary);"></i> Histórico completo arquivado
+                        </li>
+                    </ul>
+                </div>
+                <div class="tab-visual">
+                    <img src="screen3.jpg" alt="Relatórios" class="tab-image">
                 </div>
             </div>
         </div>
@@ -142,17 +294,17 @@
     </section>
 
     <!-- PRICING -->
-    <section class="section-padding" id="planos">
+    <section class="section-padding" id="planos"
+        style="background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.05) 0%, transparent 50%);">
         <div class="container">
             <div class="section-head reveal">
-                <h2>O preço de um café por mês</h2>
+                <h2>O preço de uma coxinha</h2>
                 <p>Escolha o plano que melhor se adapta ao tamanho do seu negócio.</p>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px;"
-                class="reveal">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px;">
                 <!-- Básico -->
-                <div class="bento-item">
+                <div class="bento-item staggered-reveal" style="--d: 0.1s">
                     <span style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">PLANO BÁSICO</span>
                     <h3 style="font-size: 2.5rem; margin: 15px 0;">R$ 6,90<span
                             style="font-size: 1rem; color: var(--text-muted);">/mês</span></h3>
@@ -168,7 +320,8 @@
                 </div>
 
                 <!-- PRO (Featured) -->
-                <div class="bento-item" style="border-color: var(--primary); background: rgba(59, 130, 246, 0.05);">
+                <div class="bento-item staggered-reveal"
+                    style="--d: 0.2s; border-color: var(--primary); background: rgba(99, 102, 241, 0.05);">
                     <div
                         style="position: absolute; top: 20px; right: 20px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 800;">
                         MAIS POPULAR</div>
@@ -192,49 +345,136 @@
     </section>
 
     <!-- FOOTER -->
-    <footer class="section-padding" style="border-top: 1px solid var(--glass-border); padding-bottom: 60px;">
-        <div class="container" style="text-align: center;">
-            <div style="margin-bottom: 30px;">
-                <img src="/logo_vp.png" alt="Van Pro" style="height: 40px;">
+    <footer class="section-padding"
+        style="background: black; border-top: 1px solid var(--glass-border); padding-top: 100px;">
+        <div class="container">
+            <div
+                style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; text-align: left; margin-bottom: 80px;">
+                <div>
+                    <img src="/logo_vp.png" alt="Van Pro" style="height: 40px; margin-bottom: 24px;">
+                    <p style="color: var(--text-muted); line-height: 1.8; max-width: 300px;">Transformando a gestão do
+                        transporte escolar com tecnologia de ponta e simplicidade.</p>
+                </div>
+                <div>
+                    <h4 style="color: white; margin-bottom: 24px;">Produto</h4>
+                    <ul style="list-style: none; color: var(--text-muted); line-height: 2.2;">
+                        <li><a href="#funcionalidades"
+                                style="color: inherit; text-decoration: none;">Funcionalidades</a></li>
+                        <li><a href="#planos" style="color: inherit; text-decoration: none;">Preços</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">Novidades</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: white; margin-bottom: 24px;">Suporte</h4>
+                    <ul style="list-style: none; color: var(--text-muted); line-height: 2.2;">
+                        <li><a href="https://wa.me/5522999837547"
+                                style="color: inherit; text-decoration: none;">WhatsApp</a></li>
+                        <li><a href="#faq" style="color: inherit; text-decoration: none;">FAQ</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">Tutoriais</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: white; margin-bottom: 24px;">Legal</h4>
+                    <ul style="list-style: none; color: var(--text-muted); line-height: 2.2;">
+                        <li><a href="#" style="color: inherit; text-decoration: none;">Privacidade</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">Termos</a></li>
+                    </ul>
+                </div>
             </div>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">O app do transportador escolar profissional.</p>
-            <div style="display: flex; justify-content: center; gap: 24px;">
-                <a href="#" style="color: var(--text-muted); text-decoration: none;">Privacidade</a>
-                <a href="#" style="color: var(--text-muted); text-decoration: none;">Termos de Uso</a>
-                <a href="#" style="color: var(--text-muted); text-decoration: none;">Suporte</a>
+            <div style="border-top: 1px solid var(--glass-border); padding-top: 40px; text-align: center;">
+                <p style="font-size: 0.85rem; color: var(--surface-accent);">© 2026 Van Pro. Projetado para quem move o
+                    mundo escolar.</p>
             </div>
-            <p style="margin-top: 40px; font-size: 0.8rem; color: var(--surface-accent);">© 2026 Van Pro. Criado para
-                mover o futuro.</p>
         </div>
     </footer>
+
+    <!-- VIDEO MODAL -->
+    <div id="videoModal" class="video-modal" onclick="closeVideo(event)">
+        <div class="video-container">
+            <button class="close-video" onclick="closeVideo(event)">&times;</button>
+            <iframe id="videoFrame" width="100%" height="100%"
+                src="https://www.youtube-nocookie.com/embed/00tGCurv3rs?autoplay=0&rel=0" title="Vídeo de Apresentação"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- WHATSAPP FLOAT -->
+    <a href="https://wa.me/5522999837547?text=Oi!%20Vim%20pela%20nova%20LP%20e%20quero%20conhecer%20o%20Van%20Pro"
+        class="whatsapp-float-v2" target="_blank">
+        <svg style="width: 35px; height: 35px; fill: white;" viewBox="0 0 24 24">
+            <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+    </a>
 
     <script>
         lucide.createIcons();
 
-        // SCROLL REVEAL LOGIC
+        // HERO CAROUSEL
+        let currentHeroSlide = 0;
+        const heroTrack = document.getElementById('heroCarousel');
+        const heroSlides = heroTrack.children;
+        setInterval(() => {
+            currentHeroSlide = (currentHeroSlide + 1) % heroSlides.length;
+            heroTrack.style.transform = `translateX(-${currentHeroSlide * 100}%)`;
+        }, 3000);
+
+        // SCROLL EFFECTS
         const reveals = document.querySelectorAll('.reveal');
-        const revealOnScroll = () => {
+        const phrases = document.querySelectorAll('.reveal-phrase');
+        const stackCards = document.querySelectorAll('.js-stack-card');
+
+        const handleScroll = () => {
             const windowHeight = window.innerHeight;
+
+            // Simple reveals
             reveals.forEach(el => {
-                const elementTop = el.getBoundingClientRect().top;
-                const elementVisible = 150;
-                if (elementTop < windowHeight - elementVisible) {
-                    el.classList.add('active');
+                if (el.getBoundingClientRect().top < windowHeight - 100) el.classList.add('active');
+            });
+
+            // Reveal Phrases (Mitchy Text)
+            phrases.forEach(p => {
+                const rect = p.getBoundingClientRect();
+                if (rect.top < windowHeight * 0.75) p.classList.add('active');
+                else p.classList.remove('active');
+            });
+
+            // Stacking Cards Logic
+            stackCards.forEach((card, i) => {
+                const rect = card.getBoundingClientRect();
+                const nextCard = stackCards[i + 1];
+
+                if (nextCard) {
+                    const nextRect = nextCard.getBoundingClientRect();
+                    // If the next card is coming up into view, start shrinking this one
+                    if (nextRect.top < 300) {
+                        card.classList.add('past');
+                    } else {
+                        card.classList.remove('past');
+                    }
                 }
             });
         };
-        window.addEventListener('scroll', revealOnScroll);
-        revealOnScroll(); // Initial check
 
-        // NAVBAR SCROLL EFFECT
-        const nav = document.getElementById('navWrapper');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
+        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+
+        // VIDEO MODAL LOGIC
+        function openVideo() {
+            const modal = document.getElementById('videoModal');
+            document.getElementById('videoFrame').src = document.getElementById('videoFrame').src.replace('autoplay=0', 'autoplay=1');
+            modal.style.display = 'flex';
+        }
+
+        function closeVideo(event) {
+            if (event.target.id === 'videoModal' || event.target.className === 'close-video') {
+                document.getElementById('videoModal').style.display = 'none';
+                const iframe = document.getElementById('videoFrame');
+                iframe.src = iframe.src.replace('autoplay=1', 'autoplay=0');
             }
-        });
+        }
     </script>
 
     <style>
