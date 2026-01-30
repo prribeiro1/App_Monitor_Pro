@@ -214,13 +214,13 @@ export const PublicTrackingPage: React.FC = () => {
                     let type: 'proximity' | 'pickup' | 'dropoff' = 'proximity';
 
                     if (event.event_type === 'notification_sent') {
-                        message = '🚐 Condutor chegando em breve!';
+                        message = '🚐 Van Pro chegando! Prepare o aluno.';
                         type = 'proximity';
                     } else if (event.event_type === 'picked_up') {
-                        message = `✅ ${studentName} embarcou`;
+                        message = '✅ Embarque realizado com sucesso';
                         type = 'pickup';
                     } else if (event.event_type === 'dropped_off') {
-                        message = `🏠 ${studentName} desembarcou`;
+                        message = '🏠 Desembarque realizado com sucesso';
                         type = 'dropoff';
                     }
 
@@ -232,12 +232,12 @@ export const PublicTrackingPage: React.FC = () => {
                             type
                         };
 
-                        setNotifications(prev => [notification, ...prev].slice(0, 5)); // Manter últimas 5
+                        setNotifications(prev => [notification, ...prev].slice(0, 1)); // Mostrar apenas a mais recente para não poluir
 
-                        // Remover notificação após 10 segundos
+                        // Remover notificação após 15 segundos
                         setTimeout(() => {
                             setNotifications(prev => prev.filter(n => n.id !== notification.id));
-                        }, 10000);
+                        }, 15000);
                     }
                 }
             )
@@ -347,34 +347,46 @@ export const PublicTrackingPage: React.FC = () => {
                     <MapUpdater location={driverLocation} />
                 </MapContainer>
 
-                {/* 🆕 Notificações em Tempo Real */}
+                {/* 🆕 Notificações em Tempo Real (Premium UI) */}
                 {notifications.length > 0 && (
-                    <div className="absolute top-4 left-4 right-4 z-[1000] space-y-2">
+                    <div className="absolute top-6 left-4 right-4 z-[1000] flex flex-col items-center">
+                        <style>
+                            {`
+                                @keyframes slideIn {
+                                    from { transform: translateY(-100%) scale(0.9); opacity: 0; }
+                                    to { transform: translateY(0) scale(1); opacity: 1; }
+                                }
+                                @keyframes pulseGlow {
+                                    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+                                    70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+                                    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+                                }
+                                .animate-slide-in { animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+                            `}
+                        </style>
                         {notifications.map((notification) => (
                             <div
                                 key={notification.id}
                                 className={`
-                                    p-4 rounded-xl shadow-2xl border-2 animate-slide-down
-                                    ${notification.type === 'proximity' ? 'bg-blue-500 border-blue-400' : ''}
-                                    ${notification.type === 'pickup' ? 'bg-green-500 border-green-400' : ''}
-                                    ${notification.type === 'dropoff' ? 'bg-purple-500 border-purple-400' : ''}
+                                    max-w-xs w-full p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] 
+                                    border border-white/20 backdrop-blur-md animate-slide-in
+                                    ${notification.type === 'proximity' ? 'bg-blue-600/90' : ''}
+                                    ${notification.type === 'pickup' ? 'bg-green-600/90' : ''}
+                                    ${notification.type === 'dropoff' ? 'bg-purple-600/90' : ''}
                                 `}
-                                style={{
-                                    animation: 'slideDown 0.3s ease-out'
-                                }}
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="text-2xl">
+                                <div className="flex flex-col items-center text-center gap-2">
+                                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl mb-1 shadow-inner">
                                         {notification.type === 'proximity' && '🚐'}
                                         {notification.type === 'pickup' && '✅'}
                                         {notification.type === 'dropoff' && '🏠'}
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-white font-bold text-lg">
+                                        <p className="text-white font-black text-lg leading-tight tracking-tight">
                                             {notification.message}
                                         </p>
-                                        <p className="text-white/80 text-xs">
-                                            {notification.timestamp.toLocaleTimeString()}
+                                        <p className="text-white/60 text-[10px] uppercase font-bold tracking-widest mt-1">
+                                            Agora mesmo
                                         </p>
                                     </div>
                                 </div>
