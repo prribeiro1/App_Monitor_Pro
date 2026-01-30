@@ -113,11 +113,19 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
         if (!student) return;
 
         setIsGeneratingLink(true);
+        // Depuração: Início do processo
+        // alert(`Iniciando geração para: ${student.name}`);
+
         try {
-            // Option A: Try Supabase
-            // Note: This table must exist (see instructions provided to user)
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                alert("Erro: Usuário não autenticado no Supabase.");
+                setIsGeneratingLink(false);
+                return;
+            }
+
             const payload = {
-                driver_id: (await supabase.auth.getUser()).data.user?.id,
+                driver_id: user.id,
                 driver_name: settings.driverName,
                 student_id_local: student.id,
                 student_name: student.name,
@@ -130,59 +138,45 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
                 status: 'pending'
             };
 
-            console.log('[Contract] Enviando payload:', payload);
-
             const { data, error } = await supabase
                 .from('contract_requests')
                 .insert([payload])
                 .select()
                 .single();
 
-            console.log('[Contract] Resultado insert:', { data, error });
-
             if (error) {
                 console.error('[Contract] Erro Insert:', error);
-
-                // Erro amigável para o usuário
-                let msg = 'Erro ao criar contrato no servidor.';
-                if (error.code === '23503') msg = 'Erro de vínculo: Aluno ou Motorista não encontrado na nuvem.';
-                if (error.code === '22P02') msg = 'Erro de formato (UUID). Favor editar e salvar o aluno novamente.';
-
-                alert(msg + '\n\nDetalhes: ' + error.message);
+                alert(`Erro de Servidor: ${error.message} (Código: ${error.code})`);
                 setIsGeneratingLink(false);
                 return;
             }
 
-            // 🛠️ VAN PRO FIX: APK = localhost, então forçamos a branch
-            const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-            let link = '';
-
-            if (data) {
-                link = `${baseUrl}/#/sign-contract/${data.id}`;
-            }
-
-            // Enviar direto para WhatsApp do responsável se tiver telefone cadastrado
-            const responsiblePhone = student.responsiblePhone?.replace(/\D/g, '');
+            const baseUrl = import.meta.env.VITE_APP_URL || 'https://app-van-pro.vercel.app';
+            const link = `${baseUrl}/#/sign-contract/${data.id}`;
             const message = `Olá! Segue o link para visualizar e assinar o contrato de transporte escolar do(a) ${student.name}:\n\n${link}`;
 
-            if (responsiblePhone && (responsiblePhone.length === 10 || responsiblePhone.length === 11)) {
-                // Abrir WhatsApp direto para o número do responsável
-                window.open(`https://wa.me/55${responsiblePhone}?text=${encodeURIComponent(message)}`, '_blank');
-            } else {
-                // Se não tiver telefone válido, avisar e usar Share como fallback
-                alert("⚠️ Atenção: O WhatsApp do responsável não está cadastrado ou é inválido. Por favor, atualize o cadastro do aluno para enviar via WhatsApp Direto.");
+            const rawPhone = student.responsiblePhone?.replace(/\D/g, '') || '';
 
+            // Tenta abrir WhatsApp ou Fallback para Share
+            if (rawPhone && (rawPhone.length === 10 || rawPhone.length === 11)) {
+                const waUrl = `https://wa.me/55${rawPhone}?text=${encodeURIComponent(message)}`;
+                // alert(`Abrindo WhatsApp para: ${rawPhone}`);
+
+                // No Android, window.open às vezes falha. Tentar location.href ou Capacitor Browser
+                window.location.href = waUrl;
+            } else {
+                alert("⚠️ WhatsApp não encontrado ou inválido. Abrindo menu de compartilhamento local...");
                 await Share.share({
-                    title: `Assinatura de Contrato - ${student.name}`,
+                    title: `Contrato - ${student.name}`,
                     text: message,
                     url: link,
-                    dialogTitle: 'Enviar Link de Assinatura'
+                    dialogTitle: 'Enviar Link'
                 });
             }
 
         } catch (e: any) {
             console.error(e);
-            alert("Erro ao gerar link: " + e.message);
+            alert("Erro crítico no processo: " + e.message);
         } finally {
             setIsGeneratingLink(false);
         }
