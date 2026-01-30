@@ -93,7 +93,7 @@ export const PublicStudentRegister: React.FC = () => {
                 {/* Header/Branding */}
                 <div className="text-center mb-8 pt-8">
                     <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden shadow-lg border-2 border-white/10">
-                        <img src="/logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
+                        <img src="/logo_final.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-2xl font-bold text-white">Ficha de Cadastro</h1>
                     <p className="text-gray-400 text-sm mt-1">Facilidade para você e segurança para seu filho</p>

@@ -309,7 +309,7 @@ export const PublicTrackingPage: React.FC = () => {
             <header className="bg-gray-800 p-4 flex items-center justify-between border-b border-gray-700 h-16 shrink-0 z-10 relative shadow-md">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-md overflow-hidden border border-white/10 shadow-sm">
-                        <img src="/logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
+                        <img src="/logo_final.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>
                     <div>
                         <h1 className="text-white font-bold leading-tight">Van Escolar Pro</h1>
