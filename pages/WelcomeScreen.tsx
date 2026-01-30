@@ -133,8 +133,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
 
       <div className="max-w-md w-full text-center">
         {/* Logo/Icon */}
-        <div className="w-24 h-24 bg-gradient-to-br from-primary-500 to-accent-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-          <Icon name="face" size={48} className="text-white" />
+        <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden shadow-2xl border-4 border-white/10">
+          <img src="/logo_vep.png" alt="Logo Van Escolar Pro" className="w-full h-full object-contain" />
         </div>
 
         {/* Title */}

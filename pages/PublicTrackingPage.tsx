@@ -308,7 +308,9 @@ export const PublicTrackingPage: React.FC = () => {
             {/* Header */}
             <header className="bg-gray-800 p-4 flex items-center justify-between border-b border-gray-700 h-16 shrink-0 z-10 relative shadow-md">
                 <div className="flex items-center gap-3">
-                    <span className="text-2xl">🚐</span>
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shadow-sm">
+                        <img src="/logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
+                    </div>
                     <div>
                         <h1 className="text-white font-bold leading-tight">Van Escolar Pro</h1>
                         <p className="text-gray-400 text-[10px] uppercase tracking-wider">Tempo Real</p>
