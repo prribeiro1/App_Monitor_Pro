@@ -33,12 +33,12 @@ export const LoginScreen: React.FC = () => {
       <div className="bg-navy-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-navy-700">
 
         {/* Logo / Header */}
-        <div className="text-center mb-8">
-          <div className="bg-white w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-2 overflow-hidden border-2 border-white/10 shadow-lg">
-            <img src="/logo_vp.png" alt="Logo Van Pro" className="w-full h-full object-contain p-3" />
+        <div className="text-center mb-10">
+          <div className="bg-white w-28 h-28 rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden shadow-2xl border border-white/20">
+            <img src="/logo_vp.png" alt="Logo Van Pro" className="w-full h-full object-contain p-2" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Van Pro</h1>
-          <p className="text-gray-400 text-sm mt-2">Área Restrita</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Van Pro</h1>
+          <p className="text-gray-400 text-sm mt-1">Área Restrita</p>
         </div>
 
         {/* Form */}

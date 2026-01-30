@@ -206,9 +206,24 @@ export const PublicSignaturePage: React.FC = () => {
                     )}
                 </div>
 
-                {/* Legal Notice */}
-                <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-[10px] text-yellow-200/80 italic">
-                    Ao assinar abaixo, você confirma que leu e concorda com todas as cláusulas do contrato de transporte escolar acima descritas.
+                {/* Legal Notice & Checkbox */}
+                <div
+                    onClick={() => setAgreed(!agreed)}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-4 ${agreed
+                        ? 'bg-green-500/10 border-green-500/50 text-green-200'
+                        : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-200/80'
+                        }`}
+                >
+                    <div className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${agreed ? 'bg-green-600 border-green-600' : 'bg-transparent border-yellow-500/50'
+                        }`}>
+                        {agreed && <Icon name="check" size={16} className="text-white" />}
+                    </div>
+                    <div>
+                        <p className="text-xs font-medium leading-relaxed">
+                            Eu li e concordo com todas as cláusulas do contrato de transporte escolar descritas acima e confirmo a veracidade dos dados do aluno e responsável.
+                        </p>
+                        {!agreed && <p className="text-[10px] mt-1 text-yellow-500 font-bold uppercase animate-pulse">Marque aqui para assinar</p>}
+                    </div>
                 </div>
 
                 {/* Signature Pad */}
