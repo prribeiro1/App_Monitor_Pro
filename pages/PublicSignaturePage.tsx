@@ -144,7 +144,7 @@ export const PublicSignaturePage: React.FC = () => {
         <div className="min-h-screen bg-navy-900 p-4 text-white">
             <div className="max-w-md mx-auto space-y-6 pt-6 pb-12">
                 <div className="text-center">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden shadow-lg border-2 border-white/10">
+                    <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden shadow-lg border-2 border-white/10">
                         <img src="/logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-2xl font-bold mb-2">Contrato de Transporte ✍️</h1>

@@ -69,9 +69,6 @@ export const LandingScreen: React.FC = () => {
             <nav className="navbar">
                 <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
                     <a href="#" className="flex items-center gap-3 text-xl font-extrabold uppercase tracking-tight">
-                        <div className="overflow-hidden flex items-center justify-center w-10 h-10">
-                            <img src="logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
-                        </div>
                         <span>Van Escolar <span className="text-blue-500">Pro</span></span>
                     </a>
                     <div className="hidden md:flex gap-8 items-center text-gray-400 font-medium">
@@ -533,9 +530,6 @@ export const LandingScreen: React.FC = () => {
 
             <footer className="bg-black py-12 text-center border-t border-white/10">
                 <a href="#" className="flex justify-center items-center gap-3 text-2xl font-extrabold mb-6 uppercase tracking-tight">
-                    <div className="overflow-hidden flex items-center justify-center w-10 h-10">
-                        <img src="logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
-                    </div>
                     <span>Van Escolar <span className="text-blue-500">Pro</span></span>
                 </a>
                 <p className="text-gray-600 text-sm mb-4">Feito para Tios e Tias com 💙</p>

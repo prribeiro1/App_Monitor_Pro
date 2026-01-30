@@ -197,8 +197,8 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
           return (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-sm">
-                  <img src="/logo_vep.png" alt="Logo" className="w-full h-full object-cover" />
+                <div className="w-8 h-8 rounded-md overflow-hidden border border-white/20 shadow-sm">
+                  <img src="/logo_vep.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
                 <div className="flex flex-col">
                   <h1 className="text-xl font-bold text-white leading-tight">{settings?.driverNickname || 'Van Escolar Pro'}</h1>
