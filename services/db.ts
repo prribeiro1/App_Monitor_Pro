@@ -134,13 +134,28 @@ export const dbService = {
   getRoutes: () => getAll<Route>('routes'),
   saveRoute: async (route: Route) => {
     await putItem('routes', route);
-    try { await cloudSync.saveRoute(route); } catch (e) {
-      console.error("Cloud Sync Rota falhou", e);
+    try {
+      await cloudSync.saveRoute(route);
+    } catch (e) {
+      console.warn("Cloud Sync Rota falhou, enfileirando...", e);
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'route',
+        data: route
+      });
     }
   },
   deleteRoute: async (id: string) => {
     await deleteItem('routes', id);
-    try { await cloudSync.deleteRoute(id); } catch (e) { }
+    try {
+      await cloudSync.deleteRoute(id);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'delete',
+        entity: 'route',
+        data: { id }
+      });
+    }
   },
 
   // Stops
@@ -150,12 +165,25 @@ export const dbService = {
     try {
       await cloudSync.saveStop(stop);
     } catch (e: any) {
-      alert("Erro ao salvar Ponto na Nuvem. Verifique sua conexão. " + (e.message || ""));
+      console.warn("Cloud Sync Ponto falhou, enfileirando...", e);
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'stop',
+        data: stop
+      });
     }
   },
   deleteStop: async (id: string) => {
     await deleteItem('stops', id);
-    try { await cloudSync.deleteStop(id); } catch (e) { }
+    try {
+      await cloudSync.deleteStop(id);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'delete',
+        entity: 'stop',
+        data: { id }
+      });
+    }
   },
 
   // Students
@@ -165,48 +193,120 @@ export const dbService = {
     try {
       await cloudSync.saveStudent(student);
     } catch (e: any) {
-      alert("Erro ao salvar Aluno na Nuvem: " + (e.message || ""));
+      console.warn("Cloud Sync Aluno falhou, enfileirando...", e);
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'student',
+        data: student
+      });
     }
   },
   deleteStudent: async (id: string) => {
     await deleteItem('students', id);
-    try { await cloudSync.deleteStudent(id); } catch (e) { }
+    try {
+      await cloudSync.deleteStudent(id);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'delete',
+        entity: 'student',
+        data: { id }
+      });
+    }
   },
 
   // Attendance
   getAttendance: () => getAll<AttendanceRecord>('attendance'),
   saveAttendance: async (record: AttendanceRecord) => {
     await putItem('attendance', record);
-    try { await cloudSync.saveAttendance(record); } catch (e) { }
+    try {
+      await cloudSync.saveAttendance(record);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'attendance',
+        data: record
+      });
+    }
   },
 
   // Incidents
   getIncidents: () => getAll<Incident>('incidents'),
   saveIncident: async (incident: Incident) => {
     await putItem('incidents', incident);
-    try { await cloudSync.saveIncident(incident); } catch (e) { }
+    try {
+      await cloudSync.saveIncident(incident);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'incident',
+        data: incident
+      });
+    }
   },
 
   // Payments
   getPayments: () => getAll<Payment>('payments'),
   savePayment: async (payment: Payment) => {
     await putItem('payments', payment);
-    try { await cloudSync.savePayment(payment); } catch (e) { }
+    try {
+      await cloudSync.savePayment(payment);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'payment',
+        data: payment
+      });
+    }
   },
-  deletePayment: (id: string) => deleteItem('payments', id),
+  deletePayment: async (id: string) => {
+    await deleteItem('payments', id);
+    try {
+      // Nota: cloudSync ainda não tem deletePayment explicitamente, usando executeOperation genérico se necessário
+      await syncQueue.enqueue({
+        type: 'delete',
+        entity: 'payment',
+        data: { id }
+      });
+    } catch (e) { }
+  },
 
   // Maintenance
   getMaintenanceItems: () => getAll<MaintenanceItem>('maintenance_items'),
   saveMaintenanceItem: async (item: MaintenanceItem) => {
     await putItem('maintenance_items', item);
-    try { await cloudSync.saveMaintenanceItem(item); } catch (e) { }
+    try {
+      await cloudSync.saveMaintenanceItem(item);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'maintenance_item',
+        data: item
+      });
+    }
   },
-  deleteMaintenanceItem: (id: string) => deleteItem('maintenance_items', id),
+  deleteMaintenanceItem: async (id: string) => {
+    await deleteItem('maintenance_items', id);
+    try {
+      await syncQueue.enqueue({
+        type: 'delete',
+        entity: 'maintenance_item',
+        data: { id }
+      });
+    } catch (e) { }
+  },
 
   getMaintenanceLogs: () => getAll<MaintenanceLog>('maintenance_logs'),
   saveMaintenanceLog: async (log: MaintenanceLog) => {
     await putItem('maintenance_logs', log);
-    try { await cloudSync.saveMaintenanceLog(log); } catch (e) { }
+    try {
+      await cloudSync.saveMaintenanceLog(log);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'maintenance_log',
+        data: log
+      });
+    }
   },
 
   // Settings (Single record with id 'settings')
@@ -219,7 +319,15 @@ export const dbService = {
     const existing = await getItem<UserSettings>('user_settings', 'settings');
     const settings = { ...existing, ...partialSettings, id: 'settings' } as UserSettings;
     await putItem('user_settings', settings);
-    try { await cloudSync.saveUserSettings(settings); } catch (e) { }
+    try {
+      await cloudSync.saveUserSettings(settings);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'user_settings',
+        data: settings
+      });
+    }
   },
 
   getContractSignature: (studentId: string) => getItem<any>('contract_signatures', studentId),
@@ -230,21 +338,27 @@ export const dbService = {
   getReminders: () => getAll<any>('reminders'),
   saveReminder: async (reminder: any) => {
     await putItem('reminders', reminder);
-    try { await cloudSync.saveReminder(reminder); } catch (e) { }
+    try {
+      await cloudSync.saveReminder(reminder);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'reminder',
+        data: reminder
+      });
+    }
   },
   deleteReminder: async (id: number) => {
-    // O id dos reminders é number, então passamos direto sem converter para string
-    const db = await openDB();
-    return new Promise<void>((resolve, reject) => {
-      const tx = db.transaction('reminders', 'readwrite');
-      const store = tx.objectStore('reminders');
-      const request = store.delete(id);
-      request.onsuccess = async () => {
-        try { await cloudSync.deleteReminder(id); } catch (e) { }
-        resolve();
-      };
-      request.onerror = () => reject(request.error);
-    });
+    await deleteItem('reminders', id.toString()); // Convertendo para string para compatibilidade com a assinatura genérica
+    try {
+      await cloudSync.deleteReminder(id);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'delete',
+        entity: 'reminder',
+        data: { id }
+      });
+    }
   },
 
 

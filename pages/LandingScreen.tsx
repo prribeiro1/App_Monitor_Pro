@@ -1,10 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icon } from '../components/Icon';
+import { cloudSync } from '../services/cloudSync';
+import { PlanPrices } from '../types';
 
 export const LandingScreen: React.FC = () => {
-    const [planPeriod, setPlanPeriod] = React.useState<'monthly' | 'annual'>('monthly');
+    const [planPeriod, setPlanPeriod] = useState<'monthly' | 'annual'>('monthly');
+    const [prices, setPrices] = useState<PlanPrices | null>(null);
 
     useEffect(() => {
+        const loadConstants = async () => {
+            try {
+                const constants = await cloudSync.getAppConstants();
+                if (constants && constants.plan_prices) {
+                    setPrices(constants.plan_prices);
+                }
+            } catch (e) {
+                console.error("Erro ao carregar preços na Landing:", e);
+            }
+        };
+        loadConstants();
         // Load fonts and scripts if needed
         const link = document.createElement('link');
         link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap";
@@ -322,7 +336,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Básico</h3>
                         <div className="mb-6">
                             <span className="text-3xl font-extrabold text-blue-400">
-                                R$ {planPeriod === 'monthly' ? '8,90' : '69,90'}
+                                R$ {planPeriod === 'monthly' ? (prices?.basic.monthly.toFixed(2).replace('.', ',') || '8,90') : (prices?.basic.annual.toFixed(2).replace('.', ',') || '69,90')}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === 'monthly' ? 'mês' : 'ano'}
@@ -354,7 +368,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Pro Solo</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-blue-500">
-                                R$ {planPeriod === 'monthly' ? '14,90' : '149,90'}
+                                R$ {planPeriod === 'monthly' ? (prices?.pro.monthly.toFixed(2).replace('.', ',') || '14,90') : (prices?.pro.annual.toFixed(2).replace('.', ',') || '149,90')}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === 'monthly' ? 'mês' : 'ano'}
@@ -388,7 +402,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Pro Duo</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-purple-400">
-                                R$ {planPeriod === 'monthly' ? '24,90' : '249,90'}
+                                R$ {planPeriod === 'monthly' ? (prices?.pro_plus.monthly.toFixed(2).replace('.', ',') || '24,90') : (prices?.pro_plus.annual.toFixed(2).replace('.', ',') || '249,90')}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === 'monthly' ? 'mês' : 'ano'}
