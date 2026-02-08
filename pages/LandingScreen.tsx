@@ -63,6 +63,12 @@ export const LandingScreen: React.FC = () => {
         if (modal) modal.classList.remove('active');
     };
 
+    const getSafePrice = (tier: string, period: 'monthly' | 'annual', fallback: string) => {
+        if (!prices || !(prices as any)[tier]) return fallback;
+        const val = (prices as any)[tier][period];
+        return val ? val.toFixed(2).replace('.', ',') : fallback;
+    };
+
     return (
         <div className="landing-wrapper bg-[#0f172a] text-white font-['Inter'] relative">
             {/* Custom CSS for Landing Page only */}
@@ -336,7 +342,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Básico</h3>
                         <div className="mb-6">
                             <span className="text-3xl font-extrabold text-blue-400">
-                                R$ {planPeriod === 'monthly' ? (prices?.basic.monthly.toFixed(2).replace('.', ',') || '8,90') : (prices?.basic.annual.toFixed(2).replace('.', ',') || '69,90')}
+                                R$ {getSafePrice('basic', planPeriod, planPeriod === 'monthly' ? '8,90' : '69,90')}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === 'monthly' ? 'mês' : 'ano'}
@@ -368,7 +374,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Pro Solo</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-blue-500">
-                                R$ {planPeriod === 'monthly' ? (prices?.pro.monthly.toFixed(2).replace('.', ',') || '14,90') : (prices?.pro.annual.toFixed(2).replace('.', ',') || '149,90')}
+                                R$ {getSafePrice('pro', planPeriod, planPeriod === 'monthly' ? '14,90' : '149,90')}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === 'monthly' ? 'mês' : 'ano'}
@@ -402,7 +408,7 @@ export const LandingScreen: React.FC = () => {
                         <h3 className="text-xl font-bold mb-4">Pro Duo</h3>
                         <div className="mb-2">
                             <span className="text-3xl font-extrabold text-purple-400">
-                                R$ {planPeriod === 'monthly' ? (prices?.pro_plus.monthly.toFixed(2).replace('.', ',') || '24,90') : (prices?.pro_plus.annual.toFixed(2).replace('.', ',') || '249,90')}
+                                R$ {getSafePrice('pro_plus', planPeriod, planPeriod === 'monthly' ? '24,90' : '249,90')}
                             </span>
                             <span className="text-gray-500 text-sm">
                                 /{planPeriod === 'monthly' ? 'mês' : 'ano'}

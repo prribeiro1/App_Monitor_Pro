@@ -383,6 +383,12 @@ function App() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [isUpdateRequired, setIsUpdateRequired] = useState(false);
 
+  const metadata = session?.user?.user_metadata || {};
+  const role = metadata.role || 'driver';
+  const permissions = metadata.permissions || {};
+  const currentUsername = session ? authService.getUsernameFromEmail(session.user.email) : '';
+  const isSuperUser = role === 'admin' || currentUsername === 'teste' || currentUsername === 'google_test';
+
   const fetchSettings = async () => {
     console.log("⚙️ Carregando settings...");
     const s = await dbService.getUserSettings();
@@ -517,13 +523,6 @@ function App() {
   if (loadingSession) {
     return <div className="min-h-screen bg-navy-900 flex items-center justify-center text-white">Carregando...</div>;
   }
-
-  // Permissões e Metadata (calculados apenas se session existir)
-  const metadata = session?.user?.user_metadata || {};
-  const role = metadata.role || 'driver';
-  const permissions = metadata.permissions || {};
-  const currentUsername = session ? authService.getUsernameFromEmail(session.user.email) : '';
-  const isSuperUser = role === 'admin' || currentUsername === 'teste' || currentUsername === 'google_test';
 
   const checkPermission = (feature: string, defaultAccess = true) => {
     if (isSuperUser) return true;
