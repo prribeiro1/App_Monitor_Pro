@@ -395,7 +395,7 @@ export const dbService = {
       'routes', 'stops', 'students', 'attendance',
       'incidents', 'payments', 'maintenance_items',
       'maintenance_logs', 'user_settings', 'contract_signatures', 'reminders',
-      'route_sessions', 'route_events' // 🆕 Novos stores
+      'vehicle_documents', 'route_sessions', 'route_events'
     ];
 
     return new Promise((resolve, reject) => {
@@ -426,15 +426,21 @@ export const dbService = {
 
   // Import Data (Restore)
   importData: async (data: BackupData): Promise<void> => {
+    console.log("📥 db.ts: Iniciando importData...");
     await dbService.clearDatabase();
     const db = await openDB();
-    const stores = ['routes', 'stops', 'students', 'attendance', 'incidents', 'payments', 'maintenance_items', 'maintenance_logs', 'user_settings'];
+    const stores = [
+      'routes', 'stops', 'students', 'attendance', 'incidents', 'payments',
+      'maintenance_items', 'maintenance_logs', 'user_settings', 'reminders',
+      'vehicle_documents', 'route_sessions', 'route_events'
+    ];
     const tx = db.transaction(stores, 'readwrite');
 
     // Helper to add items
     const addItems = (storeName: string, items: any[]) => {
+      if (!items) return;
       const store = tx.objectStore(storeName);
-      if (items) items.forEach(item => store.put(item));
+      items.forEach(item => store.put(item));
     };
 
     addItems('routes', data.routes);
@@ -443,14 +449,29 @@ export const dbService = {
     addItems('attendance', data.attendance);
     addItems('incidents', data.incidents);
     addItems('payments', data.payments || []);
+    addItems('reminders', (data as any).reminders || []);
+    addItems('vehicle_documents', (data as any).vehicleDocuments || []);
+    addItems('route_sessions', (data as any).routeSessions || []);
+    addItems('route_events', (data as any).routeEvents || []);
 
     // v2 Support
     if ((data as any).maintenanceItems) addItems('maintenance_items', (data as any).maintenanceItems);
     if ((data as any).maintenanceLogs) addItems('maintenance_logs', (data as any).maintenanceLogs);
-    if ((data as any).userSettings) tx.objectStore('user_settings').put({ ...(data as any).userSettings, id: 'settings' });
+
+    if ((data as any).userSettings) {
+      tx.objectStore('user_settings').put({ ...(data as any).userSettings, id: 'settings' });
+    }
 
     return new Promise((resolve, reject) => {
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = async () => {
+        console.log("✅ Importação local concluída. Iniciando push para a nuvem...");
+        // Após importar com sucesso, tentamos subir tudo para a nuvem para garantir sincronia
+        try {
+          // Disparamos o push em background para não travar a UI após o import
+          dbService.pushAllToCloud().catch(e => console.error("Erro no push automático após import:", e));
+        } catch (e) { }
+        resolve();
+      };
       tx.onerror = () => reject(tx.error);
     });
   },
@@ -467,6 +488,23 @@ export const dbService = {
       const cloudData = await cloudSync.pullAllData();
       if (!cloudData) {
         console.warn("⚠️ pullAllData retornou null, abortando sync");
+        return;
+      }
+
+      // 🛡️ SEGURANÇA CONTRA PERDA DE DADOS:
+      // Se a nuvem estiver vazia mas o local tiver dados, não sobrescrevemos.
+      // Isso evita que um app recém-atualizado (v1.3.0) perda dados locais antes de subir.
+      const isCloudEmpty = (!cloudData.students || cloudData.students.length === 0) &&
+        (!cloudData.routes || cloudData.routes.length === 0);
+
+      const localStudents = await dbService.getStudents();
+      const localRoutes = await dbService.getRoutes();
+      const isLocalNotEmpty = localStudents.length > 0 || localRoutes.length > 0;
+
+      if (isCloudEmpty && isLocalNotEmpty) {
+        console.warn("⚠️ Nuvem vazia detectada, mas o local possui dados. Abortando pull para evitar perda de dados. Sincronizando local -> nuvem...");
+        // Em vez de puxar o vazio, empurramos o que temos para salvar na nuvem
+        dbService.pushAllToCloud().catch(err => console.error("Erro no push emergencial:", err));
         return;
       }
 
@@ -492,8 +530,8 @@ export const dbService = {
       restore('maintenance_items', cloudData.maintenanceItems);
       restore('maintenance_logs', cloudData.maintenanceLogs);
       restore('vehicle_documents', cloudData.vehicleDocuments);
-      restore('route_sessions', cloudData.routeSessions || []); // 🆕
-      restore('route_events', cloudData.routeEvents || []); // 🆕
+      restore('route_sessions', cloudData.routeSessions || []);
+      restore('route_events', cloudData.routeEvents || []);
 
       if (cloudData.userSettings) {
         console.log("  ⚙️ Restaurando user_settings");
@@ -503,7 +541,6 @@ export const dbService = {
       return new Promise((resolve, reject) => {
         tx.oncomplete = () => {
           console.log("✅ Sync completo! Disparando evento db-synced");
-          // Dispara evento para avisar a UI que novos dados chegaram
           window.dispatchEvent(new Event('db-synced'));
           resolve();
         };
@@ -514,7 +551,60 @@ export const dbService = {
       });
     } catch (e) {
       console.error("❌❌❌ Erro no Pull Cloud:", e);
-      throw e; // Re-lança o erro para ser capturado no App.tsx
+      throw e;
+    }
+  },
+
+  // ☁️ Pushes all local data to cloud (Force Sync Up)
+  pushAllToCloud: async (): Promise<void> => {
+    try {
+      console.log("☁️ db.ts: Iniciando pushAllToCloud...");
+      const routes = await dbService.getRoutes();
+      const stops = await dbService.getStops();
+      const students = await dbService.getStudents();
+      const attendance = await dbService.getAttendance();
+      const payments = await dbService.getPayments();
+      const incidents = await dbService.getIncidents();
+      const reminders = await dbService.getReminders();
+      const maintItems = await dbService.getMaintenanceItems();
+      const maintLogs = await dbService.getMaintenanceLogs();
+      const vehicleDocs = await dbService.getVehicleDocuments();
+      const routeSessions = await dbService.getRouteSessions();
+      const routeEvents = await dbService.getRouteEvents();
+      const settings = await dbService.getUserSettings();
+
+      // Envia sequencialmente ou em blocos para não sobrecarregar
+      console.log(`  ⬆️ Subindo ${students.length} alunos...`);
+      for (const s of students) await cloudSync.saveStudent(s);
+
+      console.log(`  ⬆️ Subindo ${routes.length} rotas e ${stops.length} pontos...`);
+      for (const r of routes) await cloudSync.saveRoute(r);
+      for (const st of stops) await cloudSync.saveStop(st);
+
+      console.log(`  ⬆️ Subindo atendimentos, pagamentos e ocorrências...`);
+      for (const a of attendance) await cloudSync.saveAttendance(a);
+      for (const p of payments) await cloudSync.savePayment(p);
+      for (const i of incidents) await cloudSync.saveIncident(i);
+
+      console.log(`  ⬆️ Subindo manutenção e documentos...`);
+      for (const mi of maintItems) await cloudSync.saveMaintenanceItem(mi);
+      for (const ml of maintLogs) await cloudSync.saveMaintenanceLog(ml);
+      for (const vd of vehicleDocs) await cloudSync.saveVehicleDocument(vd);
+
+      console.log(`  ⬆️ Subindo sessões e lembretes...`);
+      for (const rs of routeSessions) await cloudSync.saveRouteSession(rs);
+      for (const re of routeEvents) await cloudSync.saveRouteEvent(re);
+      for (const rem of reminders) await cloudSync.saveReminder(rem);
+
+      if (settings) {
+        console.log(`  ⬆️ Subindo configurações...`);
+        await cloudSync.saveUserSettings(settings);
+      }
+
+      console.log("✅ pushAllToCloud concluído com sucesso!");
+    } catch (error) {
+      console.error("❌ Erro no pushAllToCloud:", error);
+      throw error;
     }
   },
 

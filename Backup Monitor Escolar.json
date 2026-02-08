@@ -1,0 +1,1276 @@
+{
+  "routes": [
+    {
+      "id": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "name": "Céu Itapegica"
+    },
+    {
+      "id": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "name": "Emilia"
+    },
+    {
+      "id": "8e35ba79-99b1-4c41-bdb8-a4569035eb6b",
+      "name": "Creche das Irmãs "
+    },
+    {
+      "id": "ad4ba082-fe60-4739-970c-f037bd60aeed",
+      "name": "Creche da Gruta"
+    },
+    {
+      "id": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "name": "Vila Maxi"
+    }
+  ],
+  "stops": [
+    {
+      "id": "10091e60-af61-45c0-8df8-58d467be0421",
+      "name": "Marya",
+      "routeId": "8e35ba79-99b1-4c41-bdb8-a4569035eb6b",
+      "order": 1,
+      "latitude": -23.4800268,
+      "longitude": -46.5546223
+    },
+    {
+      "id": "1315feff-392d-4bec-b775-4b0c538b6371",
+      "name": "Amora",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 8
+    },
+    {
+      "id": "167fab8f-4d32-4aa4-bf83-876b6c495e69",
+      "name": "Alice dos Santos",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 0,
+      "latitude": -23.4774408,
+      "longitude": -46.5566537
+    },
+    {
+      "id": "1e9254a1-535e-4b57-90b0-c2037c503f77",
+      "name": "Pietra",
+      "routeId": "ad4ba082-fe60-4739-970c-f037bd60aeed",
+      "order": 5
+    },
+    {
+      "id": "25e5620f-8763-491b-ade6-8456bfce8b06",
+      "name": "Isabela Debora",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 10
+    },
+    {
+      "id": "2f03f990-97fd-4436-a1f6-91af350da036",
+      "name": "Kevin",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 14
+    },
+    {
+      "id": "38fa4c59-97d9-4f71-b03f-60facbea0414",
+      "name": "Gabriel Santos",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 5,
+      "latitude": -23.484847,
+      "longitude": -46.554865
+    },
+    {
+      "id": "39768ae0-0796-4aad-894c-8d1a11aa57b0",
+      "name": "Rebeka Vitoria",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 3,
+      "latitude": -23.4751121,
+      "longitude": -46.556773
+    },
+    {
+      "id": "39eb926b-75f6-4fa8-98a3-e0b4f8a92061",
+      "name": "Stefani Silva",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 4,
+      "latitude": -23.4788752,
+      "longitude": -46.5580007
+    },
+    {
+      "id": "3d4cfe16-cbab-4f77-875c-116442aef611",
+      "name": "Lucca",
+      "routeId": "ad4ba082-fe60-4739-970c-f037bd60aeed",
+      "order": 6
+    },
+    {
+      "id": "3e43dc84-f438-49ee-aea1-ffd70ef7f223",
+      "name": "Yuri Kaleb",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 6
+    },
+    {
+      "id": "3ef7d592-9fa1-457b-99de-145e5aa9cec6",
+      "name": "Levi ",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 18
+    },
+    {
+      "id": "411eb7ea-fdce-4762-b314-f3f7729c5be3",
+      "name": "Maria Clara",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 19
+    },
+    {
+      "id": "44f31deb-9f8a-4394-8c64-6f1e733f5b14",
+      "name": "Theo",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 11,
+      "latitude": -23.4724404,
+      "longitude": -46.5549905
+    },
+    {
+      "id": "474f94f6-859d-46e5-9454-a4e7f073f979",
+      "name": "Maria Clara Santos",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 5,
+      "latitude": -23.4777626,
+      "longitude": -46.5560331
+    },
+    {
+      "id": "521b54fb-db73-4fc1-902f-ecc2c83e30bb",
+      "name": "Ruan Luca",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 5
+    },
+    {
+      "id": "534b83df-0fe4-4cdf-9bb5-98faf6885046",
+      "name": "Julia e Gustavo",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 4,
+      "latitude": -23.4894764,
+      "longitude": -46.5523584
+    },
+    {
+      "id": "5594221b-fdb4-481f-96c9-ea7fc8746943",
+      "name": "Bruna Silva ",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 12,
+      "latitude": -23.4741763,
+      "longitude": -46.5554049
+    },
+    {
+      "id": "57c94b41-7675-46a4-a3ba-e1e37995e589",
+      "name": "Vitor Hugo",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 10,
+      "latitude": -23.4741763,
+      "longitude": -46.5554049
+    },
+    {
+      "id": "5b578492-610e-427a-aff2-98d8c3789256",
+      "name": "Maju Alana",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 15
+    },
+    {
+      "id": "61e379bf-0964-413b-9acc-3c605c5d8481",
+      "name": "Sophia Torre",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 9
+    },
+    {
+      "id": "66452408-ab60-4178-b638-a7d52a4b28e0",
+      "name": "Julia Pracha",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 7,
+      "latitude": -23.4884901,
+      "longitude": -46.5538496
+    },
+    {
+      "id": "6c1c101a-a380-44b9-95a5-473a10d30da8",
+      "name": "Pedro e Rafael França ",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 6,
+      "latitude": -23.4698649,
+      "longitude": -46.5554292
+    },
+    {
+      "id": "6c72bf36-d256-4c83-9431-1f3f296b3e44",
+      "name": "Davi Lucas ",
+      "routeId": "8e35ba79-99b1-4c41-bdb8-a4569035eb6b",
+      "order": 0,
+      "latitude": -23.4675357,
+      "longitude": -46.5526168
+    },
+    {
+      "id": "715a0aa2-25a1-4712-922a-a4430bacae74",
+      "name": "João Lucas Duda ",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 4,
+      "latitude": -23.4774408,
+      "longitude": -46.5566537
+    },
+    {
+      "id": "743e00ec-a714-4833-93ac-8af296c1ffa0",
+      "name": "Vila Maxi",
+      "routeId": "58e46f13-9d72-4a7c-9bf3-c7ad55211e30",
+      "order": 0,
+      "latitude": -23.4696299,
+      "longitude": -46.5507503
+    },
+    {
+      "id": "74b0270a-5951-4b56-84b2-53425aa91aec",
+      "name": "Isis Peliceri",
+      "routeId": "ad4ba082-fe60-4739-970c-f037bd60aeed",
+      "order": 1,
+      "latitude": -23.4800268,
+      "longitude": -46.5546223
+    },
+    {
+      "id": "7cbe37b0-7933-49ea-9346-5e23101095a0",
+      "name": "Antony Gonçalves ",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 2,
+      "latitude": -23.4884901,
+      "longitude": -46.5538496
+    },
+    {
+      "id": "83df2e59-2d15-472b-99e2-15ede3387bc6",
+      "name": "Naomi Bananeiro",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 8
+    },
+    {
+      "id": "86893c19-7187-4883-a231-fadd3b6e03b0",
+      "name": "Maria Clara Pierritano",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 0,
+      "latitude": -23.4798112,
+      "longitude": -46.555177
+    },
+    {
+      "id": "8de82633-213a-4d93-b85d-f149c6edd44d",
+      "name": "Maria Clara Top",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 12
+    },
+    {
+      "id": "8f6adda0-e092-4708-a932-6b2c96677c22",
+      "name": "Zoe",
+      "routeId": "ad4ba082-fe60-4739-970c-f037bd60aeed",
+      "order": 4
+    },
+    {
+      "id": "98169be0-894f-4f71-b7fc-eb2e87c98017",
+      "name": "João Lucas ",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 3,
+      "latitude": -23.4698649,
+      "longitude": -46.5554292
+    },
+    {
+      "id": "9a2c6fb6-24ae-4232-a751-f8c3e94cb792",
+      "name": "Giovana Morais ",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 1,
+      "latitude": -23.4708854,
+      "longitude": -46.5551032
+    },
+    {
+      "id": "9e96610a-26b4-43e9-9bd2-c2c29fd173ac",
+      "name": "Lara Liz",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 7,
+      "latitude": -23.4788752,
+      "longitude": -46.5580007
+    },
+    {
+      "id": "a7254a2b-2faf-46e8-a26d-d2c894c61d4d",
+      "name": "Alice Yago",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 0,
+      "latitude": -23.4734778,
+      "longitude": -46.5523012
+    },
+    {
+      "id": "a81cdadc-46b8-4719-90a3-d2793600aef6",
+      "name": "Helena Nogueira",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 9,
+      "latitude": -23.4751121,
+      "longitude": -46.556773
+    },
+    {
+      "id": "aa709f39-74c5-4a9f-9585-37612a4ae2ad",
+      "name": "Ravi",
+      "routeId": "ad4ba082-fe60-4739-970c-f037bd60aeed",
+      "order": 2
+    },
+    {
+      "id": "ac0fb705-921a-4617-9816-ccbc32fbc7c4",
+      "name": "Mariani M Lima",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 9
+    },
+    {
+      "id": "acb2d73e-5b6b-414c-aeca-1ac1f412221a",
+      "name": "Davi Leite",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 3,
+      "latitude": -23.4696299,
+      "longitude": -46.5507503
+    },
+    {
+      "id": "b247541a-0a25-460f-bf3b-4749690235a4",
+      "name": "Maria Isis",
+      "routeId": "8e35ba79-99b1-4c41-bdb8-a4569035eb6b",
+      "order": 2,
+      "latitude": -23.4696299,
+      "longitude": -46.5507503
+    },
+    {
+      "id": "baec6eca-eb5c-4b03-8784-0930764c4296",
+      "name": "Bernardo",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 11
+    },
+    {
+      "id": "c5041226-82a4-4ad6-98ec-be62ba51c1e4",
+      "name": "Pietro Lohan",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 13,
+      "latitude": -23.469717,
+      "longitude": -46.5578392
+    },
+    {
+      "id": "ca153a7e-548c-45e6-b935-86e8d9d03998",
+      "name": "Joaquim",
+      "routeId": "ad4ba082-fe60-4739-970c-f037bd60aeed",
+      "order": 3
+    },
+    {
+      "id": "cd0e7daa-63b6-43a2-ac97-bda70c72ac80",
+      "name": "Davi",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 1,
+      "latitude": -23.4676311,
+      "longitude": -46.5516066
+    },
+    {
+      "id": "cf72009b-d934-4924-a726-6839cf3174d0",
+      "name": "Heloísa Bernardo ",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 17
+    },
+    {
+      "id": "dff390fb-f92b-42a6-bc36-5c8bd5c6e148",
+      "name": "Vitoria Pinho ",
+      "routeId": "bc6932e4-3014-496f-9bfd-70e4f264fcbf",
+      "order": 2,
+      "latitude": -23.4912162,
+      "longitude": -46.5520962
+    },
+    {
+      "id": "e0da0ee2-52e6-48a2-8010-480e24687876",
+      "name": "Enzo Gabriel Rotatória ",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 16
+    },
+    {
+      "id": "e486d483-b865-4b70-9e5d-0875a973a783",
+      "name": "Rafael Oliveira ",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 8,
+      "latitude": -23.4894764,
+      "longitude": -46.5523584
+    },
+    {
+      "id": "e8fe6028-c5d4-4503-862a-389cdf19cb8b",
+      "name": "Valentina ",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 7
+    },
+    {
+      "id": "ecf67ba2-a4ca-4f9d-8b72-d0163ec62f62",
+      "name": "Bernardo dos Santos",
+      "routeId": "ad4ba082-fe60-4739-970c-f037bd60aeed",
+      "order": 0,
+      "latitude": -23.4618827,
+      "longitude": -46.5097655
+    },
+    {
+      "id": "fa34d17d-48f6-40b8-8508-3d381324e5b7",
+      "name": "Henrique Gabriel",
+      "routeId": "0b2feb07-1837-428d-ad3d-ee8484365a98",
+      "order": 2,
+      "latitude": -23.469717,
+      "longitude": -46.5578392
+    },
+    {
+      "id": "fe3c089c-90c1-49b3-a4a5-9ed09d1936cd",
+      "name": "Isabela Oliveira ",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 1,
+      "latitude": -23.469717,
+      "longitude": -46.5578392
+    },
+    {
+      "id": "feb50020-2bc3-4180-8451-e3d892d78707",
+      "name": "Alana Silva",
+      "routeId": "4a730df7-8546-4f47-9ea8-6f3918f58c59",
+      "order": 6,
+      "latitude": -23.4760107,
+      "longitude": -46.5581391
+    }
+  ],
+  "students": [
+    {
+      "id": "0d6520a9-42e6-4187-bcab-1a4068810a7c",
+      "stopId": "38fa4c59-97d9-4f71-b03f-60facbea0414",
+      "name": "Gabriel Santos ",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "tarde",
+      "guardianName": "ARIANI Sami Santos",
+      "responsibleCpf": "30839269770",
+      "responsiblePhone": "11960367090",
+      "monthlyFees": 240,
+      "dueDay": 20,
+      "order": 1768919247568
+    },
+    {
+      "id": "0dbc7eca-6f8d-4c72-b3c5-7ed28be3c95c",
+      "stopId": "57c94b41-7675-46a4-a3ba-e1e37995e589",
+      "name": "Victor Hugo",
+      "active": true,
+      "school": "Emilia",
+      "shift": "manha",
+      "guardianName": "Simone",
+      "responsibleCpf": "34045467840",
+      "responsiblePhone": "1196969472",
+      "monthlyFees": 210,
+      "dueDay": 10,
+      "order": 1768922073005
+    },
+    {
+      "id": "12515656-4478-4313-8102-9ffc15378e8c",
+      "stopId": "e8fe6028-c5d4-4503-862a-389cdf19cb8b",
+      "name": "Valentina",
+      "active": true,
+      "school": "Ceu",
+      "shift": "integral",
+      "monthlyFees": 280,
+      "dueDay": 10,
+      "order": 1769085691825
+    },
+    {
+      "id": "1926a17c-b529-462c-868a-971eb48d794d",
+      "stopId": "ca153a7e-548c-45e6-b935-86e8d9d03998",
+      "name": "Joaquim ",
+      "active": true,
+      "school": "Gruta",
+      "shift": "integral",
+      "monthlyFees": 250,
+      "dueDay": 10,
+      "order": 1769085307964
+    },
+    {
+      "id": "225326aa-cbbd-4d78-878e-9e77c7b20bf0",
+      "stopId": "86893c19-7187-4883-a231-fadd3b6e03b0",
+      "name": "Maria Clara Top",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "tarde",
+      "monthlyFees": 270,
+      "dueDay": 10,
+      "order": 1769084622336
+    },
+    {
+      "id": "2396e680-00b2-4a07-b19b-751e062ddb3f",
+      "stopId": "715a0aa2-25a1-4712-922a-a4430bacae74",
+      "name": "João Lucas Duda",
+      "active": true,
+      "school": "Céu Itapejica ",
+      "shift": "integral",
+      "guardianName": "Bruna de Souza",
+      "responsiblePhone": "11963505849",
+      "monthlyFees": 530,
+      "dueDay": 30,
+      "order": 1768921478982
+    },
+    {
+      "id": "281d7f26-5cca-45e2-baa2-3037b893669f",
+      "stopId": "3d4cfe16-cbab-4f77-875c-116442aef611",
+      "name": "Lucca",
+      "active": true,
+      "school": "Gruta",
+      "shift": "integral",
+      "monthlyFees": 280,
+      "dueDay": 20,
+      "order": 1769085462914
+    },
+    {
+      "id": "2cb09a64-3b95-4836-9702-649e3feac9e1",
+      "stopId": "acb2d73e-5b6b-414c-aeca-1ac1f412221a",
+      "name": "Davi leite",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "manha",
+      "guardianName": "Edielma ",
+      "responsibleCpf": "28472709817",
+      "responsiblePhone": "959389404",
+      "monthlyFees": 220,
+      "dueDay": 20,
+      "order": 1768917672594
+    },
+    {
+      "id": "36cfa628-3866-4137-9e4e-46c35b8e397c",
+      "stopId": "7cbe37b0-7933-49ea-9346-5e23101095a0",
+      "name": "Antony Gonçalves ",
+      "active": true,
+      "birthDate": "2026-01-20",
+      "school": "Emilia",
+      "shift": "manha",
+      "guardianName": "Juliana",
+      "responsibleCpf": "0000000000",
+      "responsiblePhone": "11948940550",
+      "monthlyFees": 210,
+      "dueDay": 10,
+      "order": 1768914063825
+    },
+    {
+      "id": "42e955e1-ebc1-451c-bb16-746d6381168b",
+      "stopId": "534b83df-0fe4-4cdf-9bb5-98faf6885046",
+      "name": "Julia Gustavo Alcântara ",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "tarde",
+      "guardianName": "Daniela Alcântara ",
+      "responsibleCpf": "41717325871",
+      "responsiblePhone": "11988619943",
+      "monthlyFees": 420,
+      "dueDay": 10,
+      "order": 1768918115894
+    },
+    {
+      "id": "4e3330b9-25fe-4538-bb58-4f7620d352b9",
+      "stopId": "5b578492-610e-427a-aff2-98d8c3789256",
+      "name": "Maju Alana",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "monthlyFees": 180,
+      "dueDay": 10,
+      "order": 1769084836632
+    },
+    {
+      "id": "4e9a42b7-c3ff-4d4d-9bed-b5f4e972ac49",
+      "stopId": "dff390fb-f92b-42a6-bc36-5c8bd5c6e148",
+      "name": "Vitoria Pinho ",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "manha",
+      "guardianName": "Sandro",
+      "responsiblePhone": "11981989057",
+      "monthlyFees": 250,
+      "dueDay": 20,
+      "order": 1768916593801
+    },
+    {
+      "id": "4ebb5fb6-709f-42da-a002-cd9a061ec6e9",
+      "stopId": "25e5620f-8763-491b-ade6-8456bfce8b06",
+      "name": "Isabela Debora",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "tarde",
+      "guardianName": "Debora",
+      "monthlyFees": 190,
+      "dueDay": 10,
+      "order": 1769084495520
+    },
+    {
+      "id": "51328d70-8d2d-4925-99c1-c7b29a1e22c3",
+      "stopId": "474f94f6-859d-46e5-9454-a4e7f073f979",
+      "name": "Maria Clara Santos",
+      "active": true,
+      "school": "Emília ",
+      "shift": "tarde",
+      "guardianName": "Priscila Santos",
+      "responsiblePhone": "11953655829",
+      "monthlyFees": 200,
+      "dueDay": 10,
+      "order": 1768916811649
+    },
+    {
+      "id": "5156de0d-e907-4f04-8ec8-2b4978ffdbe1",
+      "stopId": "cf72009b-d934-4924-a726-6839cf3174d0",
+      "name": "Heloísa Bernardo ",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "monthlyFees": 200,
+      "dueDay": 10,
+      "order": 1769085066604
+    },
+    {
+      "id": "57ea447c-ebe5-4b8d-be73-935c8a1f5cc5",
+      "stopId": "167fab8f-4d32-4aa4-bf83-876b6c495e69",
+      "name": "Alice dos Santos",
+      "active": true,
+      "birthDate": "2026-01-20",
+      "school": "Emília ",
+      "shift": "manha",
+      "guardianName": "Rafaela dos Santos",
+      "responsibleCpf": "40300680813",
+      "responsiblePhone": "11983570957",
+      "monthlyFees": 200,
+      "dueDay": 10,
+      "order": 1768912802293
+    },
+    {
+      "id": "5bec34ae-60d2-4a0e-b080-2aa609d18073",
+      "stopId": "39768ae0-0796-4aad-894c-8d1a11aa57b0",
+      "name": "Rebeka  Vitoria",
+      "active": true,
+      "birthDate": "2026-01-20",
+      "school": "Emília ",
+      "shift": "manha",
+      "guardianName": "Marcelo Cardoso",
+      "responsibleCpf": "00000000",
+      "responsiblePhone": "11952452828",
+      "monthlyFees": 180,
+      "dueDay": 10,
+      "order": 1768915765495
+    },
+    {
+      "id": "5c4d68a8-28eb-481e-be75-a826779140b4",
+      "stopId": "5594221b-fdb4-481f-96c9-ea7fc8746943",
+      "name": "Bruna Silva",
+      "active": true,
+      "school": "Emília ",
+      "shift": "manha",
+      "guardianName": "Priscila Silva",
+      "responsibleCpf": "35478772802",
+      "responsiblePhone": "11966326581",
+      "monthlyFees": 210,
+      "dueDay": 10,
+      "order": 1768923075265
+    },
+    {
+      "id": "5db0b3da-c4d5-43e1-8cf4-777843bebfa8",
+      "stopId": "521b54fb-db73-4fc1-902f-ecc2c83e30bb",
+      "name": "Ruan Luca ",
+      "active": true,
+      "school": "Ceu",
+      "shift": "integral",
+      "monthlyFees": 210,
+      "dueDay": 10,
+      "order": 1769085543295
+    },
+    {
+      "id": "642c4d16-7a30-412e-909a-96c3ee97846a",
+      "stopId": "baec6eca-eb5c-4b03-8784-0930764c4296",
+      "name": "Bernardo",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "tarde",
+      "monthlyFees": 270,
+      "dueDay": 30,
+      "order": 1769084571577
+    },
+    {
+      "id": "6600392f-63d9-4d19-b011-c5447dfaed12",
+      "stopId": "8f6adda0-e092-4708-a932-6b2c96677c22",
+      "name": "Zoe",
+      "active": true,
+      "school": "Gruta",
+      "shift": "integral",
+      "monthlyFees": 270,
+      "dueDay": 20,
+      "order": 1769085354379
+    },
+    {
+      "id": "6bca78c8-70a9-4971-8b28-956551d0ba71",
+      "stopId": "1e9254a1-535e-4b57-90b0-c2037c503f77",
+      "name": "Pietra",
+      "active": true,
+      "school": "Gruta",
+      "shift": "integral",
+      "monthlyFees": 240,
+      "dueDay": 10,
+      "order": 1769085424398
+    },
+    {
+      "id": "6ce150b0-c061-4e4d-9680-5bc5c3f1acef",
+      "stopId": "6c72bf36-d256-4c83-9431-1f3f296b3e44",
+      "name": "Davi Lucas ",
+      "active": true,
+      "school": "Creche das Irmas",
+      "shift": "integral",
+      "guardianName": "Débora ",
+      "responsibleCpf": "000000000",
+      "responsiblePhone": "11992871017",
+      "monthlyFees": 210,
+      "dueDay": 30,
+      "order": 1768916029993
+    },
+    {
+      "id": "6f1dbdbd-a744-4575-b0dd-8f14e10ed4e3",
+      "stopId": "66452408-ab60-4178-b638-a7d52a4b28e0",
+      "name": "Julia Pracha",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "manha",
+      "guardianName": "Taina",
+      "responsibleCpf": "44093435804",
+      "responsiblePhone": "11987724089",
+      "monthlyFees": 250,
+      "dueDay": 10,
+      "order": 1768922718891
+    },
+    {
+      "id": "70274b02-9b94-41b5-b673-7ea9a451f7ea",
+      "stopId": "9a2c6fb6-24ae-4232-a751-f8c3e94cb792",
+      "name": "Giovana Morais ",
+      "active": true,
+      "birthDate": "2026-01-20",
+      "school": "Vila Maxi",
+      "shift": "manha",
+      "guardianName": "Romiele Ranere",
+      "responsibleCpf": "000000000",
+      "responsiblePhone": "11954378407",
+      "monthlyFees": 190,
+      "dueDay": 10,
+      "order": 1768915345472
+    },
+    {
+      "id": "7e8bec51-d783-4b32-b578-fc4d959a6f2d",
+      "stopId": "ac0fb705-921a-4617-9816-ccbc32fbc7c4",
+      "name": "Mariani ",
+      "active": true,
+      "shift": "manha",
+      "monthlyFees": 250,
+      "dueDay": 10,
+      "order": 1769084433706
+    },
+    {
+      "id": "85586975-ae7a-48b3-b20c-76af3c4d9551",
+      "stopId": "2f03f990-97fd-4436-a1f6-91af350da036",
+      "name": "Kevin",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "monthlyFees": 230,
+      "dueDay": 10,
+      "order": 1769084753341
+    },
+    {
+      "id": "86447b81-b809-48a2-b6d9-34f64151b163",
+      "stopId": "e0da0ee2-52e6-48a2-8010-480e24687876",
+      "name": "Enzo Gabriel Rotatória ",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "monthlyFees": 210,
+      "dueDay": 30,
+      "order": 1769084909315
+    },
+    {
+      "id": "8a70c766-9661-4fde-9f1c-e41c3d4264c1",
+      "stopId": "fe3c089c-90c1-49b3-a4a5-9ed09d1936cd",
+      "name": "Isabela Oliveira ",
+      "active": true,
+      "birthDate": "2026-01-20",
+      "school": "Emília ",
+      "shift": "tarde",
+      "guardianName": "Alessandra",
+      "responsibleCpf": "000000000",
+      "responsiblePhone": "11986689884",
+      "monthlyFees": 170,
+      "dueDay": 10,
+      "order": 1768913758660
+    },
+    {
+      "id": "8dee92a5-2e42-492e-97f9-1bcf099d31d9",
+      "stopId": "74b0270a-5951-4b56-84b2-53425aa91aec",
+      "name": "Isis Peliceri",
+      "active": true,
+      "school": "Creche da Gruta",
+      "shift": "integral",
+      "guardianName": "Vinícius Santos ",
+      "responsiblePhone": "11972224993",
+      "monthlyFees": 250,
+      "dueDay": 10,
+      "order": 1768921725712
+    },
+    {
+      "id": "907549f6-6bcb-4285-9ae3-045971993d60",
+      "stopId": "10091e60-af61-45c0-8df8-58d467be0421",
+      "name": "Marya Xavier",
+      "active": true,
+      "school": "Creche das Irmãs ",
+      "shift": "integral",
+      "guardianName": "Daiane Cristina Xaiver",
+      "responsibleCpf": "08638424612",
+      "responsiblePhone": "3599746981",
+      "monthlyFees": 230,
+      "dueDay": 20,
+      "order": 1768920686776
+    },
+    {
+      "id": "95d4ba06-0b61-48ec-baa0-c8dab0375a46",
+      "stopId": "fa34d17d-48f6-40b8-8508-3d381324e5b7",
+      "name": "Henrique Gabriel",
+      "active": true,
+      "birthDate": "2026-01-20",
+      "school": "Céu  Itapejica",
+      "shift": "integral",
+      "guardianName": "Tamires",
+      "responsiblePhone": "11969277441",
+      "monthlyFees": 230,
+      "dueDay": 20,
+      "order": 1768914287887
+    },
+    {
+      "id": "985279dc-1c11-4d6a-9f5f-d756b986025f",
+      "stopId": "411eb7ea-fdce-4762-b314-f3f7729c5be3",
+      "name": "Maria Clara ",
+      "active": true,
+      "school": "Emília ",
+      "shift": "tarde",
+      "monthlyFees": 190,
+      "dueDay": 10,
+      "order": 1769085179374
+    },
+    {
+      "id": "9d697ac1-0688-4ff3-b76c-09b6b79d3826",
+      "stopId": "9e96610a-26b4-43e9-9bd2-c2c29fd173ac",
+      "name": "Lara Liz ",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "guardianName": "Ana Carolina Ataujo",
+      "responsiblePhone": "932099820",
+      "monthlyFees": 220,
+      "dueDay": 20,
+      "order": 1768917313256
+    },
+    {
+      "id": "a2abf289-e79c-4364-83ac-fa10303d8583",
+      "stopId": "ecf67ba2-a4ca-4f9d-8b72-d0163ec62f62",
+      "name": "Bernardo dos Santos ",
+      "active": true,
+      "school": "Creche da Gruta ",
+      "shift": "integral",
+      "guardianName": "Jessica",
+      "responsiblePhone": "11946096008",
+      "monthlyFees": 450,
+      "dueDay": 10,
+      "order": 1768918803363
+    },
+    {
+      "id": "a9bdebe7-a2b0-4d33-97f8-228f442adf38",
+      "stopId": "39eb926b-75f6-4fa8-98a3-e0b4f8a92061",
+      "name": "Stefani  Silva ",
+      "active": true,
+      "school": "Emília ",
+      "shift": "manha",
+      "guardianName": "Jenifer ",
+      "responsiblePhone": "11951517854",
+      "monthlyFees": 200,
+      "dueDay": 10,
+      "order": 1768916342953
+    },
+    {
+      "id": "ac505f1d-90af-4d6a-9700-c63f1cec8ad8",
+      "stopId": "61e379bf-0964-413b-9acc-3c605c5d8481",
+      "name": "Sophia Torre",
+      "active": true,
+      "school": "Ceu",
+      "shift": "integral",
+      "monthlyFees": 200,
+      "dueDay": 20,
+      "order": 1769085781884
+    },
+    {
+      "id": "b2a27b67-d5a6-482a-bb0f-1c57cd188a94",
+      "stopId": "83df2e59-2d15-472b-99e2-15ede3387bc6",
+      "name": "Naomi Bananeiro ",
+      "active": true,
+      "school": "Ceu",
+      "shift": "integral",
+      "monthlyFees": 240,
+      "dueDay": 30,
+      "order": 1769085745375
+    },
+    {
+      "id": "b348a71b-09a6-4223-be16-eee84b788086",
+      "stopId": "c5041226-82a4-4ad6-98ec-be62ba51c1e4",
+      "name": "Pietro Logan",
+      "active": true,
+      "school": "Emília ",
+      "shift": "manha",
+      "guardianName": "Maria Snatana",
+      "responsibleCpf": "07974121553",
+      "responsiblePhone": "11994269974",
+      "monthlyFees": 210,
+      "dueDay": 10,
+      "order": 1768923305121
+    },
+    {
+      "id": "b8ee9aa2-83c2-442b-b6e0-fa0b79422bbb",
+      "stopId": "e486d483-b865-4b70-9e5d-0875a973a783",
+      "name": "Rafael Oliveira ",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "guardianName": "Ana Paula ",
+      "responsibleCpf": "37910198809",
+      "responsiblePhone": "11997826577",
+      "monthlyFees": 220,
+      "dueDay": 20,
+      "order": 1768919090900
+    },
+    {
+      "id": "ba83996c-5a29-40ec-807b-94380ccbf753",
+      "stopId": "6c1c101a-a380-44b9-95a5-473a10d30da8",
+      "name": "Pedro Rafael França ",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "manha",
+      "guardianName": "Welington Martins ",
+      "responsiblePhone": "11991618225",
+      "monthlyFees": 360,
+      "dueDay": 10,
+      "order": 1768921200752
+    },
+    {
+      "id": "bba53a16-95e4-42c8-bad8-8895130deaa5",
+      "stopId": "b247541a-0a25-460f-bf3b-4749690235a4",
+      "name": "Maria Isis de Andrade ",
+      "active": true,
+      "school": "Creche das Irmãs ",
+      "shift": "integral",
+      "guardianName": "Karoline Oliveira",
+      "responsibleCpf": "46923641810",
+      "monthlyFees": 200,
+      "dueDay": 10,
+      "order": 1768922529577
+    },
+    {
+      "id": "bc1c2eee-9c45-45d9-902f-c7fd8a45973e",
+      "stopId": "aa709f39-74c5-4a9f-9585-37612a4ae2ad",
+      "name": "Ravi Emanuel",
+      "active": true,
+      "school": "Gruta",
+      "shift": "integral",
+      "monthlyFees": 250,
+      "dueDay": 20,
+      "order": 1769085263031
+    },
+    {
+      "id": "bde61c7c-22de-47b9-be69-f9ba893fb0e2",
+      "stopId": "feb50020-2bc3-4180-8451-e3d892d78707",
+      "name": "Alana Silva ",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "guardianName": "Hayana",
+      "responsiblePhone": "11955200617",
+      "monthlyFees": 230,
+      "dueDay": 20,
+      "order": 1768917079993
+    },
+    {
+      "id": "be7d8de7-4a98-4472-8a2e-15ef7a105a1f",
+      "stopId": "a7254a2b-2faf-46e8-a26d-d2c894c61d4d",
+      "name": "Alice Yago",
+      "active": true,
+      "birthDate": "2025-12-01",
+      "school": "Céu Itapejica",
+      "shift": "integral",
+      "guardianName": "Angelica",
+      "responsibleCpf": "16693297803",
+      "responsiblePhone": "11994107900",
+      "monthlyFees": 380,
+      "dueDay": 20,
+      "order": 1768909760407
+    },
+    {
+      "id": "c19f3579-a1de-459a-9e04-ec113a2f8ea9",
+      "stopId": "98169be0-894f-4f71-b7fc-eb2e87c98017",
+      "name": "João Lucas ",
+      "active": true,
+      "school": "Céu Itapejica ",
+      "shift": "integral",
+      "guardianName": "Luciana ",
+      "responsibleCpf": "0000000000",
+      "responsiblePhone": "11952414420",
+      "monthlyFees": 230,
+      "dueDay": 10,
+      "order": 1768915524094
+    },
+    {
+      "id": "d86350dd-2b6d-4ceb-9920-e7e68e8be34a",
+      "stopId": "1315feff-392d-4bec-b775-4b0c538b6371",
+      "name": "Amora ",
+      "active": true,
+      "school": "Vila Maxi",
+      "shift": "tarde",
+      "monthlyFees": 250,
+      "dueDay": 10,
+      "order": 1769084373801
+    },
+    {
+      "id": "de8bd752-4f10-4c67-91a1-4063c55531c8",
+      "stopId": "3e43dc84-f438-49ee-aea1-ffd70ef7f223",
+      "name": "Yuri Kaleb",
+      "active": true,
+      "school": "Ceu",
+      "shift": "integral",
+      "monthlyFees": 360,
+      "dueDay": 10,
+      "order": 1769085651063
+    },
+    {
+      "id": "e1dc4a17-5353-4d0c-b7b5-5b031a0b3d09",
+      "stopId": "44f31deb-9f8a-4394-8c64-6f1e733f5b14",
+      "name": "Theo Almeida",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "guardianName": "Gleice Almeida ",
+      "responsiblePhone": "11954767236",
+      "monthlyFees": 250,
+      "dueDay": 10,
+      "order": 1768922279724
+    },
+    {
+      "id": "f0aafd7d-5218-4188-b2b2-216abac6bd75",
+      "stopId": "167fab8f-4d32-4aa4-bf83-876b6c495e69",
+      "name": "Levi",
+      "active": true,
+      "school": "Emilia",
+      "shift": "tarde",
+      "monthlyFees": 200,
+      "dueDay": 10,
+      "order": 1769085115579
+    },
+    {
+      "id": "fb2c60a3-d86b-47d7-94c3-a1d3e3952f71",
+      "stopId": "86893c19-7187-4883-a231-fadd3b6e03b0",
+      "name": "Maria Clara Pierritano",
+      "active": true,
+      "birthDate": "2026-01-20",
+      "school": "Vila Maxi",
+      "shift": "tarde",
+      "guardianName": "Aline de Lira ",
+      "responsibleCpf": "000000000",
+      "responsiblePhone": "11980684342210",
+      "monthlyFees": 210,
+      "dueDay": 10,
+      "order": 1768914893909
+    }
+  ],
+  "attendance": [
+    {
+      "id": "2026-01-20_8a70c766-9661-4fde-9f1c-e41c3d4264c1",
+      "studentId": "8a70c766-9661-4fde-9f1c-e41c3d4264c1",
+      "date": "2026-01-20",
+      "status": "PRESENT",
+      "timestamp": 1768914495380
+    },
+    {
+      "id": "2026-01-20_95d4ba06-0b61-48ec-baa0-c8dab0375a46",
+      "studentId": "95d4ba06-0b61-48ec-baa0-c8dab0375a46",
+      "date": "2026-01-20",
+      "status": "ABSENT",
+      "timestamp": 1768945059550
+    },
+    {
+      "id": "2026-01-20_be7d8de7-4a98-4472-8a2e-15ef7a105a1f",
+      "studentId": "be7d8de7-4a98-4472-8a2e-15ef7a105a1f",
+      "date": "2026-01-20",
+      "status": "ABSENT",
+      "timestamp": 1768945060108
+    },
+    {
+      "id": "2026-01-20_c19f3579-a1de-459a-9e04-ec113a2f8ea9",
+      "studentId": "c19f3579-a1de-459a-9e04-ec113a2f8ea9",
+      "date": "2026-01-20",
+      "status": "ABSENT",
+      "timestamp": 1768945058918
+    }
+  ],
+  "incidents": [],
+  "payments": [
+    {
+      "id": "0cfe2cbb-d225-461b-b5cd-7c41ea109c8e",
+      "studentId": "d86350dd-2b6d-4ceb-9920-e7e68e8be34a",
+      "month": 1,
+      "year": 2026,
+      "amount": 250,
+      "paidAt": "2026-01-22T15:41:43.948Z",
+      "timestamp": 1769096503948
+    },
+    {
+      "id": "2739314b-69bc-4ea1-8582-8d73277c6db9",
+      "studentId": "36cfa628-3866-4137-9e4e-46c35b8e397c",
+      "month": 1,
+      "year": 2026,
+      "amount": 210,
+      "paidAt": "2026-01-22T15:41:53.385Z",
+      "timestamp": 1769096513385
+    },
+    {
+      "id": "2e6af434-b8e7-41ba-8931-a080b8dbc040",
+      "studentId": "be7d8de7-4a98-4472-8a2e-15ef7a105a1f",
+      "month": 2,
+      "year": 2026,
+      "amount": 360,
+      "paidAt": "2026-01-20T11:57:11.122Z",
+      "timestamp": 1768910231123
+    },
+    {
+      "id": "4cb74e41-5773-4b6d-aaa4-edfe032bb59c",
+      "studentId": "8dee92a5-2e42-492e-97f9-1bcf099d31d9",
+      "month": 1,
+      "year": 2026,
+      "amount": 250,
+      "paidAt": "2026-01-22T15:42:20.191Z",
+      "timestamp": 1769096540191
+    },
+    {
+      "id": "56eaa297-eb6d-4db0-9e56-0304600b457c",
+      "studentId": "70274b02-9b94-41b5-b673-7ea9a451f7ea",
+      "month": 1,
+      "year": 2026,
+      "amount": 190,
+      "paidAt": "2026-01-22T15:42:05.644Z",
+      "timestamp": 1769096525644
+    },
+    {
+      "id": "57ea0058-93bd-4442-a512-4b8141b2f303",
+      "studentId": "4e3330b9-25fe-4538-bb58-4f7620d352b9",
+      "month": 1,
+      "year": 2026,
+      "amount": 180,
+      "paidAt": "2026-01-22T15:42:45.060Z",
+      "timestamp": 1769096565060
+    },
+    {
+      "id": "606e9414-93e9-4b68-9a4f-9759468772d3",
+      "studentId": "1926a17c-b529-462c-868a-971eb48d794d",
+      "month": 1,
+      "year": 2026,
+      "amount": 250,
+      "paidAt": "2026-01-22T15:42:27.309Z",
+      "timestamp": 1769096547309
+    },
+    {
+      "id": "68bc2183-d033-489c-a11b-2b884a426cca",
+      "studentId": "57ea447c-ebe5-4b8d-be73-935c8a1f5cc5",
+      "month": 1,
+      "year": 2026,
+      "amount": 200,
+      "paidAt": "2026-01-22T15:41:23.810Z",
+      "timestamp": 1769096483811
+    },
+    {
+      "id": "69f90b0d-2852-49ef-95cf-0c18d691af10",
+      "studentId": "6ba30e0e-6eba-4b78-a3a4-a9cd1100c9fc",
+      "month": 1,
+      "year": 2026,
+      "amount": 170,
+      "paidAt": "2026-01-20T13:06:16.062Z",
+      "timestamp": 1768914376062
+    },
+    {
+      "id": "6c1948a2-93ce-468c-8969-aaa53a5f1bfb",
+      "studentId": "42e955e1-ebc1-451c-bb16-746d6381168b",
+      "month": 1,
+      "year": 2026,
+      "amount": 420,
+      "paidAt": "2026-01-22T15:42:30.552Z",
+      "timestamp": 1769096550552
+    },
+    {
+      "id": "87b302a5-cd49-472f-9d67-e1fc19221290",
+      "studentId": "5156de0d-e907-4f04-8ec8-2b4978ffdbe1",
+      "month": 1,
+      "year": 2026,
+      "amount": 200,
+      "paidAt": "2026-01-22T15:42:09.815Z",
+      "timestamp": 1769096529815
+    },
+    {
+      "id": "8f00b56b-abf8-4e28-af91-6ec17d8cd793",
+      "studentId": "985279dc-1c11-4d6a-9f5f-d756b986025f",
+      "month": 1,
+      "year": 2026,
+      "amount": 190,
+      "paidAt": "2026-01-22T15:42:52.370Z",
+      "timestamp": 1769096572370
+    },
+    {
+      "id": "99e156d2-eef5-439d-bf0b-3b8d42c99f9c",
+      "studentId": "8a70c766-9661-4fde-9f1c-e41c3d4264c1",
+      "month": 1,
+      "year": 2026,
+      "amount": 170,
+      "paidAt": "2026-01-22T15:42:14.946Z",
+      "timestamp": 1769096534946
+    },
+    {
+      "id": "c4833d46-8cd3-4681-abb1-362b6d55c11f",
+      "studentId": "a2abf289-e79c-4364-83ac-fa10303d8583",
+      "month": 1,
+      "year": 2026,
+      "amount": 450,
+      "paidAt": "2026-01-22T15:41:59.354Z",
+      "timestamp": 1769096519354
+    },
+    {
+      "id": "d74122e8-d5ac-47e8-9c72-3f7df470c391",
+      "studentId": "fb2c60a3-d86b-47d7-94c3-a1d3e3952f71",
+      "month": 1,
+      "year": 2026,
+      "amount": 210,
+      "paidAt": "2026-01-22T15:42:55.626Z",
+      "timestamp": 1769096575626
+    },
+    {
+      "id": "d8d04519-8e14-4117-849c-fc5dfd4a0dc6",
+      "studentId": "6f1dbdbd-a744-4575-b0dd-8f14e10ed4e3",
+      "month": 1,
+      "year": 2026,
+      "amount": 250,
+      "paidAt": "2026-01-22T15:42:33.661Z",
+      "timestamp": 1769096553661
+    },
+    {
+      "id": "e1206b38-a6c2-4c40-b977-97c6a03877e0",
+      "studentId": "c19f3579-a1de-459a-9e04-ec113a2f8ea9",
+      "month": 1,
+      "year": 2026,
+      "amount": 230,
+      "paidAt": "2026-01-22T15:42:26.243Z",
+      "timestamp": 1769096546243
+    },
+    {
+      "id": "e8b2f779-543e-4a90-9368-a122e429cc42",
+      "studentId": "f0aafd7d-5218-4188-b2b2-216abac6bd75",
+      "month": 1,
+      "year": 2026,
+      "amount": 200,
+      "paidAt": "2026-01-22T15:42:40.603Z",
+      "timestamp": 1769096560603
+    },
+    {
+      "id": "f57a661f-711a-481c-9b10-8dab395f9479",
+      "studentId": "ba1c8e9d-6cb4-4ea3-87ad-134ba693271b",
+      "month": 1,
+      "year": 2026,
+      "amount": 240,
+      "paidAt": "2026-01-20T15:04:46.132Z",
+      "timestamp": 1768921486132
+    }
+  ],
+  "maintenanceItems": [],
+  "maintenanceLogs": [],
+  "userSettings": {
+    "currentKm": 250000,
+    "id": "settings"
+  },
+  "generatedAt": "2026-01-24T19:07:51.001Z"
+}
