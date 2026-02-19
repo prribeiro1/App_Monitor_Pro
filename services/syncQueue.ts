@@ -211,7 +211,7 @@ export const syncQueue = {
         if (!tableName) throw new Error(`Entidade desconhecida: ${op.entity}`);
 
         if (op.type === 'delete') {
-            const { error } = await supabase.from(tableName).delete().eq('id', op.data.id);
+            const { error } = await supabase.from(tableName).delete().eq('id', op.data.id).eq('user_id', user.id);
             if (error) throw error;
         } else {
             // Adiciona user_id e updated_at

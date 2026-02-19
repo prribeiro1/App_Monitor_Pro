@@ -260,8 +260,8 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
       {/* Settings Modal */}
       {
         isSettingsOpen && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-            <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700 shadow-2xl max-h-full overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 pb-10" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-700 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold text-white">Configurações</h3>
                 <button onClick={() => setIsSettingsOpen(false)} className="text-gray-400 hover:text-white"><Icon name="x" size={24} /></button>

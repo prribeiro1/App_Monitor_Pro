@@ -24,28 +24,32 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
 
   useEffect(() => {
     const loadData = async () => {
-      const [st, pay, maint, rt, sp] = await Promise.all([
-        dbService.getStudents(),
-        dbService.getPayments(),
-        dbService.getMaintenanceItems(),
-        dbService.getRoutes(),
-        dbService.getStops()
-      ]);
+      try {
+        const [st, pay, maint, rt, sp] = await Promise.all([
+          dbService.getStudents(),
+          dbService.getPayments(),
+          dbService.getMaintenanceItems(),
+          dbService.getRoutes(),
+          dbService.getStops()
+        ]);
 
-      // Filtrar alunos válidos (com rota existente)
-      const validStudents = st.filter(student => {
-        const routeId = student.routeId || sp.find(s => s.id === student.stopId)?.routeId;
-        const route = rt.find(r => r.id === routeId);
-        return student.active && route;
-      });
+        // Filtrar alunos válidos (com rota existente)
+        const validStudents = st.filter(student => {
+          const routeId = student.routeId || sp.find(s => s.id === student.stopId)?.routeId;
+          const route = rt.find(r => r.id === routeId);
+          return student.active && route;
+        });
 
-      setStudents(validStudents);
-      setPayments(pay);
-      setMaintenanceItems(maint);
-      setRoutes(rt);
-      setStops(sp);
-      setLoading(false);
-      setLoading(false);
+        setStudents(validStudents);
+        setPayments(pay);
+        setMaintenanceItems(maint);
+        setRoutes(rt);
+        setStops(sp);
+      } catch (error) {
+        console.error("❌ Erro ao carregar dados do Dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     // Carregar inicialmente

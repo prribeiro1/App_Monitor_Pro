@@ -46,7 +46,10 @@ export const cloudSync = {
     },
 
     deleteStudent: async (id: string) => {
-        const { error } = await supabase.from('students').delete().eq('id', id);
+        const { data: { user } } = await supabase.auth.getUser();
+        const query = supabase.from('students').delete().eq('id', id);
+        if (user) query.eq('user_id', user.id);
+        const { error } = await query;
         if (error) throw error;
     },
 
@@ -67,7 +70,10 @@ export const cloudSync = {
     },
 
     deleteRoute: async (id: string) => {
-        const { error } = await supabase.from('routes').delete().eq('id', id);
+        const { data: { user } } = await supabase.auth.getUser();
+        const query = supabase.from('routes').delete().eq('id', id);
+        if (user) query.eq('user_id', user.id);
+        const { error } = await query;
         if (error) throw error;
     },
 
@@ -95,7 +101,10 @@ export const cloudSync = {
     },
 
     deleteStop: async (id: string) => {
-        const { error } = await supabase.from('stops').delete().eq('id', id);
+        const { data: { user } } = await supabase.auth.getUser();
+        const query = supabase.from('stops').delete().eq('id', id);
+        if (user) query.eq('user_id', user.id);
+        const { error } = await query;
         if (error) throw error;
     },
 
@@ -218,7 +227,10 @@ export const cloudSync = {
     },
 
     deleteReminder: async (id: number) => {
-        await supabase.from('reminders').delete().eq('id', id);
+        const { data: { user } } = await supabase.auth.getUser();
+        const query = supabase.from('reminders').delete().eq('id', id);
+        if (user) query.eq('user_id', user.id);
+        await query;
     },
 
     // Documentos de Veículo
@@ -241,7 +253,10 @@ export const cloudSync = {
     },
 
     deleteVehicleDocument: async (id: string) => {
-        const { error } = await supabase.from('vehicle_documents').delete().eq('id', id);
+        const { data: { user } } = await supabase.auth.getUser();
+        const query = supabase.from('vehicle_documents').delete().eq('id', id);
+        if (user) query.eq('user_id', user.id);
+        const { error } = await query;
         if (error) throw error;
     },
 
@@ -271,7 +286,10 @@ export const cloudSync = {
     },
 
     deleteRouteSession: async (id: string) => {
-        const { error } = await supabase.from('route_sessions').delete().eq('id', id);
+        const { data: { user } } = await supabase.auth.getUser();
+        const query = supabase.from('route_sessions').delete().eq('id', id);
+        if (user) query.eq('user_id', user.id);
+        const { error } = await query;
         if (error) throw error;
     },
 
@@ -300,7 +318,10 @@ export const cloudSync = {
     },
 
     deleteRouteEvent: async (id: string) => {
-        const { error } = await supabase.from('route_events').delete().eq('id', id);
+        const { data: { user } } = await supabase.auth.getUser();
+        const query = supabase.from('route_events').delete().eq('id', id);
+        if (user) query.eq('user_id', user.id);
+        const { error } = await query;
         if (error) throw error;
     },
 
@@ -316,19 +337,19 @@ export const cloudSync = {
             console.log("✅ Iniciando PULL de dados da nuvem para usuário:", user.id);
 
             const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes, vehicleDocsRes, routeSessionsRes, routeEventsRes] = await Promise.all([
-                supabase.from('students').select('*'),
-                supabase.from('routes').select('*').order('order'),
-                supabase.from('stops').select('*').order('order'),
-                supabase.from('attendance').select('*'),
-                supabase.from('payments').select('*'),
-                supabase.from('user_settings').select('*').eq('id', 'settings').single(),
-                supabase.from('maintenance_items').select('*'),
-                supabase.from('maintenance_logs').select('*'),
-                supabase.from('incidents').select('*'),
-                supabase.from('reminders').select('*'),
-                supabase.from('vehicle_documents').select('*'),
-                supabase.from('route_sessions').select('*'), // 🆕
-                supabase.from('route_events').select('*') // 🆕
+                supabase.from('students').select('*').eq('user_id', user.id),
+                supabase.from('routes').select('*').eq('user_id', user.id).order('order'),
+                supabase.from('stops').select('*').eq('user_id', user.id).order('order'),
+                supabase.from('attendance').select('*').eq('user_id', user.id),
+                supabase.from('payments').select('*').eq('user_id', user.id),
+                supabase.from('user_settings').select('*').eq('user_id', user.id).eq('id', 'settings').single(),
+                supabase.from('maintenance_items').select('*').eq('user_id', user.id),
+                supabase.from('maintenance_logs').select('*').eq('user_id', user.id),
+                supabase.from('incidents').select('*').eq('user_id', user.id),
+                supabase.from('reminders').select('*').eq('user_id', user.id),
+                supabase.from('vehicle_documents').select('*').eq('user_id', user.id),
+                supabase.from('route_sessions').select('*').eq('user_id', user.id), // 🆕
+                supabase.from('route_events').select('*').eq('user_id', user.id) // 🆕
             ]);
 
             // 🔍 LOG DETALHADO DE CADA QUERY
