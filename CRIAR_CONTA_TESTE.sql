@@ -31,8 +31,8 @@ INSERT INTO auth.users (
   gen_random_uuid(),
   'authenticated',
   'authenticated',
-  'testuser@monitorescolar.app', -- ⚠️ MUDE 'testuser' para o nome desejado
-  crypt('senha123', gen_salt('bf')), -- ⚠️ MUDE 'senha123' para a senha desejada
+  'paulinho@monitorescolar.app', -- ⚠️ MUDE 'testuser' para o nome desejado
+  crypt('123456', gen_salt('bf')), -- ⚠️ MUDE 'senha123' para a senha desejada
   NOW(),
   '{"provider":"email","providers":["email"]}',
   '{"full_name":"Usuário Teste","device_id":"test-device","subscription_tier":"basic","trial_started_at":"' || NOW()::text || '"}',

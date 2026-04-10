@@ -29,8 +29,8 @@ INSERT INTO auth.users (
   gen_random_uuid(),
   'authenticated',
   'authenticated',
-  'testuser@monitorescolar.app',
-  crypt('senha123', gen_salt('bf')),
+  'paulinho@monitorescolar.app',
+  crypt('123456', gen_salt('bf')),
   NOW(),
   '{"provider":"email","providers":["email"]}'::jsonb,
   jsonb_build_object(

@@ -562,10 +562,10 @@ function App() {
           <Route path="/register" element={session ? <Navigate to="/dashboard" replace /> : <RegisterScreen />} />
           <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
           <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
-          <Route path="/sign-contract/:contractId?" element={<PublicSignaturePage />} />
+          <Route path="/sign-contract/:contractId" element={<PublicSignaturePage />} />
 
-          {/* B. ÁREA RESTRITA */}
-          {session ? (
+          {/* B. ÁREA RESTRITA (com Layout) - só renderiza se logado */}
+          {session && (
             <Route
               path="/*"
               element={
@@ -645,8 +645,10 @@ function App() {
                 </Layout>
               }
             />
-          ) : (
-            // Se não está logado, redireciona para Login (APK) ou Landing (WEB)
+          )}
+
+          {/* C. FALLBACK - Se não está logado e nenhuma rota pública deu match */}
+          {!session && (
             <Route path="*" element={<Navigate to={isNativeApp ? "/login" : "/landing"} replace />} />
           )}
         </Routes>
