@@ -562,7 +562,7 @@ function App() {
           <Route path="/register" element={session ? <Navigate to="/dashboard" replace /> : <RegisterScreen />} />
           <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
           <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
-          <Route path="/sign-contract/:contractId" element={<PublicSignaturePage />} />
+          <Route path="/sign-contract/*" element={<PublicSignaturePage />} />
 
           {/* B. ÁREA RESTRITA (com Layout) - só renderiza se logado */}
           {session && (
