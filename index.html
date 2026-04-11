@@ -14,17 +14,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <title>Van Escolar Pro</title>
-  <script>
-    // 🔗 VAN ESCOLAR PRO: Auto-Hash Redirect
-    // Se o usuário acessar uma URL limpa (Vercel), redireciona para a versão com HASH
-    // para que o HashRouter consiga ler a rota corretamente.
-    (function () {
-      var path = window.location.pathname;
-      if (path !== '/' && path !== '/index.html') {
-        window.location.replace('/#' + path + window.location.search);
-      }
-    })();
-  </script>
   <!-- Scripts do Google para Auth e API -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>

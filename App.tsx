@@ -556,13 +556,15 @@ function App() {
     <I18nProvider>
       <HashRouter>
         <Routes>
-          {/* A. ROTAS PÚBLICAS (Sempre acessíveis, com ou sem login) */}
+          {/* 0. ROTAS PÚBLICAS CRÍTICAS (Prioridade Máxima) */}
+          <Route path="/sign-contract/*" element={<PublicSignaturePage />} />
+          <Route path="/track/*" element={<PublicTrackingPage />} />
+          <Route path="/cadastro-aluno/*" element={<PublicStudentRegister />} />
+
+          {/* A. ROTAS DE AUTENTICAÇÃO E LANDING */}
           <Route path="/landing" element={session ? <Navigate to="/dashboard" replace /> : <LandingScreen />} />
           <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <LoginScreen />} />
           <Route path="/register" element={session ? <Navigate to="/dashboard" replace /> : <RegisterScreen />} />
-          <Route path="/track/:shareCode" element={<PublicTrackingPage />} />
-          <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
-          <Route path="/sign-contract/*" element={<PublicSignaturePage />} />
 
           {/* B. ÁREA RESTRITA (com Layout) - só renderiza se logado */}
           {session && (
