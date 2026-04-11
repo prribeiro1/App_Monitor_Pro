@@ -97,12 +97,14 @@ export const PublicSignaturePage: React.FC = () => {
 
     // Parse clauses from DB or use defaults
     const getClauses = () => {
-        if (dbContract?.contract_clauses) {
+        const rawClauses = dbContract?.contract_clauses;
+        if (rawClauses) {
             try {
-                const parsed = JSON.parse(dbContract.contract_clauses);
+                // Se for string, dá parse. Se já for objeto/array, usa direto.
+                const parsed = typeof rawClauses === 'string' ? JSON.parse(rawClauses) : rawClauses;
                 if (Array.isArray(parsed) && parsed.length > 0) return parsed;
             } catch (e) {
-                console.error("Erro ao parsear cláusulas:", e);
+                console.error("Erro ao processar cláusulas:", e);
             }
         }
         return DEFAULT_CLAUSES;

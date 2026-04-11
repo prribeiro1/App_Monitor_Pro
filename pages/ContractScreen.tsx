@@ -147,7 +147,7 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
                 responsible_phone: student.responsiblePhone || '',
                 monthly_fee: student.monthlyFees,
                 due_day: student.dueDay,
-                contract_clauses: JSON.stringify(settings?.contractClauses || []),
+                contract_clauses: settings?.contractClauses || [],
                 status: 'pending'
             };
 
