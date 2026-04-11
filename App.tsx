@@ -557,9 +557,9 @@ function App() {
       <HashRouter>
         <Routes>
           {/* 0. ROTAS PÚBLICAS CRÍTICAS (Prioridade Máxima) */}
-          <Route path="/sign-contract/*" element={<PublicSignaturePage />} />
-          <Route path="/track/*" element={<PublicTrackingPage />} />
-          <Route path="/cadastro-aluno/*" element={<PublicStudentRegister />} />
+          <Route path="/sign-contract/:contractId" element={<PublicSignaturePage />} />
+          <Route path="/track/:routeId" element={<PublicTrackingPage />} />
+          <Route path="/cadastro-aluno/:driverId" element={<PublicStudentRegister />} />
 
           {/* A. ROTAS DE AUTENTICAÇÃO E LANDING */}
           <Route path="/landing" element={session ? <Navigate to="/dashboard" replace /> : <LandingScreen />} />
