@@ -159,10 +159,12 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
 
             if (error) {
                 console.error('[Contract] Erro Insert:', error);
-                alert(`Erro de Servidor: ${error.message} (Código: ${error.code})`);
+                alert(`ERRO AO SALVAR NO SUPABASE: ${error.message} (Código: ${error.code})`);
                 setIsGeneratingLink(false);
                 return;
             }
+
+            alert("Contrato salvo com sucesso na nuvem!");
 
             const baseUrl = import.meta.env.VITE_APP_URL || 'https://app-van-pro.vercel.app';
             const link = `${baseUrl}/#/sign-contract/${data.id}`;
