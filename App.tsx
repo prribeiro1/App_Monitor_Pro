@@ -400,7 +400,7 @@ function App() {
     const serverTier = user?.user_metadata?.subscription_tier;
     console.log("📊 Server tier:", serverTier);
 
-    if (s && !s.subscriptionTier && !serverTier && !isSuperUser) {
+    if (session && s && !s.subscriptionTier && !serverTier && !isSuperUser) {
       console.log("⚠️ Redirecionando para /change-plan");
       window.location.hash = '/change-plan';
     }
