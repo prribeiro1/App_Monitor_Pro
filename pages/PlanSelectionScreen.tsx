@@ -10,8 +10,8 @@ interface PlanSelectionScreenProps {
 export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSelectPlan }) => {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionTier | null>(null);
   const [prices, setPrices] = useState<PlanPrices>({
-    basic: { monthly: 8.90, annual: 69.90 },
-    pro: { monthly: 14.90, annual: 149.90 },
+    basic: { monthly: 0, annual: 0 },
+    pro: { monthly: 15.90, annual: 159.90 },
     pro_plus: { monthly: 24.90, annual: 249.90 }
   });
   const [whatsappLink, setWhatsappLink] = useState('https://wa.me/5522999837547');
