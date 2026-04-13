@@ -23,8 +23,10 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
   const handlePlanSelected = async (tier: SubscriptionTier, price?: number) => {
     if (tier === 'basic') {
       setSelectedPlan(tier);
-      const updatedSettings: UserSettings = { ...settings!, subscriptionTier: tier };
-      await dbService.saveUserSettings(updatedSettings);
+      if (settings) {
+        const updatedSettings: UserSettings = { ...settings, subscriptionTier: tier };
+        await dbService.saveUserSettings(updatedSettings);
+      }
       onComplete();
       return;
     }
@@ -113,11 +115,17 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
     onComplete();
   };
 
+  if (!settings) {
+    return (
+      <div className="min-h-screen bg-navy-900 flex items-center justify-center text-white">
+        <Icon name="loader" className="animate-spin mr-2" /> Carregando...
+      </div>
+    );
+  }
+
   if (step === 'plan') {
     return <PlanSelectionScreen onSelectPlan={handlePlanSelected} />;
   }
-
-
 
   // Welcome Screen
   return (
