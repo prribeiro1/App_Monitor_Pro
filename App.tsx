@@ -55,11 +55,11 @@ interface BottomNavItemProps {
   active: boolean;
 }
 
-const BottomNavItem: React.FC<BottomNavItemProps> = ({ to, icon, label, active }) => {
+const BottomNavItem: React.FC<BottomNavItemProps & { onClick?: () => void }> = ({ to, icon, label, active, onClick }) => {
   const navigate = useNavigate();
   return (
     <div
-      onClick={() => navigate(to)}
+      onClick={onClick || (() => navigate(to))}
       className={`flex flex-col items-center justify-center w-full h-full cursor-pointer transition-colors ${active ? 'text-primary-500' : 'text-gray-400'}`}
     >
       <Icon name={icon} size={20} />
@@ -175,19 +175,42 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
   };
 
   const allTabs = [
-    { path: '/dashboard', icon: 'home' as IconName, label: 'Home', key: 'dashboard' },
-    { path: '/routes', icon: 'map' as IconName, label: 'Rotas', key: 'routes' },
-    { path: '/students', icon: 'users' as IconName, label: 'Alunos', key: 'students' },
-    { path: '/attendance', icon: 'check' as IconName, label: 'Chamada', key: 'attendance' },
-    { path: '/incidents', icon: 'alert-triangle' as IconName, label: 'Ocor.', key: 'incidents' },
-    { path: '/reports', icon: 'bar-chart' as IconName, label: 'Relat.', key: 'reports' },
-    { path: '/financial', icon: 'dollar-sign' as IconName, label: 'Financ.', key: 'financial' },
+    { path: '/dashboard', icon: 'home' as IconName, label: 'Home', key: 'dashboard', pro: false },
+    { path: '/routes', icon: 'map' as IconName, label: 'Rotas', key: 'routes', pro: false },
+    { path: '/students', icon: 'users' as IconName, label: 'Alunos', key: 'students', pro: false },
+    { path: '/attendance', icon: 'check' as IconName, label: 'Chamada', key: 'attendance', pro: false },
+    { path: '/reports', icon: 'bar-chart' as IconName, label: 'Relat.', key: 'reports', pro: true },
+    { path: '/financial', icon: 'dollar-sign' as IconName, label: 'Financ.', key: 'financial', pro: true },
+    { path: '/maintenance', icon: 'tool' as IconName, label: 'Manut.', key: 'maintenance', pro: true },
   ];
 
-  const tabs = allTabs.filter(t => permissions[t.key]);
+  const metadata = session?.user?.user_metadata || {};
+  const userTier = metadata.subscription_tier || settings?.subscriptionTier || 'basic';
+  const trialStartedAt = metadata.trial_started_at;
+  const isTrialActive = trialStartedAt
+    ? (new Date().getTime() - new Date(trialStartedAt).getTime()) < (7 * 24 * 60 * 60 * 1000)
+    : false;
+  const isPro = userTier !== 'basic' || isTrialActive || permissions.team;
+
+  const tabs = allTabs.filter(t => permissions[t.key] !== false);
 
   return (
     <div className="flex flex-col h-screen bg-navy-900 text-gray-100 overflow-hidden">
+      {/* 🔒 Banner de Teste Expirado */}
+      {!isPro && userTier === 'basic' && (
+        <div className="bg-red-600 p-2 flex items-center justify-between px-4 z-[60] shadow-lg">
+          <div className="flex items-center gap-2">
+            <Icon name="alert-triangle" size={14} className="text-white animate-pulse" />
+            <span className="text-[10px] font-bold text-white uppercase">Teste Expirado. Funções PRO bloqueadas.</span>
+          </div>
+          <button 
+            onClick={() => window.location.hash = '/change-plan'}
+            className="bg-white text-red-600 text-[10px] font-black px-3 py-1 rounded-full active:scale-95 transition"
+          >
+            ASSINAR AGORA
+          </button>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-navy-800 px-4 pb-4 shadow-lg flex justify-between items-center z-10" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         {(() => {
@@ -363,7 +386,19 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
 
       {/* Bottom Nav */}
       <nav className="bg-navy-800 h-14 flex items-center justify-around shadow-inner border-t border-navy-700 z-20 shrink-0" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {tabs.map(tab => (<BottomNavItem key={tab.path} to={tab.path} icon={tab.icon} label={tab.label} active={location.pathname === tab.path} />))}
+        {tabs.map(tab => (
+          <BottomNavItem 
+            key={tab.path} 
+            to={tab.path} 
+            icon={tab.icon} 
+            label={tab.label} 
+            active={location.pathname === tab.path} 
+            onClick={tab.pro && !isPro ? () => {
+              alert("⚠️ Esta é uma função do Plano Pro.\nSeu período de teste expirou.");
+              window.location.hash = '/change-plan';
+            } : undefined}
+          />
+        ))}
       </nav>
     </div >
   );

@@ -46,8 +46,10 @@ export const StudentsScreen: React.FC = () => {
   const [responsibleEmail, setResponsibleEmail] = useState('');
   const [responsiblePhone, setResponsiblePhone] = useState('');
   const [observation, setObservation] = useState('');
+  const [active, setActive] = useState(true); // Status do aluno (Novo)
   const [monthlyFees, setMonthlyFees] = useState('');
   const [dueDay, setDueDay] = useState('');
+  const [sala, setSala] = useState(''); // Campo sala (Novo)
 
   // 🆕 NOVA ESTRUTURA (sem pontos)
   const [address, setAddress] = useState('');
@@ -254,9 +256,10 @@ export const StudentsScreen: React.FC = () => {
       id: editingId || crypto.randomUUID(),
       stopId: undefined, // 🛠️ VAN PRO FIX: Não enviar "" para evitar erro de UUID no Supabase
       name: studentName,
-      active: true,
+      active: active, // Usar estado (Novo)
       birthDate: birthDate || undefined,
       school: school || undefined,
+      sala: sala || undefined, // Campo sala (Novo)
       shift: shift || undefined,
       guardianName: guardianName || undefined,
       responsibleCpf: responsibleCpf || undefined,
@@ -294,6 +297,8 @@ export const StudentsScreen: React.FC = () => {
     setObservation('');
     setMonthlyFees('');
     setDueDay('');
+    setSala('');
+    setActive(true);
     setEditingId(null);
 
     // 🆕 Limpar novos campos
@@ -321,6 +326,8 @@ export const StudentsScreen: React.FC = () => {
     setObservation(student.observation || '');
     setMonthlyFees(student.monthlyFees ? student.monthlyFees.toString() : '');
     setDueDay(student.dueDay ? student.dueDay.toString() : '');
+    setSala(student.sala || '');
+    setActive(student.active);
     setEditingId(student.id);
 
     // 🆕 NOVA ESTRUTURA
@@ -405,6 +412,9 @@ export const StudentsScreen: React.FC = () => {
                     <span className="text-orange-400" title="Possui observação">⚠️</span>
                   )}
                   {student.name}
+                  {!student.active && (
+                    <span className="text-[10px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded ml-1 uppercase font-bold">Inativo</span>
+                  )}
                 </span>
                 <div className="text-xs text-gray-400 space-y-0.5">
                   {student.school && <div>{student.school}</div>}
@@ -453,9 +463,14 @@ export const StudentsScreen: React.FC = () => {
                       {selectedStudent.observation && <span className="text-orange-400">⚠️</span>}
                       {selectedStudent.name}
                     </h2>
-                    {selectedStudent.shift && (
-                      <span className="text-sm text-gray-400">{shiftLabels[selectedStudent.shift]}</span>
-                    )}
+                    <div className="flex gap-2 items-center">
+                      {selectedStudent.shift && (
+                        <span className="text-sm text-gray-400">{shiftLabels[selectedStudent.shift]}</span>
+                      )}
+                      {!selectedStudent.active && (
+                        <span className="text-[10px] bg-red-500/20 text-red-500 px-2 py-0.5 rounded uppercase font-bold">Inativo</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -467,10 +482,10 @@ export const StudentsScreen: React.FC = () => {
                       <span className="text-white">{formatDate(selectedStudent.birthDate)}</span>
                     </div>
                   )}
-                  {selectedStudent.school && (
+                   {selectedStudent.school && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Escola</span>
-                      <span className="text-white">{selectedStudent.school}</span>
+                      <span className="text-white">{selectedStudent.school} {selectedStudent.sala ? ` - ${selectedStudent.sala}` : ''}</span>
                     </div>
                   )}
                   {selectedStudent.routeId && (
@@ -582,18 +597,115 @@ export const StudentsScreen: React.FC = () => {
             <h3 className="text-xl font-bold text-white mb-4">{editingId ? 'Editar Aluno' : 'Novo Aluno'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
 
-              {/* Nome do Aluno */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Nome do Aluno *</label>
-                <input
-                  type="text"
-                  value={studentName}
-                  onChange={e => setStudentName(e.target.value)}
-                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
-                  placeholder="Nome completo"
-                  required
-                />
+              {/* Nome e Status */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-sm text-gray-400 mb-1">Nome do Aluno *</label>
+                  <input
+                    type="text"
+                    value={studentName}
+                    onChange={e => setStudentName(e.target.value)}
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl"
+                    placeholder="Nome completo"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Status</label>
+                  <button
+                    type="button"
+                    onClick={() => setActive(!active)}
+                    className={`w-full p-3 rounded-xl border font-bold transition-colors ${active ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}
+                  >
+                    {active ? 'ATIVO' : 'INATIVO'}
+                  </button>
+                </div>
               </div>
+
+              {/* 🆕 Endereço (Movido para baixo do nome) */}
+              <div className="relative">
+                <label className="block text-sm text-gray-400 mb-1">Endereço (Rua, Número...)</label>
+                <div className="relative flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={addressSearch}
+                      onChange={e => handleAddressSearch(e.target.value)}
+                      placeholder="Ex: Rua Direita, 100, São Paulo"
+                      className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl focus:border-primary-500 outline-none transition"
+                    />
+                    {isSearchingAddress && (
+                      <div className="absolute right-3 top-3">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {suggestions.length > 0 && (
+                  <div className="absolute z-[101] left-0 right-0 bg-navy-800 border-2 border-primary-500/50 rounded-xl shadow-2xl mt-2 max-h-52 overflow-y-auto backdrop-blur-md">
+                    {suggestions.map((sug, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectSuggestion(sug)}
+                        className="w-full text-left p-4 text-sm text-gray-200 border-b border-navy-700 hover:bg-primary-600/20 active:bg-primary-600/40 transition-colors last:border-0"
+                      >
+                        <div className="flex gap-3">
+                          <Icon name="map-pin" size={16} className="text-primary-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-bold">{sug.properties.name || sug.properties.street}</p>
+                            <p className="text-[10px] text-gray-500">{sug.properties.city}{sug.properties.state ? `, ${sug.properties.state}` : ''}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {address && (
+                <textarea
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  placeholder="Endereço confirmado..."
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl h-14 text-xs resize-none"
+                />
+              )}
+
+              {/* Botão de Mapa Compacto */}
+              <button
+                type="button"
+                onClick={() => setShowAddressMap(!showAddressMap)}
+                className={`w-full py-2 rounded-xl text-xs font-bold transition-all border ${showAddressMap ? 'bg-navy-700 border-navy-600 text-white' : 'bg-primary-500/10 border-primary-500/30 text-primary-400'}`}
+              >
+                {showAddressMap ? 'Ocultar Mapa' : (latitude ? '📍 Localização Definida (Ver Mapa)' : '📍 Marcar Ponto no Mapa')}
+              </button>
+
+              {showAddressMap && (
+                <div className="h-60 bg-navy-900 rounded-xl overflow-hidden border-2 border-navy-700 relative z-0">
+                  <MapContainer
+                    center={[latitude || -23.5505, longitude || -46.6333]}
+                    zoom={16}
+                    style={{ height: '100%', width: '100%' }}
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <MapEvents />
+                    {latitude && longitude && (
+                      <Marker position={[latitude, longitude]} draggable={true}
+                        eventHandlers={{
+                          dragend: (e) => {
+                            const marker = e.target;
+                            const position = marker.getLatLng();
+                            setLatitude(position.lat);
+                            setLongitude(position.lng);
+                          }
+                        }}
+                      />
+                    )}
+                  </MapContainer>
+                </div>
+              )}
 
               {/* Data de Nascimento */}
               <div>
@@ -602,20 +714,30 @@ export const StudentsScreen: React.FC = () => {
                   type="date"
                   value={birthDate}
                   onChange={e => setBirthDate(e.target.value)}
-                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl"
                 />
               </div>
 
-              {/* Escola e Turno */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              {/* Escola, Sala e Turno */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
                   <label className="block text-sm text-gray-400 mb-1">Escola</label>
                   <input
                     type="text"
                     value={school}
                     onChange={e => setSchool(e.target.value)}
-                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl"
                     placeholder="Nome da escola"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Sala</label>
+                  <input
+                    type="text"
+                    value={sala}
+                    onChange={e => setSala(e.target.value)}
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl"
+                    placeholder="Ex: 5º B"
                   />
                 </div>
                 <div>
@@ -623,11 +745,11 @@ export const StudentsScreen: React.FC = () => {
                   <select
                     value={shift}
                     onChange={e => setShift(e.target.value as any)}
-                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                    className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl"
                   >
-                    <option value="integral">Integral</option>
                     <option value="manha">Manhã</option>
                     <option value="tarde">Tarde</option>
+                    <option value="integral">Integral</option>
                     <option value="noite">Noite</option>
                   </select>
                 </div>

@@ -37,6 +37,7 @@ export interface Student {
   dueDay?: number; // Dia de Vencimento
   birthDate?: string; // Data de nascimento
   school?: string; // Escola
+  sala?: string; // Sala (Novo)
   shift?: 'integral' | 'manha' | 'tarde' | 'noite'; // Turno
   observation?: string; // Observações (alergias, condições, etc.)
   asaasSubscriptionId?: string;

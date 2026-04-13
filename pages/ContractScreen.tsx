@@ -364,7 +364,7 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
                 doc.addImage(settings.driverSignature, 'PNG', margin + 80, y - 10, signatureWidth, signatureHeight);
             }
             dottedLine(margin + 80, y - 1, 90);
-            doc.text("Assinatura do CONTRATADO (Monitor):", margin, y);
+            doc.text("Assinatura do CONTRATADO (Condutor):", margin, y);
 
             const today = new Date();
             const dateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
@@ -415,7 +415,7 @@ export const ContractScreen: React.FC<ContractScreenProps> = ({ settings }) => {
                 <div className="bg-navy-800 p-4 rounded-xl border border-navy-700">
                     <h3 className="text-primary-400 font-bold mb-3 flex items-center gap-2 text-sm">
                         <Icon name="user" size={18} />
-                        Sua Assinatura (Monitor)
+                        Sua Assinatura (Condutor)
                     </h3>
                     {settings?.driverSignature ? (
                         <div className="flex items-center gap-4 p-3 bg-navy-900 rounded-lg border border-green-500/30">

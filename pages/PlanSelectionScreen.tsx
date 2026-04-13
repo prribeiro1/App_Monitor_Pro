@@ -58,7 +58,7 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
     },
     {
       id: 'pro' as SubscriptionTier,
-      name: 'Pro',
+      name: 'Pro Solo',
       price: prices.pro.monthly,
       priceAnnual: prices.pro.annual,
       color: 'from-blue-600 to-blue-700',
@@ -75,12 +75,51 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
         'Suporte prioritário'
       ],
       notIncluded: []
+    },
+    {
+      id: 'pro_plus' as SubscriptionTier,
+      name: 'Pro Duo',
+      price: 0,
+      priceAnnual: 0,
+      color: 'from-indigo-600 to-indigo-700',
+      icon: 'users' as const,
+      badge: 'Até 2 Condutores',
+      isWhatsapp: true, 
+      features: [
+        'Tudo do Pro Solo',
+        'Acesso para 2 condutores',
+        'Sincronização em tempo real',
+        'Gestão centralizada'
+      ],
+      notIncluded: []
+    },
+    {
+      id: 'pro_plus' as SubscriptionTier,
+      name: 'Equipe / Frotas',
+      price: 0,
+      priceAnnual: 0,
+      color: 'from-purple-600 to-purple-700',
+      icon: 'truck' as const,
+      badge: 'Empresas',
+      isWhatsapp: true,
+      features: [
+        'Tudo do Pro Duo',
+        'Painel para 3+ condutores',
+        'Gestão de frota avançada',
+        'Treinamento e Suporte VIP'
+      ],
+      notIncluded: []
     }
   ];
 
   const handleContinue = () => {
     if (selectedPlan) {
       const plan = plans.find(p => p.id === selectedPlan);
+      if ((plan as any).isWhatsapp) {
+        const message = `Olá! Gostaria de saber mais sobre o Plano ${plan?.name} do Van Escolar Pro.`;
+        window.open(`${whatsappLink}?text=${encodeURIComponent(message)}`, '_blank');
+        return;
+      }
       onSelectPlan(selectedPlan, plan?.price || 0);
     }
   };
@@ -125,8 +164,10 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
                   <div>
                     <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-primary-400">R$ {plan.price.toFixed(2)}</span>
-                      <span className="text-gray-500 text-sm">/mês</span>
+                      <span className="text-2xl font-bold text-primary-400">
+                        {plan.price > 0 ? `R$ ${plan.price.toFixed(2)}` : 'Consultar'}
+                      </span>
+                      {plan.price > 0 && <span className="text-gray-500 text-sm">/mês</span>}
                     </div>
                   </div>
                 </div>
@@ -143,16 +184,18 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
               </div>
 
               {/* Annual Price */}
-              <div className="bg-navy-900/50 rounded-lg p-3 mb-4">
-                <p className="text-xs text-gray-400 mb-1">Plano Anual</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-lg font-bold text-green-400">R$ {plan.priceAnnual.toFixed(2)}</span>
-                  <span className="text-xs text-gray-500">/ano</span>
-                  <span className="text-xs text-green-400 font-semibold">
-                    (Economize {Math.round(((plan.price * 12 - plan.priceAnnual) / (plan.price * 12)) * 100)}%)
-                  </span>
+              {plan.priceAnnual > 0 && (
+                <div className="bg-navy-900/50 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-400 mb-1">Plano Anual</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-bold text-green-400">R$ {plan.priceAnnual.toFixed(2)}</span>
+                    <span className="text-xs text-gray-500">/ano</span>
+                    <span className="text-xs text-green-400 font-semibold">
+                      (Economize {Math.round(((plan.price * 12 - plan.priceAnnual) / (plan.price * 12)) * 100)}%)
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Features */}
               <div className="space-y-2">

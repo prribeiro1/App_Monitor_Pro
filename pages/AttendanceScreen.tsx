@@ -4,6 +4,7 @@ import { Student, Stop, Route, AttendanceRecord, AttendanceStatus } from '../typ
 import { Icon } from '../components/Icon';
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
+import { useNavigate } from 'react-router-dom';
 
 interface RouteGroup {
   routeName: string;
@@ -17,6 +18,9 @@ export const AttendanceScreen: React.FC = () => {
   const [stops, setStops] = useState<Stop[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
+  const [filterShift, setFilterShift] = useState<'all' | 'manha' | 'tarde' | 'integral'>('all');
+  const [sortBy, setSortBy] = useState<'order' | 'name' | 'sala'>('order');
+  const navigate = useNavigate();
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -79,10 +83,18 @@ export const AttendanceScreen: React.FC = () => {
   };
 
   const groupedByRoute = routes.sort((a, b) => (a.order || 0) - (b.order || 0)).reduce((acc, route) => {
-    const routeStudents = students.filter(s => getRouteIdForStudent(s) === route.id);
+    // Filtrar por ATIVOS e por TURNO
+    let routeStudents = students.filter(s => s.active && getRouteIdForStudent(s) === route.id);
+    
+    if (filterShift !== 'all') {
+      routeStudents = routeStudents.filter(s => s.shift === filterShift);
+    }
 
-    // 🆕 NOVA ESTRUTURA: Ordenar por routeOrder (ou order como fallback)
+    // Ordenação
     routeStudents.sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      if (sortBy === 'sala') return (a.sala || '').localeCompare(b.sala || '');
+      
       const orderA = a.routeOrder ?? a.order ?? 0;
       const orderB = b.routeOrder ?? b.order ?? 0;
       return orderA - orderB;
@@ -123,6 +135,47 @@ export const AttendanceScreen: React.FC = () => {
           <div className="absolute inset-0 bg-red-500/5"></div>
           <div className="text-2xl font-bold text-red-400">{absent}</div>
           <div className="text-xs text-red-200/70 uppercase">{t('attendance_absent')}</div>
+        </div>
+      </div>
+
+      {/* 🆕 Filtros e Ordenação */}
+      <div className="space-y-4 mb-6">
+        {/* Turnos */}
+        <div className="flex bg-navy-800 p-1 rounded-xl border border-navy-700">
+          {(['all', 'manha', 'tarde', 'integral'] as const).map((shift) => (
+            <button
+              key={shift}
+              onClick={() => setFilterShift(shift)}
+              className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${filterShift === shift ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            >
+              {shift === 'all' ? 'TODOS' : shift.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        {/* Ordenação */}
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-xs text-gray-500 font-bold uppercase">Ordenar por:</span>
+          <div className="flex gap-2 flex-1">
+            <button
+              onClick={() => setSortBy('order')}
+              className={`flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg border transition-all ${sortBy === 'order' ? 'bg-primary-500/10 border-primary-500/50 text-primary-400' : 'bg-navy-800 border-navy-700 text-gray-500'}`}
+            >
+              ROTA
+            </button>
+            <button
+              onClick={() => setSortBy('name')}
+              className={`flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg border transition-all ${sortBy === 'name' ? 'bg-primary-500/10 border-primary-500/50 text-primary-400' : 'bg-navy-800 border-navy-700 text-gray-500'}`}
+            >
+              NOME
+            </button>
+            <button
+              onClick={() => setSortBy('sala')}
+              className={`flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg border transition-all ${sortBy === 'sala' ? 'bg-primary-500/10 border-primary-500/50 text-primary-400' : 'bg-navy-800 border-navy-700 text-gray-500'}`}
+            >
+              SALA
+            </button>
+          </div>
         </div>
       </div>
 
@@ -169,21 +222,26 @@ export const AttendanceScreen: React.FC = () => {
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <InitialsAvatar name={student.name} />
                           <div className="truncate">
-                            <h3 className="text-white font-bold text-base truncate">{student.name}</h3>
+                            <h3 
+                              onClick={() => student.id && navigate(`/alunos?open=${student.id}`)}
+                              className="text-white font-bold text-base truncate cursor-pointer hover:text-primary-400 transition-colors"
+                            >
+                              {student.name}
+                            </h3>
                             {isBirthday(student) && (
                               <p className="text-[10px] text-pink-400 flex items-center gap-1">
                                 🎂 Aniversário Hoje
                               </p>
                             )}
-                            {locationText && (
-                              <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                                <Icon name="map-pin" size={8} /> {locationText}
-                              </p>
-                            )}
+                            <p className="text-[10px] text-gray-300 font-medium flex items-center gap-1">
+                              {student.school || 'Sem Escola'} {student.sala ? ` • ${student.sala}` : ''}
+                            </p>
                             {student.observation && (
-                              <p className="text-[10px] text-yellow-400 flex items-center gap-1 mt-0.5">
-                                <Icon name="alert-circle" size={10} /> {student.observation}
-                              </p>
+                              <div className="bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded mt-1">
+                                <p className="text-[10px] text-yellow-500 flex items-center gap-1">
+                                  <Icon name="alert-circle" size={10} /> {student.observation}
+                                </p>
+                              </div>
                             )}
                           </div>
                         </div>

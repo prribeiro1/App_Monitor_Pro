@@ -23,6 +23,7 @@ export const cloudSync = {
                 responsible_email: student.responsibleEmail,
                 responsible_phone: student.responsiblePhone,
                 school: student.school,
+                sala: student.sala,
                 shift: student.shift,
                 due_day: student.dueDay,
                 monthly_fees: student.monthlyFees,
@@ -394,6 +395,7 @@ export const cloudSync = {
                     responsibleEmail: s.responsible_email,
                     responsiblePhone: s.responsible_phone,
                     school: s.school,
+                    sala: s.sala, // 🆕
                     shift: s.shift,
                     dueDay: s.due_day,
                     monthlyFees: s.monthly_fees ? parseFloat(s.monthly_fees) : 0,
