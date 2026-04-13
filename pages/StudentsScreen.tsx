@@ -96,7 +96,7 @@ export const StudentsScreen: React.FC = () => {
     return null;
   };
 
-  // 🆕 Buscar sugestões de endereço (Photon API - Mais estável)
+  // 🆕 Buscar sugestões de endereço (Nominatim para precisão, Photon para velocidade)
   const handleAddressSearch = async (value: string) => {
     setAddressSearch(value);
     if (value.length < 3) {
@@ -106,24 +106,19 @@ export const StudentsScreen: React.FC = () => {
 
     setIsSearchingAddress(true);
     try {
-      // Tentativa 1: Photon (Mais rápido)
-      const resp = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(value)}&limit=5&lang=pt`);
-      const data = await resp.json();
-
-      if (data.features && data.features.length > 0) {
-        setSuggestions(data.features);
-      } else {
-        // Fallback: Nominatim (Caso Photon venha vazio)
-        console.log('Photon sem resultados, tentando Nominatim...');
+      // Se tiver número ou vírgula, prioriza Nominatim que é melhor para endereços exatos no BR
+      const isDetailed = /[0-9]/.test(value) || value.includes(',');
+      
+      if (isDetailed) {
         const nomResp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=5&addressdetails=1&countrycodes=br`);
         const nomData = await nomResp.json();
-
-        // Converter formato Nominatim para o esperado (GeoJSON features)
+        
         const converted = nomData.map((item: any) => ({
           properties: {
             name: item.display_name,
             street: item.address?.road || item.display_name,
-            city: item.address?.city || item.address?.town,
+            housenumber: item.address?.house_number,
+            city: item.address?.city || item.address?.town || item.address?.village,
             state: item.address?.state
           },
           geometry: {
@@ -131,6 +126,13 @@ export const StudentsScreen: React.FC = () => {
           }
         }));
         setSuggestions(converted);
+      } else {
+        // Busca rápida via Photon
+        const resp = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(value)}&limit=5&lang=pt`);
+        const data = await resp.json();
+        if (data.features && data.features.length > 0) {
+          setSuggestions(data.features);
+        }
       }
     } catch (err) {
       console.error('Erro ao buscar endereços:', err);
@@ -166,10 +168,18 @@ export const StudentsScreen: React.FC = () => {
     setIsLoadingLocation(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLatitude(position.coords.latitude);
-        setLongitude(position.coords.longitude);
+        const { latitude: lat, longitude: lng } = position.coords;
+        setLatitude(lat);
+        setLongitude(lng);
+        setShowAddressMap(true);
         setIsLoadingLocation(false);
-        alert('Localização capturada com sucesso!');
+        // Tentar buscar o endereço reverso (opcional, mas ajuda)
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.display_name) setAddress(data.display_name);
+          })
+          .catch(() => {});
       },
       (error) => {
         console.error('Erro ao capturar localização:', error);
@@ -631,7 +641,7 @@ export const StudentsScreen: React.FC = () => {
                       type="text"
                       value={addressSearch}
                       onChange={e => handleAddressSearch(e.target.value)}
-                      placeholder="Ex: Rua Direita, 100, São Paulo"
+                      placeholder="Ex: Rua Direita, 100"
                       className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl focus:border-primary-500 outline-none transition"
                     />
                     {isSearchingAddress && (
@@ -640,6 +650,15 @@ export const StudentsScreen: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    disabled={isLoadingLocation}
+                    title="Usar minha localização atual"
+                    className="bg-navy-700 border border-navy-600 p-3 rounded-xl text-primary-400 hover:bg-navy-600 transition-colors"
+                  >
+                    <Icon name={isLoadingLocation ? "loader" : "map-pin"} className={isLoadingLocation ? "animate-spin" : ""} />
+                  </button>
                 </div>
 
                 {suggestions.length > 0 && (
@@ -767,163 +786,6 @@ export const StudentsScreen: React.FC = () => {
                   <option value="">Selecione uma rota</option>
                   {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
-              </div>
-
-              {/* 🆕 Busca de Endereço (Autocomplete) */}
-              <div className="relative">
-                <label className="block text-sm text-gray-400 mb-1">Buscar Endereço (Rua, Número...)</label>
-                <div className="relative flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={addressSearch}
-                      onChange={e => handleAddressSearch(e.target.value)}
-                      placeholder="Ex: Rua Direita, 100, São Paulo"
-                      className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl focus:border-primary-500 outline-none transition"
-                    />
-                    {isSearchingAddress && (
-                      <div className="absolute right-3 top-3">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Lista de Sugestões Photon */}
-                {suggestions.length > 0 && (
-                  <div className="absolute z-[101] left-0 right-0 bg-navy-800 border-2 border-primary-500/50 rounded-xl shadow-2xl mt-2 max-h-52 overflow-y-auto backdrop-blur-md">
-                    {suggestions.map((sug, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSelectSuggestion(sug)}
-                        className="w-full text-left p-4 text-sm text-gray-200 border-b border-navy-700 hover:bg-primary-600/20 active:bg-primary-600/40 transition-colors last:border-0"
-                      >
-                        <div className="flex gap-3">
-                          <Icon name="map-pin" size={16} className="text-primary-400 shrink-0 mt-0.5" />
-                          <div>
-                            <p className="font-bold">{sug.properties.name || sug.properties.street}</p>
-                            <p className="text-[10px] text-gray-500">{sug.properties.city}{sug.properties.state ? `, ${sug.properties.state}` : ''}</p>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Endereço Final (Editável) */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Endereço Confirmado</label>
-                <textarea
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                  placeholder="Selecione acima ou digite aqui..."
-                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-xl h-16 text-sm resize-none"
-                />
-              </div>
-
-              {/* 🆕 Localização GPS no Mapa */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-400">Ponto no Mapa</label>
-                    {latitude && longitude && (
-                      <span className="flex items-center gap-1 text-[10px] text-green-500 font-bold bg-green-500/10 px-2 py-0.5 rounded-full">
-                        <Icon name="check" size={10} /> Localizado
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddressMap(!showAddressMap)}
-                    className="text-primary-400 text-xs font-bold px-2 py-1 hover:bg-primary-500/10 rounded transition"
-                  >
-                    {showAddressMap ? 'Ocultar Mapa' : (latitude ? 'Ajustar Local' : 'Abrir Mapa')}
-                  </button>
-                </div>
-
-                {showAddressMap && (
-                  <div className="space-y-2">
-                    <div className="h-60 bg-navy-900 rounded-xl overflow-hidden border-2 border-navy-700 relative z-0">
-                      <MapContainer
-                        center={[latitude || -23.5505, longitude || -46.6333]}
-                        zoom={16}
-                        style={{ height: '100%', width: '100%' }}
-                      >
-                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                        <MapEvents />
-                        {latitude && longitude && (
-                          <Marker position={[latitude, longitude]} draggable={true}
-                            eventHandlers={{
-                              dragend: (e) => {
-                                const marker = e.target;
-                                const position = marker.getLatLng();
-                                setLatitude(position.lat);
-                                setLongitude(position.lng);
-                              }
-                            }}
-                          />
-                        )}
-                      </MapContainer>
-
-                      {/* Botão Flutuante para Confirmar */}
-                      {latitude && longitude && (
-                        <div className="absolute bottom-4 left-0 right-0 flex justify-center z-[1000] px-4">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowAddressMap(false);
-                              alert('Localização confirmada! ✅');
-                            }}
-                            className="bg-green-600 text-white px-6 py-2 rounded-full font-bold shadow-2xl flex items-center gap-2 hover:bg-green-500 transition-all scale-110"
-                          >
-                            <Icon name="check" size={18} />
-                            Confirmar Este Ponto
-                          </button>
-                        </div>
-                      )}
-
-                      <div className="absolute top-2 left-2 bg-navy-900/80 p-2 rounded text-[10px] text-gray-400 z-[1000] pointer-events-none">
-                        Arraste o pino ou clique no mapa
-                      </div>
-                    </div>
-                    {latitude && (
-                      <p className="text-[10px] text-primary-400 text-center font-mono">
-                        GPS: {latitude.toFixed(6)}, {longitude?.toFixed(6)}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* 🆕 Localização GPS */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Localização GPS (opcional)</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleGetLocation}
-                    disabled={isLoadingLocation}
-                    className="flex-1 bg-blue-500/20 text-blue-400 py-3 rounded-lg font-bold hover:bg-blue-500/30 transition disabled:opacity-50"
-                  >
-                    {isLoadingLocation ? 'Capturando...' : latitude && longitude ? '✓ Localização Salva' : '📍 Usar Localização Atual'}
-                  </button>
-                  {latitude && longitude && (
-                    <button
-                      type="button"
-                      onClick={() => { setLatitude(undefined); setLongitude(undefined); }}
-                      className="bg-red-500/20 text-red-400 px-4 rounded-lg hover:bg-red-500/30 transition"
-                    >
-                      Limpar
-                    </button>
-                  )}
-                </div>
-                {latitude && longitude && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Lat: {latitude.toFixed(6)}, Lng: {longitude.toFixed(6)}
-                  </p>
-                )}
               </div>
 
               <hr className="border-navy-700" />

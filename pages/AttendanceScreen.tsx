@@ -223,7 +223,7 @@ export const AttendanceScreen: React.FC = () => {
                           <InitialsAvatar name={student.name} />
                           <div className="truncate">
                             <h3 
-                              onClick={() => student.id && navigate(`/alunos?open=${student.id}`)}
+                              onClick={() => student.id && navigate(`/students?open=${student.id}`)}
                               className="text-white font-bold text-base truncate cursor-pointer hover:text-primary-400 transition-colors"
                             >
                               {student.name}
