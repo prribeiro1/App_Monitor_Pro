@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { dbService } from '../services/db';
-import { Route, Student } from '../types';
+import { Route, Student, UserSettings } from '../types';
 import { Icon } from '../components/Icon';
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 
 interface RoutesScreenProps {
+  settings: UserSettings | null;
   canUseGps?: boolean;
 }
 
-export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) => {
+export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps = true }) => {
   const { t } = useI18n();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -19,6 +23,57 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
   const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
   const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
   const [routeName, setRouteName] = useState('');
+
+  const exportItineraryPDF = async (route: Route, routeStudents: Student[]) => {
+    try {
+      const doc = new jsPDF();
+      const driverName = settings?.driverNickname || settings?.driverName || 'Condutor';
+      
+      // Header
+      doc.setFillColor(26, 28, 53);
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.text('ITINERÁRIO DA ROTA', 105, 20, { align: 'center' });
+      doc.setFontSize(14);
+      doc.text(route.name.toUpperCase(), 105, 30, { align: 'center' });
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.text(`Responsável: ${driverName}`, 14, 50);
+      doc.text(`Data do Relatório: ${new Date().toLocaleDateString()}`, 14, 55);
+      doc.text(`Total de Alunos: ${routeStudents.length}`, 14, 60);
+
+      const tableData = routeStudents.map(s => [
+        s.routeId === route.id ? (s.routeOrder || '-') : (s.routeOrder2 || '-'),
+        s.name,
+        s.school || '-',
+        s.address || '-',
+        s.estimatedPickupTime || '-'
+      ]);
+
+      autoTable(doc, {
+        head: [['Ordem', 'Aluno', 'Escola', 'Endereço', 'Horário']],
+        body: tableData,
+        startY: 70,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] },
+        columnStyles: { 3: { cellWidth: 70 } }
+      });
+
+      const fileName = `itinerario_${route.name.replace(/\s+/g, '_')}.pdf`;
+      if (Capacitor.isNativePlatform()) {
+          const base64 = doc.output('datauristring').split(',')[1];
+          const result = await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
+          await Share.share({ title: 'Itinerário de Rota', url: result.uri });
+      } else {
+          doc.save(fileName);
+      }
+    } catch (e: any) {
+      alert('Erro ao gerar itinerário: ' + e.message);
+    }
+  };
 
   const fetchData = async () => {
     const [r, st] = await Promise.all([dbService.getRoutes(), dbService.getStudents()]);
@@ -113,6 +168,11 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
         </div>
       </div>
 
+      <div className="mb-4 bg-navy-800 p-4 rounded-xl border border-navy-700 text-xs text-gray-400">
+        <Icon name="info" size={14} className="inline mr-1 text-primary-500" />
+        Dica: Clique no ícone de papel <Icon name="file-text" size={12} className="inline"/> ao lado da rota para gerar um itinerário impresso para motoristas reservas.
+      </div>
+
       {routes.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <Icon name="map" size={48} className="mx-auto mb-4 opacity-50" />
@@ -121,7 +181,7 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
       ) : (
         <div className="space-y-3">
           {routes.map(route => {
-            const routeStudents = students.filter(s => s.routeId === route.id);
+            const routeStudents = students.filter(s => s.routeId === route.id || s.routeId2 === route.id);
             const isExpanded = expandedRoutes[route.id];
             return (
               <div key={route.id} className="bg-navy-800 rounded-xl border border-navy-700 overflow-hidden">
@@ -134,6 +194,13 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); exportItineraryPDF(route, routeStudents); }} 
+                      className="p-2 text-primary-400 hover:text-white transition"
+                      title="Baixar Itinerário PDF"
+                    >
+                      <Icon name="file-text" size={18} />
+                    </button>
                     <button onClick={(e) => { e.stopPropagation(); openEditRoute(route); }} className="p-2 text-gray-400 hover:text-white transition"><Icon name="edit" size={16} /></button>
                     <button onClick={(e) => { e.stopPropagation(); handleDeleteRoute(route.id); }} className="p-2 text-red-400 hover:text-red-300 transition"><Icon name="trash" size={16} /></button>
                     <Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} className="text-gray-400" />
@@ -174,9 +241,12 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ canUseGps = true }) 
                                   {student.observation && (
                                     <span className="text-orange-400" title="Possui observação">⚠️</span>
                                   )}
-                                  {student.routeOrder != null && student.routeOrder > 0 && (
-                                    <span className="text-primary-400 text-xs font-bold mr-1">#{student.routeOrder}</span>
-                                  )}
+                                  {(() => {
+                                      const order = student.routeId === route.id ? student.routeOrder : student.routeOrder2;
+                                      return order != null && order > 0 && (
+                                        <span className="text-primary-400 text-xs font-bold mr-1">#{order}</span>
+                                      );
+                                  })()}
                                   {student.name}
                                 </span>
                                 <div className="text-xs text-gray-400 space-y-0.5">

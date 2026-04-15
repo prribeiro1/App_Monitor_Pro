@@ -20,6 +20,7 @@ export const AttendanceScreen: React.FC = () => {
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
   const [filterShift, setFilterShift] = useState<'all' | 'manha' | 'tarde' | 'integral'>('all');
   const [sortBy, setSortBy] = useState<'order' | 'name' | 'sala'>('order');
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   const today = new Date().toISOString().split('T')[0];
@@ -83,11 +84,21 @@ export const AttendanceScreen: React.FC = () => {
   };
 
   const groupedByRoute = routes.sort((a, b) => (a.order || 0) - (b.order || 0)).reduce((acc, route) => {
-    // Filtrar por ATIVOS e por TURNO
-    let routeStudents = students.filter(s => s.active && getRouteIdForStudent(s) === route.id);
+    // Filtrar por ATIVOS e por TURNO e por ROTA (primária ou secundária)
+    let routeStudents = students.filter(s => s.active && (s.routeId === route.id || s.routeId2 === route.id));
     
     if (filterShift !== 'all') {
       routeStudents = routeStudents.filter(s => s.shift === filterShift);
+    }
+
+    // Filtragem por busca (Escola ou Sala)
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.toLowerCase();
+      routeStudents = routeStudents.filter(s => 
+        (s.school || '').toLowerCase().includes(term) || 
+        (s.sala || '').toLowerCase().includes(term) ||
+        s.name.toLowerCase().includes(term)
+      );
     }
 
     // Ordenação
@@ -95,9 +106,14 @@ export const AttendanceScreen: React.FC = () => {
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'sala') return (a.sala || '').localeCompare(b.sala || '');
       
-      const orderA = a.routeOrder ?? a.order ?? 0;
-      const orderB = b.routeOrder ?? b.order ?? 0;
-      return orderA - orderB;
+      // Handle routeOrder vs routeOrder2 depending on which route context we are in
+      const getOrder = (student: Student) => {
+        if (student.routeId === route.id) return student.routeOrder ?? 0;
+        if (student.routeId2 === route.id) return student.routeOrder2 ?? student.routeOrder ?? 0;
+        return 0;
+      };
+
+      return getOrder(a) - getOrder(b);
     });
 
     acc[route.id] = {
@@ -135,6 +151,22 @@ export const AttendanceScreen: React.FC = () => {
           <div className="absolute inset-0 bg-red-500/5"></div>
           <div className="text-2xl font-bold text-red-400">{absent}</div>
           <div className="text-xs text-red-200/70 uppercase">{t('attendance_absent')}</div>
+        </div>
+      </div>
+
+      {/* 🆕 Busca por Escola/Sala */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Filtrar por Escola, Sala ou Nome..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full bg-navy-800 text-white border border-navy-700 rounded-xl p-3 pl-10 focus:border-primary-500 outline-none transition"
+          />
+          <div className="absolute left-3 top-3.5 text-gray-400">
+            <Icon name="search" size={20} />
+          </div>
         </div>
       </div>
 

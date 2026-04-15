@@ -27,6 +27,7 @@ interface RouteReportGroup {
 export const ReportsScreen: React.FC = () => {
     const { t, language } = useI18n();
     const [reportType, setReportType] = useState<'monthly' | 'daily'>('monthly');
+    const [groupBy, setGroupBy] = useState<'route' | 'school'>('route');
     const [month, setMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); // YYYY-MM-DD
     const [reportData, setReportData] = useState<Record<string, RouteReportGroup>>({});
@@ -39,7 +40,7 @@ export const ReportsScreen: React.FC = () => {
 
     useEffect(() => {
         loadData();
-    }, [month, date, reportType]);
+    }, [month, date, reportType, groupBy]);
 
     const loadData = async () => {
         const [students, routes, stops, attendance, allIncidents] = await Promise.all([
@@ -55,22 +56,31 @@ export const ReportsScreen: React.FC = () => {
         setIncidents(allIncidents);
 
         // Group Logic
-        const grouped: Record<string, RouteReportGroup> = {};
-
-        // 1. Initialize groups with ALL routes (so empty routes appear)
-        routes.forEach(r => {
-            grouped[r.id] = { routeName: r.name, students: [] };
-        });
+        // 1. Initialize groups
+        if (groupBy === 'route') {
+            routes.forEach(r => {
+                grouped[r.id] = { routeName: r.name, students: [] };
+            });
+            grouped['sem_rota'] = { routeName: 'Sem Rota Definida', students: [] };
+        }
 
         // Map for fast lookup
         const stopMap = stops.reduce((acc, s) => ({ ...acc, [s.id]: s }), {} as Record<string, Stop>);
 
         students.forEach(student => {
-            const routeId = student.routeId || 'sem_rota';
-            // Safety check
-            if (!grouped[routeId] && routeId !== 'sem_rota') return;
-            if (routeId === 'sem_rota' && !grouped['sem_rota']) {
-                grouped['sem_rota'] = { routeName: 'Sem Rota Definida', students: [] };
+            let groupId = '';
+            let groupName = '';
+
+            if (groupBy === 'route') {
+                groupId = student.routeId || 'sem_rota';
+                groupName = routes.find(r => r.id === groupId)?.name || 'Sem Rota Definida';
+            } else {
+                groupId = student.school || 'Sem Escola';
+                groupName = student.school || 'Sem Escola';
+            }
+
+            if (!grouped[groupId]) {
+                grouped[groupId] = { routeName: groupName, students: [] };
             }
 
             let presentRecs: AttendanceRecord[] = [];
@@ -98,7 +108,7 @@ export const ReportsScreen: React.FC = () => {
                 );
             }
 
-            grouped[routeId].students.push({
+            grouped[groupId].students.push({
                 student,
                 presentCount: presentRecs.length,
                 absentCount: absentRecs.length,
@@ -358,6 +368,21 @@ export const ReportsScreen: React.FC = () => {
                         className="bg-navy-800 text-white p-3 rounded-xl border border-navy-700 w-full"
                     />
                 )}
+
+                <div className="flex bg-navy-800 p-1 rounded-xl border border-navy-700">
+                    <button
+                        onClick={() => setGroupBy('route')}
+                        className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'route' ? 'bg-navy-700 text-white shadow-lg border border-primary-500/50' : 'text-gray-400 hover:text-white'}`}
+                    >
+                        Agrupar: ROTA
+                    </button>
+                    <button
+                        onClick={() => setGroupBy('school')}
+                        className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'school' ? 'bg-navy-700 text-white shadow-lg border border-primary-500/50' : 'text-gray-400 hover:text-white'}`}
+                    >
+                        Agrupar: ESCOLA
+                    </button>
+                </div>
             </div>
 
             {/* List */}
@@ -374,7 +399,7 @@ export const ReportsScreen: React.FC = () => {
                                 className="bg-navy-800 p-4 flex justify-between items-center cursor-pointer hover:bg-navy-700 transition"
                             >
                                 <h3 className="text-white font-bold flex items-center gap-2">
-                                    <Icon name="map" className="text-primary-500" />
+                                    <Icon name={groupBy === 'route' ? "map" : "book-open"} className="text-primary-500" />
                                     {group.routeName}
                                 </h3>
                                 <Icon name={isExpanded ? "x" : "plus"} className="text-gray-400 rotate-45" size={16} />

@@ -410,6 +410,60 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         .filter(p => p.month === month && p.year === year && students.some(s => s.id === p.studentId))
         .reduce((sum, p) => sum + p.amount, 0);
 
+    const generateReceiptPDF = async (student: Student, payment: Payment) => {
+        try {
+            const doc = new jsPDF();
+            const tio = settings?.driverNickname || settings?.driverName || 'Motorista';
+            
+            // Layout Estilizado do Recibo
+            doc.setFillColor(26, 28, 53); // Navy Blue
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.text('RECIBO DE PAGAMENTO', 105, 25, { align: 'center' });
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(12);
+            doc.text(`Nº do Recibo: ${payment.id.split('-')[0].toUpperCase()}`, 14, 55);
+            doc.text(`Data de Emissão: ${new Date().toLocaleDateString()}`, 14, 62);
+            
+            // Conteúdo principal em um box
+            doc.setDrawColor(200, 200, 200);
+            doc.rect(14, 75, 182, 80);
+            
+            doc.setFontSize(14);
+            doc.text(`Recebi de: ${student.guardianName || 'Responsável'}`, 20, 90);
+            doc.text(`A importância de: R$ ${payment.amount.toFixed(2)}`, 20, 105);
+            doc.text(`Referente a: Mensalidade Escolar - ${months[month-1]}/${year}`, 20, 120);
+            doc.text(`Aluno(a): ${student.name}`, 20, 135);
+            
+            // Assinatura
+            const finalY = 200;
+            doc.line(60, finalY, 150, finalY);
+            doc.text(tio, 105, finalY + 7, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text('Assinatura do Condutor', 105, finalY + 15, { align: 'center' });
+            
+            if (settings?.driverSignature) {
+                try {
+                   doc.addImage(settings.driverSignature, 'PNG', 75, finalY - 25, 60, 20);
+                } catch(e) {}
+            }
+
+            const fileName = `recibo_${student.name.replace(/\s+/g, '_')}_${month}_${year}.pdf`;
+            if (Capacitor.isNativePlatform()) {
+                const base64 = doc.output('datauristring').split(',')[1];
+                const result = await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
+                await Share.share({ title: 'Recibo de Pagamento', url: result.uri });
+            } else {
+                doc.save(fileName);
+            }
+        } catch (e: any) {
+            alert('Erro ao gerar recibo: ' + e.message);
+        }
+    };
+
     const totalPending = students
         .filter(s => !getPaymentForStudent(s.id))
         .reduce((sum, s) => sum + (s.monthlyFees || 0), 0);
@@ -436,8 +490,8 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             doc.text(`Lucro Líquido: R$ ${netProfit.toFixed(2)}`, 14, 40);
             doc.text(`Pagantes: ${paidCount} / ${totalStudents}`, 14, 45);
 
-            // Tabela de Mensalidades
-            const bodyData = students.map(student => {
+            // Tabela de Mensalidades - SEMPRE ALFABÉTICA NO PDF a pedido do usuário
+            const bodyData = [...students].sort((a,b) => a.name.localeCompare(b.name)).map(student => {
                 const payment = getPaymentForStudent(student.id);
                 const valor = payment ? payment.amount : (student.monthlyFees || 0);
                 return [
@@ -748,13 +802,22 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                                 {payment ? (
                                     <>
                                         <span className="text-green-400 font-bold">R$ {payment.amount.toFixed(2)}</span>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); sendWhatsAppReminder(student, payment); }}
-                                            className="text-[10px] flex items-center gap-1 bg-green-600/20 text-green-400 px-2 py-1 rounded-full hover:bg-green-600/30"
-                                        >
-                                            <Icon name="message-circle" size={12} />
-                                            Recibo
-                                        </button>
+                                        <div className="flex gap-1 mt-1">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); sendWhatsAppReminder(student, payment); }}
+                                                className="text-[10px] flex items-center gap-1 bg-green-600/20 text-green-400 px-2 py-1 rounded-full hover:bg-green-600/30"
+                                            >
+                                                <Icon name="message-circle" size={12} />
+                                                WhatsApp
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); generateReceiptPDF(student, payment); }}
+                                                className="text-[10px] flex items-center gap-1 bg-blue-600/20 text-blue-400 px-2 py-1 rounded-full hover:bg-blue-600/30"
+                                            >
+                                                <Icon name="file-text" size={12} />
+                                                PDF
+                                            </button>
+                                        </div>
                                     </>
                                 ) : (
                                     <>

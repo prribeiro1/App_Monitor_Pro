@@ -41,6 +41,7 @@ export const StudentsScreen: React.FC = () => {
   const [school, setSchool] = useState('');
   const [shift, setShift] = useState<'integral' | 'manha' | 'tarde' | 'noite'>('manha');
   const [selectedRouteId, setSelectedRouteId] = useState('');
+  const [selectedRouteId2, setSelectedRouteId2] = useState('');
   const [guardianName, setGuardianName] = useState('');
   const [responsibleCpf, setResponsibleCpf] = useState('');
   const [responsibleEmail, setResponsibleEmail] = useState('');
@@ -57,6 +58,7 @@ export const StudentsScreen: React.FC = () => {
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
   const [routeOrder, setRouteOrder] = useState('');
+  const [routeOrder2, setRouteOrder2] = useState('');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showAddressMap, setShowAddressMap] = useState(false);
@@ -283,10 +285,12 @@ export const StudentsScreen: React.FC = () => {
 
       // 🆕 NOVA ESTRUTURA
       routeId: selectedRouteId || undefined, // Garantir que não seja ""
+      routeId2: selectedRouteId2 || undefined,
       address: address || undefined,
       latitude: latitude,
       longitude: longitude,
       routeOrder: routeOrder ? parseInt(routeOrder) : 0,
+      routeOrder2: routeOrder2 ? parseInt(routeOrder2) : 0,
     };
 
     await dbService.saveStudent(student);
@@ -316,11 +320,13 @@ export const StudentsScreen: React.FC = () => {
     setLatitude(undefined);
     setLongitude(undefined);
     setRouteOrder('');
+    setRouteOrder2('');
     setShowAddressMap(false);
     setSuggestions([]);
 
     if (routes.length > 0) {
       setSelectedRouteId(routes[0].id);
+      setSelectedRouteId2('');
     }
   };
 
@@ -342,10 +348,12 @@ export const StudentsScreen: React.FC = () => {
 
     // 🆕 NOVA ESTRUTURA
     setSelectedRouteId(student.routeId || '');
+    setSelectedRouteId2(student.routeId2 || '');
     setAddress(student.address || '');
     setLatitude(student.latitude);
     setLongitude(student.longitude);
     setRouteOrder(student.routeOrder ? student.routeOrder.toString() : '');
+    setRouteOrder2(student.routeOrder2 ? student.routeOrder2.toString() : '');
     setShowAddressMap(!!(student.latitude && student.longitude));
     setSuggestions([]);
 
@@ -774,18 +782,30 @@ export const StudentsScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Rota */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Rota *</label>
+                <label className="block text-sm text-gray-400 mb-1">Rota Primária (Principal) *</label>
                 <select
                   value={selectedRouteId}
-                  onChange={e => handleRouteChange(e.target.value)}
+                  onChange={e => setSelectedRouteId(e.target.value)}
                   className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
                   required
                 >
-                  <option value="">Selecione uma rota</option>
+                  <option value="">Selecione a rota principal</option>
                   {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Rota Secundária (Opcional - Ex: 2ª viagem)</label>
+                <select
+                  value={selectedRouteId2}
+                  onChange={e => setSelectedRouteId2(e.target.value)}
+                  className="w-full bg-navy-900 border border-navy-700 text-white p-3 rounded-lg"
+                >
+                  <option value="">Não participa de outra rota</option>
+                  {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+                <p className="text-[10px] text-gray-500 mt-1">O aluno aparecerá na lista de chamada para ambas as rotas.</p>
               </div>
 
               <hr className="border-navy-700" />

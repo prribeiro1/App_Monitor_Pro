@@ -19,6 +19,7 @@ export interface Student {
   id: string;
   stopId?: string; // ⚠️ DEPRECATED: Manter por compatibilidade, usar routeId
   routeId?: string; // 🆕 NOVO: ID da rota (substitui stopId)
+  routeId2?: string; // 🆕 NOVO: ID da segunda rota (opcional)
   name: string;
   active: boolean;
   guardianName?: string; // Nome do Responsável
@@ -28,6 +29,7 @@ export interface Student {
   responsiblePhone?: string;
   order?: number; // ⚠️ DEPRECATED: Usar routeOrder
   routeOrder?: number; // 🆕 NOVO: Ordem na rota (1, 2, 3...)
+  routeOrder2?: number; // 🆕 NOVO: Ordem na segunda rota (opcional)
   address?: string; // 🆕 NOVO: Endereço completo (opcional)
   latitude?: number; // 🆕 NOVO: Coordenadas (opcional)
   longitude?: number; // 🆕 NOVO: Coordenadas (opcional)

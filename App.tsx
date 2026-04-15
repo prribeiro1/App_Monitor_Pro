@@ -634,7 +634,7 @@ function App() {
                 >
                   <Routes>
                     <Route path="/dashboard" element={<DashboardScreen onNavigate={(path) => window.location.hash = path} />} />
-                    {canViewRoutes && <Route path="/routes" element={<RoutesScreen canUseGps={canViewGps} />} />}
+                    {canViewRoutes && <Route path="/routes" element={<RoutesScreen settings={settings} canUseGps={canViewGps} />} />}
                     {canViewRoutes && <Route path="/routes/history" element={<RouteHistoryScreen />} />}
                     {canViewRoutes && <Route path="/routes/organize/:routeId" element={<RouteOrganizerScreen />} />}
                     {canViewRoutes && <Route path="/routes/start/:routeId" element={<RouteStartScreen />} />}

@@ -16,6 +16,7 @@ export const PublicStudentRegister: React.FC = () => {
         contact: '',
         responsibleEmail: '',
         school: '',
+        sala: '',
         shift: 'manha',
         address: '',
         monthlyFees: '', // Added fees
@@ -46,6 +47,7 @@ export const PublicStudentRegister: React.FC = () => {
                 responsible_phone: formData.contact, // Fix: Map to responsible_phone for the app to show it
                 responsible_email: formData.responsibleEmail,
                 school: formData.school,
+                sala: formData.sala,
                 shift: formData.shift,
                 address: formData.address,
                 monthly_fees: formData.monthlyFees ? parseFloat(formData.monthlyFees) : 0, // Map fees
@@ -212,7 +214,7 @@ export const PublicStudentRegister: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Email e Escola */}
+                    {/* Email, Escola e Sala */}
                     <div className="space-y-4">
                         <div>
                             <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">E-mail</label>
@@ -225,16 +227,28 @@ export const PublicStudentRegister: React.FC = () => {
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Escola</label>
-                            <input
-                                type="text"
-                                required
-                                className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
-                                placeholder="Nome da instituição"
-                                value={formData.school}
-                                onChange={e => setFormData({ ...formData, school: e.target.value })}
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Escola</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
+                                    placeholder="Nome da instituição"
+                                    value={formData.school}
+                                    onChange={e => setFormData({ ...formData, school: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-400 text-xs font-bold mb-1 ml-1 uppercase">Sala</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-navy-900 border border-navy-700 text-white p-4 rounded-xl focus:border-primary-500 outline-none transition"
+                                    placeholder="Ex: 5º A"
+                                    value={formData.sala}
+                                    onChange={e => setFormData({ ...formData, sala: e.target.value })}
+                                />
+                            </div>
                         </div>
                     </div>
 

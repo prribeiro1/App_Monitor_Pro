@@ -29,10 +29,12 @@ export const cloudSync = {
                 monthly_fees: student.monthlyFees,
                 stop_id: cleanUUID(student.stopId),
                 route_id: cleanUUID(student.routeId),
+                route_id_2: cleanUUID(student.routeId2),
                 address: student.address,
                 latitude: student.latitude,
                 longitude: student.longitude,
                 route_order: student.routeOrder,
+                route_order_2: student.routeOrder2,
                 estimated_pickup_time: student.estimatedPickupTime,
                 estimated_drop_time: student.estimatedDropTime,
                 birth_date: student.birthDate,
@@ -401,10 +403,12 @@ export const cloudSync = {
                     monthlyFees: s.monthly_fees ? parseFloat(s.monthly_fees) : 0,
                     stopId: s.stop_id,
                     routeId: s.route_id, // 🆕
+                    routeId2: s.route_id_2, // 🆕
                     address: s.address, // 🆕
                     latitude: s.latitude, // 🆕
                     longitude: s.longitude, // 🆕
                     routeOrder: s.route_order, // 🆕
+                    routeOrder2: s.route_order_2, // 🆕
                     estimatedPickupTime: s.estimated_pickup_time, // 🆕
                     estimatedDropTime: s.estimated_drop_time, // 🆕
                     birthDate: s.birth_date,
