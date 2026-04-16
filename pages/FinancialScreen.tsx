@@ -39,6 +39,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+    const [pdfSortOrder, setPdfSortOrder] = useState<'name' | 'date'>('name');
 
     // Estados para gastos
     const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -490,8 +491,29 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             doc.text(`Lucro Líquido: R$ ${netProfit.toFixed(2)}`, 14, 40);
             doc.text(`Pagantes: ${paidCount} / ${totalStudents}`, 14, 45);
 
-            // Tabela de Mensalidades - SEMPRE ALFABÉTICA NO PDF a pedido do usuário
-            const bodyData = [...students].sort((a,b) => a.name.localeCompare(b.name)).map(student => {
+            // Tabela de Mensalidades - Ordenação Dinâmica
+            const sortedStudents = [...students].sort((a, b) => {
+                if (pdfSortOrder === 'name') {
+                    return a.name.localeCompare(b.name);
+                } else {
+                    const payA = getPaymentForStudent(a.id);
+                    const payB = getPaymentForStudent(b.id);
+                    
+                    // Se ambos pagaram, ordena pela data
+                    if (payA && payB) {
+                        return new Date(payA.paidAt).getTime() - new Date(payB.paidAt).getTime();
+                    }
+                    
+                    // Pagos vêm primeiro no relatório por data
+                    if (payA && !payB) return -1;
+                    if (!payA && payB) return 1;
+                    
+                    // Ambos pendentes, ordem alfabética
+                    return a.name.localeCompare(b.name);
+                }
+            });
+
+            const bodyData = sortedStudents.map(student => {
                 const payment = getPaymentForStudent(student.id);
                 const valor = payment ? payment.amount : (student.monthlyFees || 0);
                 return [
@@ -635,6 +657,23 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                     </a>
                 </div>
             )}
+
+            {/* PDF Sort Selection */}
+            <div className="flex items-center gap-2 mb-4">
+                <span className="text-gray-400 text-xs font-bold uppercase">Ordem do PDF:</span>
+                <button
+                    onClick={() => setPdfSortOrder('name')}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${pdfSortOrder === 'name' ? 'bg-primary-600 text-white' : 'bg-navy-800 text-gray-500 border border-navy-700'}`}
+                >
+                    Nome (A-Z)
+                </button>
+                <button
+                    onClick={() => setPdfSortOrder('date')}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${pdfSortOrder === 'date' ? 'bg-primary-600 text-white' : 'bg-navy-800 text-gray-500 border border-navy-700'}`}
+                >
+                    Data Pagto.
+                </button>
+            </div>
 
             {/* Search Bar */}
             <div className="mb-6">
