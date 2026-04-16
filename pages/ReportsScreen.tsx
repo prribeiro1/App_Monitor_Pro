@@ -6,7 +6,7 @@ import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
@@ -53,7 +53,7 @@ export const ReportsScreen: React.FC = () => {
 
         setIncidents(allIncidents);
 
-        setIncidents(allIncidents);
+        const grouped: Record<string, RouteReportGroup> = {};
 
         // Group Logic
         // 1. Initialize groups
@@ -63,9 +63,6 @@ export const ReportsScreen: React.FC = () => {
             });
             grouped['sem_rota'] = { routeName: 'Sem Rota Definida', students: [] };
         }
-
-        // Map for fast lookup
-        const stopMap = stops.reduce((acc, s) => ({ ...acc, [s.id]: s }), {} as Record<string, Stop>);
 
         students.forEach(student => {
             let groupId = '';
@@ -97,7 +94,6 @@ export const ReportsScreen: React.FC = () => {
                     i.studentId === student.id && i.date.startsWith(month)
                 );
             } else {
-                // Daily Report
                 const studentRecords = attendance.filter(a =>
                     a.studentId === student.id && a.date === date
                 );
@@ -124,10 +120,8 @@ export const ReportsScreen: React.FC = () => {
         });
 
         setReportData(grouped);
-
-        // Auto expand logic (optional)
         const initialExpanded: Record<string, boolean> = {};
-        routes.forEach(r => initialExpanded[r.id] = false);
+        Object.keys(grouped).forEach(k => initialExpanded[k] = false);
         setExpandedRoutes(initialExpanded);
     };
 
@@ -140,7 +134,6 @@ export const ReportsScreen: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    // --- PDF Export Logic ---
     const exportPDF = async () => {
         try {
             const doc = new jsPDF();
@@ -150,20 +143,16 @@ export const ReportsScreen: React.FC = () => {
 
             doc.text(title, 14, 20);
 
-            // Table Data
             const bodyData: any[] = [];
-
             Object.values(reportData).forEach((groupItem) => {
                 const group = groupItem as RouteReportGroup;
                 if (group.students.length === 0) return;
-                // Group Header Row
                 bodyData.push([{ content: group.routeName.toUpperCase(), colSpan: reportType === 'monthly' ? 5 : 4, styles: { fillColor: [26, 28, 53], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
 
                 group.students.forEach(stat => {
                     if (reportType === 'monthly') {
                         const pDates = stat.presentDates.sort((a, b) => a - b).join(', ');
                         const aDates = stat.absentDates.sort((a, b) => a - b).join(', ');
-
                         bodyData.push([
                             stat.student.name,
                             `${stat.presentCount} (${pDates})`,
@@ -172,13 +161,11 @@ export const ReportsScreen: React.FC = () => {
                             `${((stat.presentCount / ((stat.presentCount + stat.absentCount) || 1)) * 100).toFixed(0)}%`
                         ]);
                     } else {
-                        // Daily Row
                         const status = stat.presentCount > 0 ? 'PRESENTE' : (stat.absentCount > 0 ? 'FALTA' : '-');
                         bodyData.push([
                             stat.student.name,
                             status,
                             stat.incidentCount > 0 ? 'SIM' : '-',
-                            // Obs placeholder
                             ''
                         ]);
                     }
@@ -205,99 +192,24 @@ export const ReportsScreen: React.FC = () => {
                 });
             }
 
-            // Incidents Summary - logo abaixo da tabela
-            const periodIncidents = reportType === 'monthly'
-                ? incidents.filter(i => i.date.startsWith(month))
-                : incidents.filter(i => i.date === date);
-
-            if (periodIncidents.length > 0) {
-                const lastY = (doc as any).lastAutoTable?.finalY || 100;
-
-                // Verificar se precisa de nova página
-                if (lastY > 220) {
-                    doc.addPage();
-                    doc.setFontSize(12);
-                    doc.text("Detalhamento de Ocorrências", 14, 20);
-                } else {
-                    doc.setFontSize(12);
-                    doc.text("Detalhamento de Ocorrências", 14, lastY + 15);
-                }
-
-                const incidentBody = periodIncidents.map(inc => {
-                    let sName = "Desconhecido";
-                    Object.values(reportData).forEach((gItem) => {
-                        const g = gItem as RouteReportGroup;
-                        const s = g.students.find(st => st.student.id === inc.studentId);
-                        if (s) sName = s.student.name;
-                    });
-
-                    // Formatar data corretamente (pode vir como ISO ou YYYY-MM-DD)
-                    let incDate = '-';
-                    if (inc.date) {
-                        const dateOnly = inc.date.split('T')[0]; // Remove hora se tiver
-                        const parts = dateOnly.split('-');
-                        if (parts.length === 3) {
-                            incDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
-                        }
-                    }
-
-                    return [
-                        incDate,
-                        sName,
-                        inc.type,
-                        inc.observation || '-'
-                    ];
-                });
-
-                autoTable(doc, {
-                    head: [['Data', 'Aluno', 'Tipo', 'Observação']],
-                    body: incidentBody,
-                    startY: lastY > 220 ? 30 : lastY + 20,
-                    styles: { fontSize: 8 },
-                    headStyles: { fillColor: [239, 68, 68] },
-                    columnStyles: { 3: { cellWidth: 70 } }
-                });
-            }
-
-            // Save and Share Logic
-            const base64 = doc.output('datauristring').split(',')[1];
-            const fileName = `relatorio_${month}.pdf`;
-
+            const fileName = `relatorio_${reportType === 'monthly' ? month : date}.pdf`;
             if (Capacitor.isNativePlatform()) {
-                const result = await Filesystem.writeFile({
-                    path: fileName,
-                    data: base64,
-                    directory: Directory.Cache
-                });
-
-                await Share.share({
-                    title: `Relatório ${month}`,
-                    text: `Relatório de Monitoramento Escolar - ${month}`,
-                    url: result.uri,
-                    dialogTitle: 'Compartilhar Relatório'
-                });
+                const base64 = doc.output('datauristring').split(',')[1];
+                const result = await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
+                await Share.share({ title: fileName, url: result.uri });
             } else {
                 doc.save(fileName);
             }
         } catch (e: any) {
-            console.error("Erro ao exportar PDF", e);
             alert(`Erro ao gerar PDF: ${e.message}`);
         }
     };
 
-    // --- Calendar Generation Helper ---
     const renderCalendar = (stats: StudentStats) => {
         const [y, m] = month.split('-').map(Number);
-        // JS Date month is 0-indexed (0=Jan, 11=Dec). 'm' from string is 1-12.
-        // So m-1 is the correct month index.
-        const firstDayOfMonth = new Date(y, m - 1, 1).getDay(); // 0=Sun, 6=Sat
-        const daysInMonth = new Date(y, m, 0).getDate(); // Day 0 of next month = last day of current
-
-        // Calculate padding for the first week (only if start is Mon-Fri)
-        // Mon(1) -> 0 pad, Tue(2) -> 1 pad, ..., Fri(5) -> 4 pad
-        // Sat(6) or Sun(0) -> 0 pad (because we skip until Monday)
+        const firstDayOfMonth = new Date(y, m - 1, 1).getDay();
+        const daysInMonth = new Date(y, m, 0).getDate();
         const padding = (firstDayOfMonth >= 1 && firstDayOfMonth <= 5) ? firstDayOfMonth - 1 : 0;
-
         const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
         return (
@@ -305,23 +217,16 @@ export const ReportsScreen: React.FC = () => {
                 {['S', 'T', 'Q', 'Q', 'S'].map((d, i) => (
                     <div key={i} className="text-center text-gray-500 text-xs font-bold">{d}</div>
                 ))}
-
-                {/* Empty cells for padding */}
                 {Array.from({ length: padding }).map((_, i) => (
                     <div key={`pad-${i}`} className="h-8 w-8" />
                 ))}
-
                 {days.map(day => {
                     const date = new Date(y, m - 1, day);
                     const dayOfWeek = date.getDay();
-
-                    // Skip Weekends
                     if (dayOfWeek === 0 || dayOfWeek === 6) return null;
-
-                    let bgClass = "bg-navy-700 text-gray-400"; // Default
+                    let bgClass = "bg-navy-700 text-gray-400";
                     if (stats.presentDates.includes(day)) bgClass = "bg-green-500 text-white";
                     if (stats.absentDates.includes(day)) bgClass = "bg-red-500 text-white";
-
                     return (
                         <div key={day} className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${bgClass}`}>
                             {day}
@@ -335,140 +240,57 @@ export const ReportsScreen: React.FC = () => {
     return (
         <div className="p-4 pb-20">
             <h2 className="text-2xl font-bold text-white mb-4">Relatórios</h2>
-
-            {/* Controls */}
             <div className="flex flex-col gap-4 mb-6">
                 <div className="flex bg-navy-800 p-1 rounded-xl border border-navy-700">
-                    <button
-                        onClick={() => setReportType('monthly')}
-                        className={`flex-1 p-2 rounded-lg text-sm font-bold transition ${reportType === 'monthly' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        Mensal
-                    </button>
-                    <button
-                        onClick={() => setReportType('daily')}
-                        className={`flex-1 p-2 rounded-lg text-sm font-bold transition ${reportType === 'daily' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        Diário
-                    </button>
+                    <button onClick={() => setReportType('monthly')} className={`flex-1 p-2 rounded-lg text-sm font-bold transition ${reportType === 'monthly' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>Mensal</button>
+                    <button onClick={() => setReportType('daily')} className={`flex-1 p-2 rounded-lg text-sm font-bold transition ${reportType === 'daily' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>Diário</button>
                 </div>
-
                 {reportType === 'monthly' ? (
-                    <input
-                        type="month"
-                        value={month}
-                        onChange={e => setMonth(e.target.value)}
-                        className="bg-navy-800 text-white p-3 rounded-xl border border-navy-700 w-full"
-                    />
+                    <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="bg-navy-800 text-white p-3 rounded-xl border border-navy-700 w-full" />
                 ) : (
-                    <input
-                        type="date"
-                        value={date}
-                        onChange={e => setDate(e.target.value)}
-                        className="bg-navy-800 text-white p-3 rounded-xl border border-navy-700 w-full"
-                    />
+                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-navy-800 text-white p-3 rounded-xl border border-navy-700 w-full" />
                 )}
-
                 <div className="flex bg-navy-800 p-1 rounded-xl border border-navy-700">
-                    <button
-                        onClick={() => setGroupBy('route')}
-                        className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'route' ? 'bg-navy-700 text-white shadow-lg border border-primary-500/50' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        Agrupar: ROTA
-                    </button>
-                    <button
-                        onClick={() => setGroupBy('school')}
-                        className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'school' ? 'bg-navy-700 text-white shadow-lg border border-primary-500/50' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        Agrupar: ESCOLA
-                    </button>
+                    <button onClick={() => setGroupBy('route')} className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'route' ? 'bg-navy-700 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>ROTA</button>
+                    <button onClick={() => setGroupBy('school')} className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'school' ? 'bg-navy-700 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>ESCOLA</button>
                 </div>
             </div>
 
-            {/* List */}
             <div className="space-y-4 mb-20">
-                {Object.entries(reportData).map(([routeId, groupItem]) => {
-                    const group = groupItem as RouteReportGroup;
-                    if (group.students.length === 0) return null;
-                    const isExpanded = expandedRoutes[routeId];
-
-                    return (
-                        <div key={routeId} className="border border-navy-700 rounded-xl overflow-hidden">
-                            <div
-                                onClick={() => toggleRoute(routeId)}
-                                className="bg-navy-800 p-4 flex justify-between items-center cursor-pointer hover:bg-navy-700 transition"
-                            >
-                                <h3 className="text-white font-bold flex items-center gap-2">
-                                    <Icon name={groupBy === 'route' ? "map" : "book-open"} className="text-primary-500" />
-                                    {group.routeName}
-                                </h3>
-                                <Icon name={isExpanded ? "x" : "plus"} className="text-gray-400 rotate-45" size={16} />
-                            </div>
-
-                            {isExpanded && (
-                                <div className="bg-navy-900/50 p-2 space-y-2">
-                                    {group.students.map(stats => (
-                                        <div key={stats.student.id} className="flex items-center justify-between p-3 bg-navy-800 rounded-lg border border-navy-700">
-                                            <div className="flex-1">
-                                                <div className="text-white font-medium">{stats.student.name}</div>
-                                                <div className="text-xs text-gray-400 flex gap-3 mt-1">
-                                                    <span className="text-green-400">Presenças: {stats.presentCount}</span>
-                                                    <span className="text-red-400">Faltas: {stats.absentCount}</span>
-                                                    {stats.incidentCount > 0 && <span className="text-yellow-500 font-bold">⚠️ {stats.incidentCount} Ocorr.</span>}
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); openDetails(stats); }}
-                                                className="p-2 bg-navy-700 hover:bg-primary-600 text-primary-200 hover:text-white rounded-full transition"
-                                                title="Ver Detalhes/Calendário"
-                                            >
-                                                <Icon name="eye" size={20} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                {Object.entries(reportData).map(([routeId, group]) => (
+                    <div key={routeId} className="border border-navy-700 rounded-xl overflow-hidden">
+                        <div onClick={() => toggleRoute(routeId)} className="bg-navy-800 p-4 flex justify-between items-center cursor-pointer">
+                            <h3 className="text-white font-bold">{group.routeName}</h3>
+                            <Icon name={expandedRoutes[routeId] ? "chevron-up" : "chevron-down"} className="text-gray-400" />
                         </div>
-                    );
-                })}
+                        {expandedRoutes[routeId] && (
+                            <div className="bg-navy-900/50 p-2 space-y-2">
+                                {group.students.map(stats => (
+                                    <div key={stats.student.id} className="flex items-center justify-between p-3 bg-navy-800 rounded-lg border border-navy-700">
+                                        <div className="flex-1">
+                                            <div className="text-white font-medium">{stats.student.name}</div>
+                                            <div className="text-xs text-gray-400 flex gap-3 mt-1">
+                                                <span className="text-green-400">P: {stats.presentCount}</span>
+                                                <span className="text-red-400">F: {stats.absentCount}</span>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => openDetails(stats)} className="p-2 text-primary-400 hover:text-white transition"><Icon name="eye" size={20} /></button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ))}
             </div>
 
-            {/* Floating Action Button for PDF */}
-            <button
-                onClick={exportPDF}
-                className="fixed bottom-24 right-4 bg-primary-600 hover:bg-primary-500 text-white p-4 rounded-full shadow-xl shadow-primary-600/30 flex items-center justify-center z-30"
-            >
-                <Icon name="save" size={24} />
-            </button>
+            <button onClick={exportPDF} className="fixed bottom-24 right-4 bg-primary-600 text-white p-4 rounded-full shadow-xl z-30"><Icon name="save" size={24} /></button>
 
-            {/* Details Modal */}
             {isModalOpen && selectedStudentStats && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <div className="bg-navy-800 p-6 rounded-2xl w-full max-w-sm border border-navy-600 relative">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white">
-                            <Icon name="x" />
-                        </button>
-
-                        <div className="text-center mb-4">
-                            <InitialsAvatar name={selectedStudentStats.student.name} size="lg" />
-                            <h3 className="text-xl font-bold text-white">{selectedStudentStats.student.name}</h3>
-                            <p className="text-primary-400 text-sm">{month}</p>
-                        </div>
-
-                        <div className="bg-navy-900 p-4 rounded-xl">
-                            {renderCalendar(selectedStudentStats)}
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-2 gap-3">
-                            <div className="bg-green-500/20 p-2 rounded-lg text-center border border-green-500/30">
-                                <div className="text-2xl font-bold text-green-500">{selectedStudentStats.presentCount}</div>
-                                <div className="text-[10px] uppercase text-green-200">Presenças</div>
-                            </div>
-                            <div className="bg-red-500/20 p-2 rounded-lg text-center border border-red-500/30">
-                                <div className="text-2xl font-bold text-red-500">{selectedStudentStats.absentCount}</div>
-                                <div className="text-[10px] uppercase text-red-200">Faltas</div>
-                            </div>
-                        </div>
+                        <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-400"><Icon name="x" /></button>
+                        <h3 className="text-xl font-bold text-white text-center mb-4">{selectedStudentStats.student.name}</h3>
+                        <div className="bg-navy-900 p-4 rounded-xl">{renderCalendar(selectedStudentStats)}</div>
                     </div>
                 </div>
             )}

@@ -494,22 +494,17 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             // Tabela de Mensalidades - Ordenação Dinâmica
             const sortedStudents = [...students].sort((a, b) => {
                 if (pdfSortOrder === 'name') {
-                    return a.name.localeCompare(b.name);
+                    return a.name.trim().localeCompare(b.name.trim(), undefined, { sensitivity: 'base' });
                 } else {
                     const payA = getPaymentForStudent(a.id);
                     const payB = getPaymentForStudent(b.id);
                     
-                    // Se ambos pagaram, ordena pela data
                     if (payA && payB) {
                         return new Date(payA.paidAt).getTime() - new Date(payB.paidAt).getTime();
                     }
-                    
-                    // Pagos vêm primeiro no relatório por data
                     if (payA && !payB) return -1;
                     if (!payA && payB) return 1;
-                    
-                    // Ambos pendentes, ordem alfabética
-                    return a.name.localeCompare(b.name);
+                    return a.name.trim().localeCompare(b.name.trim(), undefined, { sensitivity: 'base' });
                 }
             });
 

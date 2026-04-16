@@ -19,7 +19,7 @@ export const AttendanceScreen: React.FC = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
   const [filterShift, setFilterShift] = useState<'all' | 'manha' | 'tarde' | 'integral'>('all');
-  const [sortBy, setSortBy] = useState<'order' | 'name' | 'sala'>('order');
+  const [sortBy, setSortBy] = useState<'order' | 'name' | 'sala' | 'school'>('order');
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
@@ -105,8 +105,8 @@ export const AttendanceScreen: React.FC = () => {
     routeStudents.sort((a, b) => {
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'sala') return (a.sala || '').localeCompare(b.sala || '');
+      if (sortBy === 'school') return (a.school || '').localeCompare(b.school || '');
       
-      // Handle routeOrder vs routeOrder2 depending on which route context we are in
       const getOrder = (student: Student) => {
         if (student.routeId === route.id) return student.routeOrder ?? 0;
         if (student.routeId2 === route.id) return student.routeOrder2 ?? student.routeOrder ?? 0;
@@ -159,7 +159,7 @@ export const AttendanceScreen: React.FC = () => {
         <div className="relative">
           <input
             type="text"
-            placeholder="Filtrar por Escola, Sala ou Nome..."
+            placeholder="Filtrar por escola ou sala..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full bg-navy-800 text-white border border-navy-700 rounded-xl p-3 pl-10 focus:border-primary-500 outline-none transition"
@@ -187,19 +187,13 @@ export const AttendanceScreen: React.FC = () => {
 
         {/* Ordenação */}
         <div className="flex items-center justify-between gap-4">
-          <span className="text-xs text-gray-500 font-bold uppercase">Ordenar por:</span>
+          <span className="text-xs text-gray-500 font-bold uppercase">Ordenar:</span>
           <div className="flex gap-2 flex-1">
             <button
-              onClick={() => setSortBy('order')}
-              className={`flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg border transition-all ${sortBy === 'order' ? 'bg-primary-500/10 border-primary-500/50 text-primary-400' : 'bg-navy-800 border-navy-700 text-gray-500'}`}
+              onClick={() => setSortBy('school')}
+              className={`flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg border transition-all ${sortBy === 'school' ? 'bg-primary-500/10 border-primary-500/50 text-primary-400' : 'bg-navy-800 border-navy-700 text-gray-500'}`}
             >
-              ROTA
-            </button>
-            <button
-              onClick={() => setSortBy('name')}
-              className={`flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg border transition-all ${sortBy === 'name' ? 'bg-primary-500/10 border-primary-500/50 text-primary-400' : 'bg-navy-800 border-navy-700 text-gray-500'}`}
-            >
-              NOME
+              ESCOLA
             </button>
             <button
               onClick={() => setSortBy('sala')}
