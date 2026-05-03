@@ -6,6 +6,7 @@ import { Icon } from '../components/Icon';
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
 import { authService, supabase } from '../services/auth';
+import { formatCurrency } from '../utils';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -533,7 +534,7 @@ export const StudentsScreen: React.FC = () => {
                   {selectedStudent.monthlyFees && selectedStudent.monthlyFees > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Mensalidade</span>
-                      <span className="text-green-400">R$ {selectedStudent.monthlyFees.toFixed(2)}</span>
+                      <span className="text-green-400">{formatCurrency(selectedStudent.monthlyFees)}</span>
                     </div>
                   )}
                   {selectedStudent.dueDay && selectedStudent.dueDay > 0 && (

@@ -582,7 +582,7 @@ function App() {
   const canViewReminders = checkPermission('reminders', true);
   const canViewReports = checkPermission('reports', true);
   const canViewAttendance = checkPermission('attendance', true);
-  const canViewIncidents = checkPermission('incidents', true);
+  const canViewIncidents = checkPermission('incidents', false);
   const canViewStudents = checkPermission('students', true);
   const canViewRoutes = checkPermission('routes', true);
   const canViewAsaas = ENABLE_ASAAS && checkPermission('asaas', isProPlus);

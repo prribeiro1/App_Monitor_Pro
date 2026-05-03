@@ -244,15 +244,18 @@ export const AttendanceScreen: React.FC = () => {
                     const locationText = student.address || stops.find(s => s.id === student.stopId)?.name || '';
 
                     return (
-                      <div key={student.id} className="bg-navy-800 p-3 rounded-2xl border border-navy-700 shadow-sm flex items-center justify-between">
+                      <div key={student.id} className={`bg-navy-800 p-3 rounded-2xl border border-navy-700 shadow-sm flex items-center justify-between transition-all ${status === AttendanceStatus.PRESENT ? 'opacity-60' : ''}`}>
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <InitialsAvatar name={student.name} />
                           <div className="truncate">
                             <h3 
                               onClick={() => student.id && navigate(`/students?open=${student.id}`)}
-                              className="text-white font-bold text-base truncate cursor-pointer hover:text-primary-400 transition-colors"
+                              className="text-white font-bold text-base truncate cursor-pointer hover:text-primary-400 transition-colors flex items-center"
                             >
                               {student.name}
+                              {status === AttendanceStatus.PRESENT && (
+                                <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded ml-2 uppercase font-bold tracking-wider">Já Embarcou</span>
+                              )}
                             </h3>
                             {isBirthday(student) && (
                               <p className="text-[10px] text-pink-400 flex items-center gap-1">

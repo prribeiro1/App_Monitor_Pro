@@ -9,6 +9,7 @@ import autoTable from 'jspdf-autotable';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { formatCurrency } from '../utils';
 
 // Interface para gastos
 interface Expense {
@@ -389,12 +390,12 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             message = `Olá! Confirmo o recebimento da mensalidade de ${student.name} referente a ${month}/${year}. Valor: R$ ${payment.amount.toFixed(2)}. Obrigado!`;
         } else {
             // Cobrança
-            const valor = student.monthlyFees ? `R$ ${student.monthlyFees.toFixed(2)}` : 'a mensalidade';
+            const valor = student.monthlyFees ? formatCurrency(student.monthlyFees) : 'a mensalidade';
             const vencimento = student.dueDay ? `vencimento dia ${student.dueDay}` : '';
             const pix = settings?.pixKey ? `Chave Pix: ${settings.pixKey}` : 'Chave Pix: (Solicitar)';
             const tio = settings?.driverNickname || settings?.driverName?.split(' ')[0] || 'Motorista';
 
-            message = `Olá! Tudo bom? Lembrete automático do Tio ${tio} 🚐\nReferente ao aluno ${student.name} (${month}/${year}).\nValor: ${valor} ${vencimento}.\n${pix}\nFavor enviar comprovante. Grato!`;
+            message = `Olá! Tudo bom? Lembrete automático do Tio (a) ${tio} 🚐\nReferente ao aluno ${student.name} (${month}/${year}).\nValor: ${valor} ${vencimento}.\n${pix}\nFavor enviar comprovante. Grato!`;
         }
 
         window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
@@ -435,7 +436,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             
             doc.setFontSize(14);
             doc.text(`Recebi de: ${student.guardianName || 'Responsável'}`, 20, 90);
-            doc.text(`A importância de: R$ ${payment.amount.toFixed(2)}`, 20, 105);
+            doc.text(`A importância de: ${formatCurrency(payment.amount)}`, 20, 105);
             doc.text(`Referente a: Mensalidade Escolar - ${months[month-1]}/${year}`, 20, 120);
             doc.text(`Aluno(a): ${student.name}`, 20, 135);
             
@@ -469,6 +470,8 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         .filter(s => !getPaymentForStudent(s.id))
         .reduce((sum, s) => sum + (s.monthlyFees || 0), 0);
 
+    const totalExpected = students.reduce((sum, s) => sum + (s.monthlyFees || 0), 0);
+
     // Total de gastos do mês
     const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
@@ -486,10 +489,12 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             doc.text(`Relatório Financeiro: ${monthName}/${year}`, 14, 20);
 
             doc.setFontSize(10);
-            doc.text(`Total Recebido: R$ ${totalReceived.toFixed(2)}`, 14, 30);
-            doc.text(`Total Gastos: R$ ${totalExpenses.toFixed(2)}`, 14, 35);
-            doc.text(`Lucro Líquido: R$ ${netProfit.toFixed(2)}`, 14, 40);
-            doc.text(`Pagantes: ${paidCount} / ${totalStudents}`, 14, 45);
+            doc.text(`Total Esperado: ${formatCurrency(totalExpected)}`, 14, 30);
+            doc.text(`Total Recebido: ${formatCurrency(totalReceived)}`, 14, 35);
+            doc.text(`Falta Receber: ${formatCurrency(totalPending)}`, 14, 40);
+            doc.text(`Total Gastos: ${formatCurrency(totalExpenses)}`, 14, 45);
+            doc.text(`Lucro Líquido: ${formatCurrency(netProfit)}`, 14, 50);
+            doc.text(`Pagantes: ${paidCount} / ${totalStudents}`, 14, 55);
 
             // Tabela de Mensalidades - Ordenação Dinâmica
             const sortedStudents = [...students].sort((a, b) => {
@@ -513,7 +518,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                 const valor = payment ? payment.amount : (student.monthlyFees || 0);
                 return [
                     student.name,
-                    `R$ ${valor.toFixed(2)}`,
+                    formatCurrency(valor),
                     payment ? new Date(payment.paidAt).toLocaleDateString() : '-',
                     payment ? 'PAGO' : 'PENDENTE'
                 ];
@@ -522,7 +527,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             autoTable(doc, {
                 head: [['Aluno', 'Valor', 'Data Pagto.', 'Status']],
                 body: bodyData,
-                startY: 55,
+                startY: 65,
                 theme: 'grid',
                 styles: { fontSize: 10 },
                 headStyles: { fillColor: [22, 163, 74] }, // Green header
@@ -541,7 +546,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             if (expenses.length > 0) {
                 const expenseBody = expenses.map(e => [
                     e.description,
-                    `R$ ${Number(e.amount).toFixed(2)}`,
+                    formatCurrency(e.amount),
                     formatDateLocal(e.date)
                 ]);
 
@@ -689,12 +694,20 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
             {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-navy-800 p-4 rounded-xl border border-navy-700">
-                    <p className="text-gray-400 text-xs uppercase font-bold">Recebido</p>
-                    <p className="text-2xl font-bold text-green-400">R$ {totalReceived.toFixed(2)}</p>
+                    <p className="text-gray-400 text-xs uppercase font-bold">Total Esperado</p>
+                    <p className="text-xl font-bold text-white">{formatCurrency(totalExpected)}</p>
                 </div>
                 <div className="bg-navy-800 p-4 rounded-xl border border-navy-700">
                     <p className="text-gray-400 text-xs uppercase font-bold">Pagantes</p>
-                    <p className="text-2xl font-bold text-white">{paidCount}/{totalStudents}</p>
+                    <p className="text-xl font-bold text-white">{paidCount}/{totalStudents}</p>
+                </div>
+                <div className="bg-navy-800 p-4 rounded-xl border border-navy-700">
+                    <p className="text-gray-400 text-xs uppercase font-bold">Recebido</p>
+                    <p className="text-xl font-bold text-green-400">{formatCurrency(totalReceived)}</p>
+                </div>
+                <div className="bg-navy-800 p-4 rounded-xl border border-navy-700">
+                    <p className="text-gray-400 text-xs uppercase font-bold">Falta Receber</p>
+                    <p className="text-xl font-bold text-orange-400">{formatCurrency(totalPending)}</p>
                 </div>
             </div>
 
@@ -725,12 +738,12 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <p className="text-xs text-gray-500">Gastos</p>
-                        <p className="text-lg font-bold text-red-400">- R$ {totalExpenses.toFixed(2)}</p>
+                        <p className="text-lg font-bold text-red-400">- {formatCurrency(totalExpenses)}</p>
                     </div>
                     <div>
                         <p className="text-xs text-gray-500">Lucro Líquido</p>
                         <p className={`text-lg font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            R$ {netProfit.toFixed(2)}
+                            {formatCurrency(netProfit)}
                         </p>
                     </div>
                 </div>
@@ -750,7 +763,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                                             <p className="text-gray-500 text-xs">{formatDateLocal(expense.date)}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-red-400 font-bold text-sm">- R$ {Number(expense.amount).toFixed(2)}</span>
+                                            <span className="text-red-400 font-bold text-sm">- {formatCurrency(expense.amount)}</span>
                                             <button
                                                 onClick={() => deleteExpense(expense.id)}
                                                 className="text-gray-500 hover:text-red-400 p-1"
@@ -835,7 +848,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                             <div className="text-right flex flex-col items-end gap-1">
                                 {payment ? (
                                     <>
-                                        <span className="text-green-400 font-bold">R$ {payment.amount.toFixed(2)}</span>
+                                        <span className="text-green-400 font-bold">{formatCurrency(payment.amount)}</span>
                                         <div className="flex gap-1 mt-1">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); sendWhatsAppReminder(student, payment); }}
@@ -856,7 +869,7 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
                                 ) : (
                                     <>
                                         <span className="text-red-400 text-sm font-bold">
-                                            {student.monthlyFees ? `R$ ${student.monthlyFees.toFixed(2)}` : 'Pendente'}
+                                            {student.monthlyFees ? formatCurrency(student.monthlyFees) : 'Pendente'}
                                         </span>
                                         <div className="flex gap-1">
                                             <button

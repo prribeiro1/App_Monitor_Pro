@@ -72,8 +72,11 @@ export const ReportsScreen: React.FC = () => {
                 groupId = student.routeId || 'sem_rota';
                 groupName = routes.find(r => r.id === groupId)?.name || 'Sem Rota Definida';
             } else {
-                groupId = student.school || 'Sem Escola';
-                groupName = student.school || 'Sem Escola';
+                const school = student.school || 'Sem Escola';
+                const shift = student.shift || 'Sem Turno';
+                const sala = student.sala || 'Sem Sala';
+                groupId = `${school}_${shift}_${sala}`;
+                groupName = `${school} - ${shift.toUpperCase()} - Sala: ${sala}`;
             }
 
             if (!grouped[groupId]) {
@@ -252,7 +255,7 @@ export const ReportsScreen: React.FC = () => {
                 )}
                 <div className="flex bg-navy-800 p-1 rounded-xl border border-navy-700">
                     <button onClick={() => setGroupBy('route')} className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'route' ? 'bg-navy-700 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>ROTA</button>
-                    <button onClick={() => setGroupBy('school')} className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'school' ? 'bg-navy-700 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>ESCOLA</button>
+                    <button onClick={() => setGroupBy('school')} className={`flex-1 p-2 rounded-lg text-xs font-bold transition ${groupBy === 'school' ? 'bg-navy-700 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>ESCOLA / TURMA</button>
                 </div>
             </div>
 

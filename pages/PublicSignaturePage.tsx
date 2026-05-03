@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/auth';
 import { SignaturePad } from '../components/SignaturePad';
 import { Icon } from '../components/Icon';
+import { formatCurrency } from '../utils';
 
 const DEFAULT_CLAUSES = [
     { title: "CLÁUSULA 1ª - DO OBJETO", content: "O presente contrato tem como objeto a prestação de serviços de transporte escolar do(a) aluno(a) {{ALUNO}}, conforme rota e horários previamente definidos entre as partes." },
@@ -117,7 +118,7 @@ export const PublicSignaturePage: React.FC = () => {
 
         return content
             .replace(/{{ALUNO}}/g, student?.toUpperCase() || '____')
-            .replace(/{{VALOR}}/g, fee ? `R$ ${parseFloat(fee).toFixed(2)}` : '____')
+            .replace(/{{VALOR}}/g, fee ? formatCurrency(parseFloat(fee)) : '____')
             .replace(/{{DIA}}/g, day?.toString() || '____');
     };
 
@@ -177,7 +178,7 @@ export const PublicSignaturePage: React.FC = () => {
                         </div>
                         <div className="flex justify-between border-b border-navy-700 pb-2">
                             <span className="text-gray-400">Mensalidade:</span>
-                            <span className="text-accent-400 font-bold">R$ {dbContract?.monthly_fee || monthlyFee || '---'}</span>
+                            <span className="text-accent-400 font-bold">{dbContract?.monthly_fee ? formatCurrency(dbContract.monthly_fee) : monthlyFee ? formatCurrency(parseFloat(monthlyFee)) : '---'}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-400">Vencimento:</span>

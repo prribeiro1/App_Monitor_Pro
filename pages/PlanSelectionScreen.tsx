@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Icon } from '../components/Icon';
 import { SubscriptionTier, PlanPrices } from '../types';
 import { cloudSync } from '../services/cloudSync';
+import { formatCurrency } from '../utils';
 
 interface PlanSelectionScreenProps {
   onSelectPlan: (tier: SubscriptionTier, price: number) => void;
@@ -165,7 +166,7 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
                     <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-bold text-primary-400">
-                        {plan.price > 0 ? `R$ ${plan.price.toFixed(2)}` : 'Consultar'}
+                        {plan.price > 0 ? formatCurrency(plan.price) : 'Consultar'}
                       </span>
                       {plan.price > 0 && <span className="text-gray-500 text-sm">/mês</span>}
                     </div>
@@ -188,7 +189,7 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
                 <div className="bg-navy-900/50 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-400 mb-1">Plano Anual</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-lg font-bold text-green-400">R$ {plan.priceAnnual.toFixed(2)}</span>
+                    <span className="text-lg font-bold text-green-400">{formatCurrency(plan.priceAnnual)}</span>
                     <span className="text-xs text-gray-500">/ano</span>
                     <span className="text-xs text-green-400 font-semibold">
                       (Economize {Math.round(((plan.price * 12 - plan.priceAnnual) / (plan.price * 12)) * 100)}%)
