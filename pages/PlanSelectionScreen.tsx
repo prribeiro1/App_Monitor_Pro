@@ -39,8 +39,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
     {
       id: 'basic' as SubscriptionTier,
       name: 'Básico',
-      price: prices.basic.monthly,
-      priceAnnual: prices.basic.annual,
+      price: prices?.basic?.monthly ?? 0,
+      priceAnnual: prices?.basic?.annual ?? 0,
       color: 'from-gray-600 to-gray-700',
       icon: 'check-circle' as const,
       features: [
@@ -60,8 +60,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
     {
       id: 'pro' as SubscriptionTier,
       name: 'Pro Solo',
-      price: prices.pro.monthly,
-      priceAnnual: prices.pro.annual,
+      price: prices?.pro?.monthly ?? 15.90,
+      priceAnnual: prices?.pro?.annual ?? 159.90,
       color: 'from-blue-600 to-blue-700',
       icon: 'star' as const,
       badge: 'Mais Popular',
@@ -80,8 +80,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
     {
       id: 'pro_plus' as SubscriptionTier,
       name: 'Pro Duo',
-      price: 0,
-      priceAnnual: 0,
+      price: prices?.pro_plus?.monthly ?? 24.90,
+      priceAnnual: prices?.pro_plus?.annual ?? 249.90,
       color: 'from-indigo-600 to-indigo-700',
       icon: 'users' as const,
       badge: 'Até 2 Condutores',
@@ -140,9 +140,9 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
 
         {/* Plans */}
         <div className="space-y-4">
-          {plans.map((plan) => (
+          {plans.map((plan, index) => (
             <div
-              key={plan.id}
+              key={`${plan.id}-${index}`}
               onClick={() => setSelectedPlan(plan.id)}
               className={`relative rounded-2xl p-5 border-2 transition-all cursor-pointer ${selectedPlan === plan.id
                 ? 'border-primary-500 bg-primary-500/10 shadow-lg shadow-primary-500/20'
