@@ -5,7 +5,6 @@ import { OnboardingBankScreen } from './OnboardingBankScreen';
 import { SubscriptionTier, UserSettings } from '../types';
 import { dbService } from '../services/db';
 import { supabase } from '../services/auth';
-import { asaasService } from '../services/asaasService';
 
 interface WelcomeScreenProps {
   settings: UserSettings | null;
@@ -21,89 +20,33 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
   };
 
   const handlePlanSelected = async (tier: SubscriptionTier, price?: number) => {
-    if (tier === 'basic') {
+    try {
       setSelectedPlan(tier);
+
+      // 1. Salvar plano localmente
       if (settings) {
         const updatedSettings: UserSettings = { ...settings, subscriptionTier: tier };
         await dbService.saveUserSettings(updatedSettings);
       }
-      onComplete();
-      return;
-    }
 
-    try {
-      // Inicia fluxo de pagamento para Pro/Pro+
-      alert("Iniciando processo de assinatura... Você será redirecionado para o checkout do Asaas.");
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
-
-      const driverName = settings?.driverName || user.user_metadata?.full_name || 'Motorista';
-      const driverEmail = settings?.driverEmail || user.email!;
-      const driverCpf = settings?.driverCpf;
-
-      if (!driverCpf) {
-        alert("Por favor, preencha seu CPF no perfil antes de assinar um plano Pro.");
-        setStep('welcome'); // Ou redirecionar para perfil
-        return;
-      }
-
-      // 1. Buscar ou Criar Cliente no Asaas
-      let customerId = '';
+      // 2. Salvar plano no Supabase Auth metadata
       try {
-        const search = await asaasService.getCustomerByCpf(driverCpf);
-        if (search.data && search.data.length > 0) {
-          customerId = search.data[0].id;
-        } else {
-          const customer = await asaasService.createCustomer({
-            name: driverName,
-            cpfCnpj: driverCpf,
-            email: driverEmail
-          });
-          customerId = customer.id;
-        }
-      } catch (cError: any) {
-        throw new Error(`Erro ao gerenciar cliente no Asaas: ${cError.message}`);
+        await supabase.auth.updateUser({
+          data: { subscription_tier: tier }
+        });
+      } catch (e) {
+        console.warn("Não foi possível atualizar tier no Supabase Auth:", e);
       }
 
-      if (!customerId) throw new Error("Não foi possível obter um ID de cliente no Asaas.");
-
-      // 2. Criar Assinatura do App (Sem Split, pois é pra nós)
-      const value = price || (tier === 'pro_plus' ? 24.90 : 14.90);
-      const description = `Plano ${tier.toUpperCase()} - Van Escolar Pro`;
-
-      const subscription = await asaasService.createSubscription({
-        customer: customerId,
-        billingType: 'UNDEFINED', // Deixa o cliente escolher no checkout
-        value: value,
-        nextDueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 dias de trial
-        cycle: 'MONTHLY',
-        description: description,
-        externalReference: `subscription:${user.id}`
-      });
-
-      // A função proxy agora tenta anexar o invoiceUrl aqui
-      if (subscription && (subscription.invoiceUrl || subscription.checkoutUrl)) {
-        const paymentUrl = subscription.invoiceUrl || subscription.checkoutUrl;
-
-        // Abrir link de pagamento
-        window.open(paymentUrl, '_blank');
-
-        // Salvar intenção de plano localmente
-        const updatedSettings: UserSettings = { ...settings!, subscriptionTier: tier };
-        await dbService.saveUserSettings(updatedSettings);
-
-        alert("Seu link de assinatura foi gerado! Você será redirecionado para o checkout. Após o pagamento, seu plano será ativado automaticamente.");
-
-        onComplete();
-      } else {
-        console.error("Assinatura criada mas link ausente:", subscription);
-        throw new Error("Assinatura criada, mas o link de pagamento não foi retornado. Por favor, tente novamente em instantes ou contate o suporte.");
+      // 3. Para Pro, o link de checkout já foi aberto pelo PlanSelectionScreen
+      if (tier === 'pro' || tier === 'pro_plus') {
+        alert("✅ Plano selecionado! Complete o pagamento na página que foi aberta. Seu acesso Pro já está ativo.");
       }
 
+      onComplete();
     } catch (error: any) {
-      console.error("Erro ao processar assinatura:", error);
-      alert(`Erro: ${error.message || 'Falha na comunicação com Asaas'}`);
+      console.error("Erro ao salvar plano:", error);
+      alert(`Erro: ${error.message || 'Falha ao salvar o plano'}`);
     }
   };
 

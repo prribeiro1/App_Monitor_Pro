@@ -15,6 +15,12 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
     pro: { monthly: 15.90, annual: 159.90 },
     pro_plus: { monthly: 24.90, annual: 249.90 }
   });
+  const [paymentLinks, setPaymentLinks] = useState<any>({
+    pro: {
+      monthly: 'https://www.asaas.com/c/a3ru4pxft5opr3wg',
+      annual: 'https://www.asaas.com/c/hm7mn9upu8lpyq1x'
+    }
+  });
   const [whatsappLink, setWhatsappLink] = useState('https://wa.me/5522999837547');
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +30,7 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
         const constants = await cloudSync.getAppConstants();
         if (constants) {
           if (constants.plan_prices) setPrices(constants.plan_prices);
+          if (constants.payment_links) setPaymentLinks(constants.payment_links);
           if (constants.contact_links?.whatsapp_team) setWhatsappLink(constants.contact_links.whatsapp_team);
         }
       } catch (e) {
@@ -76,50 +83,16 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
         'Suporte prioritário'
       ],
       notIncluded: []
-    },
-    {
-      id: 'pro_plus' as SubscriptionTier,
-      name: 'Pro Duo',
-      price: prices?.pro_plus?.monthly ?? 24.90,
-      priceAnnual: prices?.pro_plus?.annual ?? 249.90,
-      color: 'from-indigo-600 to-indigo-700',
-      icon: 'users' as const,
-      badge: 'Até 2 Condutores',
-      isWhatsapp: true, 
-      features: [
-        'Tudo do Pro Solo',
-        'Acesso para 2 condutores',
-        'Sincronização em tempo real',
-        'Gestão centralizada'
-      ],
-      notIncluded: []
-    },
-    {
-      id: 'pro_plus' as SubscriptionTier,
-      name: 'Equipe / Frotas',
-      price: 0,
-      priceAnnual: 0,
-      color: 'from-purple-600 to-purple-700',
-      icon: 'truck' as const,
-      badge: 'Empresas',
-      isWhatsapp: true,
-      features: [
-        'Tudo do Pro Duo',
-        'Painel para 3+ condutores',
-        'Gestão de frota avançada',
-        'Treinamento e Suporte VIP'
-      ],
-      notIncluded: []
     }
   ];
 
   const handleContinue = () => {
     if (selectedPlan) {
       const plan = plans.find(p => p.id === selectedPlan);
-      if ((plan as any).isWhatsapp) {
-        const message = `Olá! Gostaria de saber mais sobre o Plano ${plan?.name} do Van Escolar Pro.`;
-        window.open(`${whatsappLink}?text=${encodeURIComponent(message)}`, '_blank');
-        return;
+      if (selectedPlan === 'pro') {
+        // Abre o link de checkout do Asaas no navegador
+        const link = paymentLinks?.pro?.monthly || 'https://www.asaas.com/c/a3ru4pxft5opr3wg';
+        window.open(link, '_blank');
       }
       onSelectPlan(selectedPlan, plan?.price || 0);
     }
@@ -166,7 +139,7 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
                     <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-bold text-primary-400">
-                        {plan.price > 0 ? formatCurrency(plan.price) : 'Consultar'}
+                        {plan.price > 0 ? formatCurrency(plan.price) : 'Grátis'}
                       </span>
                       {plan.price > 0 && <span className="text-gray-500 text-sm">/mês</span>}
                     </div>
@@ -235,7 +208,7 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
             </div>
             <div className="text-left">
               <p className="text-white font-bold text-sm">Plano para Equipes?</p>
-              <p className="text-gray-400 text-xs text-balance">Consulte valores para frotas de 3 a 5 motoristas.</p>
+              <p className="text-gray-400 text-xs text-balance">Consulte valores para frotas de 2 ou mais motoristas.</p>
             </div>
             <Icon name="external-link" size={16} className="text-gray-600 ml-auto" />
           </a>
