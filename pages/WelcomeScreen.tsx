@@ -23,27 +23,30 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ settings, onComple
     try {
       setSelectedPlan(tier);
 
-      // 1. Salvar plano localmente
-      if (settings) {
-        const updatedSettings: UserSettings = { ...settings, subscriptionTier: tier };
-        await dbService.saveUserSettings(updatedSettings);
+      if (tier === 'basic') {
+        // Básico: salvar e ativar imediatamente
+        if (settings) {
+          const updatedSettings: UserSettings = { ...settings, subscriptionTier: 'basic' };
+          await dbService.saveUserSettings(updatedSettings);
+        }
+        try {
+          await supabase.auth.updateUser({ data: { subscription_tier: 'basic' } });
+        } catch (e) { console.warn("Erro ao atualizar tier:", e); }
+        onComplete();
+      } else {
+        // Pro: NÃO ativar. O checkout já foi aberto pelo PlanSelectionScreen.
+        // Salvar como 'basic' localmente para evitar redirecionamento ao /change-plan
+        if (settings && !settings.subscriptionTier) {
+          const updatedSettings: UserSettings = { ...settings, subscriptionTier: 'basic' };
+          await dbService.saveUserSettings(updatedSettings);
+        }
+        alert(
+          "🔗 Link de pagamento aberto!\n\n" +
+          "Após realizar o pagamento via Pix, envie o comprovante pelo nosso WhatsApp para ativarmos seu plano Pro.\n\n" +
+          "Enquanto isso, você continuará com acesso ao plano Básico."
+        );
+        onComplete();
       }
-
-      // 2. Salvar plano no Supabase Auth metadata
-      try {
-        await supabase.auth.updateUser({
-          data: { subscription_tier: tier }
-        });
-      } catch (e) {
-        console.warn("Não foi possível atualizar tier no Supabase Auth:", e);
-      }
-
-      // 3. Para Pro, o link de checkout já foi aberto pelo PlanSelectionScreen
-      if (tier === 'pro' || tier === 'pro_plus') {
-        alert("✅ Plano selecionado! Complete o pagamento na página que foi aberta. Seu acesso Pro já está ativo.");
-      }
-
-      onComplete();
     } catch (error: any) {
       console.error("Erro ao salvar plano:", error);
       alert(`Erro: ${error.message || 'Falha ao salvar o plano'}`);

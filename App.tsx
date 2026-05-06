@@ -190,14 +190,39 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
   const isTrialActive = trialStartedAt
     ? (new Date().getTime() - new Date(trialStartedAt).getTime()) < (7 * 24 * 60 * 60 * 1000)
     : false;
-  const isPro = userTier !== 'basic' || isTrialActive || permissions.team;
+
+  // 🔒 Verificação de assinatura paga
+  const subscriptionPaidUntil = metadata.subscription_paid_until;
+  const isSubscriptionActive = subscriptionPaidUntil
+    ? new Date(subscriptionPaidUntil).getTime() >= new Date().setHours(0, 0, 0, 0)
+    : false;
+  const daysUntilExpiry = subscriptionPaidUntil
+    ? Math.ceil((new Date(subscriptionPaidUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : -1;
+
+  const isPro = isTrialActive || (userTier !== 'basic' && isSubscriptionActive) || permissions.team;
 
   const tabs = allTabs.filter(t => permissions[t.key] !== false);
 
   return (
     <div className="flex flex-col h-screen bg-navy-900 text-gray-100 overflow-hidden">
-      {/* 🔒 Banner de Teste Expirado */}
-      {!isPro && userTier === 'basic' && (
+      {/* 🔒 Banner: Assinatura expirada */}
+      {!isPro && userTier !== 'basic' && !isTrialActive && (
+        <div className="bg-red-600 p-2 flex items-center justify-between px-4 z-[60] shadow-lg">
+          <div className="flex items-center gap-2">
+            <Icon name="alert-triangle" size={14} className="text-white animate-pulse" />
+            <span className="text-[10px] font-bold text-white uppercase">Assinatura expirada. Renove para voltar ao Pro.</span>
+          </div>
+          <button 
+            onClick={() => window.location.hash = '/change-plan'}
+            className="bg-white text-red-600 text-[10px] font-black px-3 py-1 rounded-full active:scale-95 transition"
+          >
+            RENOVAR
+          </button>
+        </div>
+      )}
+      {/* 🔒 Banner: Teste expirado (nunca assinou) */}
+      {!isPro && userTier === 'basic' && !isTrialActive && trialStartedAt && (
         <div className="bg-red-600 p-2 flex items-center justify-between px-4 z-[60] shadow-lg">
           <div className="flex items-center gap-2">
             <Icon name="alert-triangle" size={14} className="text-white animate-pulse" />
@@ -208,6 +233,23 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
             className="bg-white text-red-600 text-[10px] font-black px-3 py-1 rounded-full active:scale-95 transition"
           >
             ASSINAR AGORA
+          </button>
+        </div>
+      )}
+      {/* ⚠️ Banner: Assinatura vencendo em breve */}
+      {isPro && daysUntilExpiry >= 0 && daysUntilExpiry <= 5 && !permissions.team && (
+        <div className="bg-yellow-600 p-2 flex items-center justify-between px-4 z-[60] shadow-lg">
+          <div className="flex items-center gap-2">
+            <Icon name="clock" size={14} className="text-white" />
+            <span className="text-[10px] font-bold text-white uppercase">
+              {daysUntilExpiry === 0 ? 'Seu plano Pro vence hoje!' : `Seu plano Pro vence em ${daysUntilExpiry} dia${daysUntilExpiry > 1 ? 's' : ''}. Renove!`}
+            </span>
+          </div>
+          <button 
+            onClick={() => window.location.hash = '/change-plan'}
+            className="bg-white text-yellow-700 text-[10px] font-black px-3 py-1 rounded-full active:scale-95 transition"
+          >
+            RENOVAR
           </button>
         </div>
       )}
@@ -394,7 +436,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
             label={tab.label} 
             active={location.pathname === tab.path} 
             onClick={tab.pro && !isPro ? () => {
-              alert("⚠️ Esta é uma função do Plano Pro.\nSeu período de teste expirou.");
+              alert("⚠️ Esta é uma função do Plano Pro.\nAssine ou renove seu plano para ter acesso.");
               window.location.hash = '/change-plan';
             } : undefined}
           />
@@ -571,8 +613,14 @@ function App() {
     ? (new Date().getTime() - new Date(trialStartedAt).getTime()) < (7 * 24 * 60 * 60 * 1000)
     : false;
 
-  const isPro = userTier !== 'basic' || isTrialActive || isSuperUser;
-  const isProPlus = userTier === 'pro_plus' || isTrialActive || isSuperUser;
+  // 🔒 Verificação de assinatura paga (subscription_paid_until no metadata do Supabase)
+  const subscriptionPaidUntil = metadata.subscription_paid_until;
+  const isSubscriptionActive = subscriptionPaidUntil
+    ? new Date(subscriptionPaidUntil).getTime() >= new Date().setHours(0, 0, 0, 0)
+    : false;
+
+  const isPro = isTrialActive || (userTier !== 'basic' && isSubscriptionActive) || isSuperUser;
+  const isProPlus = (userTier === 'pro_plus' && isSubscriptionActive) || isTrialActive || isSuperUser;
   const currentTier = isSuperUser ? 'pro_plus' : (isTrialActive ? 'pro_plus' : userTier);
 
   const canViewFinancial = checkPermission('financial', isPro);

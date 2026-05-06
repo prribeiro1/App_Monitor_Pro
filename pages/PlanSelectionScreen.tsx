@@ -12,7 +12,7 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionTier | null>(null);
   const [prices, setPrices] = useState<PlanPrices>({
     basic: { monthly: 0, annual: 0 },
-    pro: { monthly: 15.90, annual: 159.90 },
+    pro: { monthly: 19.90, annual: 199.90 },
     pro_plus: { monthly: 24.90, annual: 249.90 }
   });
   const [paymentLinks, setPaymentLinks] = useState<any>({
@@ -67,8 +67,8 @@ export const PlanSelectionScreen: React.FC<PlanSelectionScreenProps> = ({ onSele
     {
       id: 'pro' as SubscriptionTier,
       name: 'Pro Solo',
-      price: prices?.pro?.monthly ?? 15.90,
-      priceAnnual: prices?.pro?.annual ?? 159.90,
+      price: prices?.pro?.monthly ?? 19.90,
+      priceAnnual: prices?.pro?.annual ?? 199.90,
       color: 'from-blue-600 to-blue-700',
       icon: 'star' as const,
       badge: 'Mais Popular',
