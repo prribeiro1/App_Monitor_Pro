@@ -64,9 +64,17 @@ export const TeamScreen: React.FC = () => {
             // Then update subscription tier
             // We'll use a custom RPC or directly update metadata if possible 
             // Since we don't have a specific RPC for tier yet, let's create a generic one or assume update_user_metadata exists
+            // Calcula data de expiração (Se for Pro, libera por 1 ano para evitar bloqueio manual)
+            const farFuture = new Date();
+            farFuture.setFullYear(farFuture.getFullYear() + 1);
+            const expiryIso = farFuture.toISOString().split('T')[0];
+
             const { error: tierError } = await supabase.rpc('update_user_metadata_admin', {
                 target_email: email,
-                new_metadata: { subscription_tier: tier }
+                new_metadata: { 
+                    subscription_tier: tier,
+                    subscription_paid_until: tier !== 'basic' ? expiryIso : null
+                }
             });
 
             if (tierError) {

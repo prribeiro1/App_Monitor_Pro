@@ -101,19 +101,27 @@ async function handlePaymentSuccess(supabase: any, payment: any) {
       console.log(`📚 Status do aluno ${id} atualizado.`);
     }
 
-    if (type === 'subscription') {
-      const tier = payment.value >= 24.90 ? 'pro_plus' : (payment.value >= 14.90 ? 'pro' : 'basic');
+      // Calcula data de expiração (31 dias a partir de hoje ou da data do pagamento)
+      const payDate = payment.paymentDate ? new Date(payment.paymentDate) : new Date();
+      const expiryDate = new Date(payDate);
+      expiryDate.setDate(expiryDate.getDate() + 31);
+      const expiryIso = expiryDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
       // Atualiza Perfil
-      await supabase.from('profiles').update({ subscription_tier: tier }).eq('id', id);
+      await supabase.from('profiles').update({ 
+        subscription_tier: tier,
+        subscription_paid_until: expiryIso
+      }).eq('id', id);
 
       // Atualiza Metadata do Auth
       await supabase.auth.admin.updateUserById(id, {
-        user_metadata: { subscription_tier: tier }
+        user_metadata: { 
+          subscription_tier: tier,
+          subscription_paid_until: expiryIso
+        }
       });
 
-      console.log(`👤 Plano do usuário ${id} atualizado para ${tier}.`);
-    }
+      console.log(`👤 Plano do usuário ${id} atualizado para ${tier} até ${expiryIso}.`);
   } catch (dbError) {
     console.error(`❌ Erro ao atualizar banco de dados: ${dbError.message}`);
     console.error('Certifique-se de que a tabela e as colunas (payment_status, etc) existem.');
