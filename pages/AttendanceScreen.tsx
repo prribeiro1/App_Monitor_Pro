@@ -23,7 +23,15 @@ export const AttendanceScreen: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
-  const today = new Date().toISOString().split('T')[0];
+  // Formata a data local (evita timezone bugs do toISOString)
+  const getLocalDate = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const today = getLocalDate();
 
   // Verifica se é aniversário do aluno
   const isBirthday = (student: Student) => {
@@ -43,7 +51,7 @@ export const AttendanceScreen: React.FC = () => {
 
     const todayMap: Record<string, AttendanceStatus> = {};
     allAttendance.forEach(r => {
-      if (r.date === today) {
+      if (r.date && r.date.startsWith(today)) {
         todayMap[r.studentId] = r.status;
       }
     });
