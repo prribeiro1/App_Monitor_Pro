@@ -183,7 +183,7 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps 
       ) : (
         <div className="space-y-3">
           {routes.map(route => {
-            const routeStudents = students.filter(s => s.routeId === route.id || s.routeId2 === route.id);
+            const routeStudents = students.filter(s => s.active && (s.routeId === route.id || s.routeId2 === route.id));
             const isExpanded = expandedRoutes[route.id];
             return (
               <div key={route.id} className="bg-navy-800 rounded-xl border border-navy-700 overflow-hidden">

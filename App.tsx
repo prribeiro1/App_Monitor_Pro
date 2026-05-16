@@ -179,7 +179,8 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
     { path: '/routes', icon: 'map' as IconName, label: 'Rotas', key: 'routes', pro: false },
     { path: '/students', icon: 'users' as IconName, label: 'Alunos', key: 'students', pro: false },
     { path: '/attendance', icon: 'check' as IconName, label: 'Chamada', key: 'attendance', pro: false },
-    { path: '/incidents', icon: 'alert-triangle' as IconName, label: 'Ocor.', key: 'incidents', pro: false },
+    // Ocorrências removida da navegação por solicitação do cliente
+    // { path: '/incidents', icon: 'alert-triangle' as IconName, label: 'Ocor.', key: 'incidents', pro: false },
     { path: '/reports', icon: 'bar-chart' as IconName, label: 'Relat.', key: 'reports', pro: true },
     { path: '/financial', icon: 'dollar-sign' as IconName, label: 'Financ.', key: 'financial', pro: true },
   ];
@@ -446,7 +447,7 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
   );
 };
 
-const APP_VERSION = '1.3.3';
+const APP_VERSION = '1.3.4';
 
 const DashboardWrapper: React.FC = () => {
   const navigate = useNavigate();
@@ -630,7 +631,7 @@ function App() {
   const canViewReminders = checkPermission('reminders', true);
   const canViewReports = checkPermission('reports', true);
   const canViewAttendance = checkPermission('attendance', true);
-  const canViewIncidents = checkPermission('incidents', false);
+  const canViewIncidents = false; // 🚫 Ocorrências desativada para todos os usuários
   const canViewStudents = checkPermission('students', true);
   const canViewRoutes = checkPermission('routes', true);
   const canViewAsaas = ENABLE_ASAAS && checkPermission('asaas', isProPlus);

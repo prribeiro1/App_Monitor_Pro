@@ -78,7 +78,19 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         // Carregar gastos do Supabase
         await fetchExpenses();
 
-        setStudents(s.filter(student => student.active));
+        // 🆕 ALUNOS INATIVOS: Mostrar no histórico financeiro se tiver pagamento registrado
+        // Alunos ativos sempre aparecem. Inativos aparecem APENAS se possuem pagamento
+        // no mês/ano selecionado (preserva histórico até o mês que esteve ativo).
+        const allPayments = p.length > 0 ? p : await dbService.getPayments();
+        const filteredStudents = s.filter(student => {
+            if (student.active) return true;
+            // Inativo: verificar se tem pagamento no mês/ano selecionado
+            return allPayments.some(pay =>
+                pay.studentId === student.id && pay.month === month && pay.year === year
+            );
+        });
+
+        setStudents(filteredStudents);
         setStops(st);
         setRoutes(r);
         setLoading(false);
@@ -293,8 +305,8 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
 
     useEffect(() => { fetchData(); }, []);
 
-    // Recarregar gastos quando mudar mês/ano
-    useEffect(() => { fetchExpenses(); }, [month, year]);
+    // 🆕 Recarregar dados completos quando mudar mês/ano (necessário para filtro de inativos)
+    useEffect(() => { fetchData(); }, [month, year]);
 
     const getPaymentForStudent = (studentId: string) => {
         return payments.find(p => p.studentId === studentId && p.month === month && p.year === year);
