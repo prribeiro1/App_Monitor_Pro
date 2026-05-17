@@ -221,7 +221,7 @@ export const ReportsScreen: React.FC = () => {
                 sortedSchools.forEach(([schoolName, school]) => {
                     // Cabeçalho da escola
                     bodyData.push([{
-                        content: `🏫 ${schoolName.toUpperCase()}`,
+                        content: `ESCOLA: ${schoolName.toUpperCase()}`,
                         colSpan: reportType === 'monthly' ? 4 : 3,
                         styles: { fillColor: [26, 28, 53], textColor: [255, 255, 255], fontStyle: 'bold' }
                     }]);
@@ -233,7 +233,7 @@ export const ReportsScreen: React.FC = () => {
                     sortedSalas.forEach(([salaKey, sala]) => {
                         // Sub-cabeçalho da sala
                         bodyData.push([{
-                            content: `  📚 ${sala.salaName}`,
+                            content: `  Turma: ${sala.salaName}`,
                             colSpan: reportType === 'monthly' ? 4 : 3,
                             styles: { fillColor: [40, 44, 80], textColor: [180, 200, 255], fontStyle: 'italic' }
                         }]);
