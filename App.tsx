@@ -447,7 +447,32 @@ const Layout: React.FC<PropsWithChildren<LayoutProps>> = ({ children, onBackup, 
   );
 };
 
-const APP_VERSION = '1.3.4';
+const APP_VERSION = '1.3.5';
+const APP_VERSION_CODE = 23;
+
+const compareVersionNames = (current: string, required: string) => {
+  const currentParts = current.split('.').map(part => Number(part) || 0);
+  const requiredParts = required.split('.').map(part => Number(part) || 0);
+  const maxLength = Math.max(currentParts.length, requiredParts.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const currentValue = currentParts[i] || 0;
+    const requiredValue = requiredParts[i] || 0;
+    if (currentValue !== requiredValue) return currentValue - requiredValue;
+  }
+
+  return 0;
+};
+
+const parseUpdateConfig = (value: any) => {
+  if (typeof value === 'number') return { minVersionCode: value };
+  if (typeof value === 'string') return { minVersion: value };
+
+  return {
+    minVersion: value?.minVersion || value?.min_version,
+    minVersionCode: Number(value?.minVersionCode || value?.min_version_code || value?.versionCode || 0) || undefined,
+  };
+};
 
 const DashboardWrapper: React.FC = () => {
   const navigate = useNavigate();
@@ -488,7 +513,15 @@ function App() {
     try {
       const { data, error } = await supabase.from('app_constants').select('value').eq('key', 'min_version').single();
       if (error) { console.warn("Version check skipped:", error.message); return; }
-      if (data.value > APP_VERSION) setIsUpdateRequired(true);
+      const updateConfig = parseUpdateConfig(data.value);
+      const requiresVersionCodeUpdate = updateConfig.minVersionCode
+        ? APP_VERSION_CODE < updateConfig.minVersionCode
+        : false;
+      const requiresVersionNameUpdate = updateConfig.minVersion
+        ? compareVersionNames(APP_VERSION, updateConfig.minVersion) < 0
+        : false;
+
+      setIsUpdateRequired(requiresVersionCodeUpdate || requiresVersionNameUpdate);
     } catch (e) { console.error("Error checking version:", e); }
   };
 

@@ -82,24 +82,28 @@ export const ReportsScreen: React.FC = () => {
         let presentRecs: AttendanceRecord[] = [];
         let absentRecs: AttendanceRecord[] = [];
 
-        const matchesRoute = (record: AttendanceRecord) => {
-            if (!routeId) return true;
-            if (record.routeId) return record.routeId === routeId;
-            return student.routeId === routeId;
-        };
-
         if (reportType === 'monthly') {
             const studentRecords = attendance.filter(a =>
-                a.studentId === student.id && a.date.startsWith(month) && matchesRoute(a)
+                a.studentId === student.id && a.date.startsWith(month)
             );
-            presentRecs = studentRecords.filter(a => a.status === 'PRESENT');
-            absentRecs = studentRecords.filter(a => a.status === 'ABSENT');
+            const routeRecords = routeId
+                ? studentRecords.filter(a => !a.routeId || a.routeId === routeId)
+                : studentRecords;
+            const recordsToUse = routeId && routeRecords.length === 0 ? studentRecords : routeRecords;
+
+            presentRecs = recordsToUse.filter(a => a.status === 'PRESENT');
+            absentRecs = recordsToUse.filter(a => a.status === 'ABSENT');
         } else {
             const studentRecords = attendance.filter(a =>
-                a.studentId === student.id && a.date === date && matchesRoute(a)
+                a.studentId === student.id && a.date === date
             );
-            presentRecs = studentRecords.filter(a => a.status === 'PRESENT');
-            absentRecs = studentRecords.filter(a => a.status === 'ABSENT');
+            const routeRecords = routeId
+                ? studentRecords.filter(a => !a.routeId || a.routeId === routeId)
+                : studentRecords;
+            const recordsToUse = routeId && routeRecords.length === 0 ? studentRecords : routeRecords;
+
+            presentRecs = recordsToUse.filter(a => a.status === 'PRESENT');
+            absentRecs = recordsToUse.filter(a => a.status === 'ABSENT');
         }
 
         return {
