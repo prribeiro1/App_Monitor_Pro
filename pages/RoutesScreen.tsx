@@ -26,6 +26,16 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps 
   const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
   const [routeName, setRouteName] = useState('');
 
+  const getStudentRouteOrder = (student: Student, routeId: string) => {
+    if (student.routeId === routeId) return student.routeOrder || student.order || 0;
+    if (student.routeId2 === routeId) return student.routeOrder2 || student.routeOrder || student.order || 0;
+    return 0;
+  };
+
+  const getRouteStudents = (routeId: string) => students
+    .filter(s => s.active && (s.routeId === routeId || s.routeId2 === routeId))
+    .sort((a, b) => getStudentRouteOrder(a, routeId) - getStudentRouteOrder(b, routeId));
+
   const exportItineraryPDF = async (route: Route, routeStudents: Student[]) => {
     try {
       const doc = new jsPDF();
@@ -80,39 +90,65 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps 
   const fetchData = async () => {
     const [r, st] = await Promise.all([dbService.getRoutes(), dbService.getStudents()]);
     st.sort((a, b) => (a.routeOrder || a.order || 0) - (b.routeOrder || b.order || 0));
+    r.sort((a, b) => (a.order || 0) - (b.order || 0));
     setRoutes(r);
     setStudents(st);
+  };
+
+  const moveRoute = async (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= routes.length) return;
+
+    const reorderedRoutes = [...routes];
+    const temp = reorderedRoutes[index];
+    reorderedRoutes[index] = reorderedRoutes[newIndex];
+    reorderedRoutes[newIndex] = temp;
+
+    const updatedRoutes = reorderedRoutes.map((r, idx) => ({
+      ...r,
+      order: idx + 1
+    }));
+
+    setRoutes(updatedRoutes);
+
+    try {
+      await Promise.all(updatedRoutes.map(r => dbService.saveRoute(r)));
+    } catch (err) {
+      console.error('Erro ao reordenar rotas:', err);
+    }
   };
 
   useEffect(() => { fetchData(); }, []);
 
   const toggleRoute = (id: string) => setExpandedRoutes(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const handleDragStart = (e: React.DragEvent, studentId: string) => {
+  const handleDragStart = (e: React.DragEvent, studentId: string, routeId: string) => {
     setDraggedStudentId(studentId);
     e.dataTransfer.setData('studentId', studentId);
+    e.dataTransfer.setData('routeId', routeId);
   };
 
   const handleDragOver = (e: React.DragEvent, studentId: string) => {
     e.preventDefault();
   };
 
-  const handleDrop = async (e: React.DragEvent, targetStudentId: string) => {
+  const handleDrop = async (e: React.DragEvent, targetStudentId: string, routeId: string) => {
     e.preventDefault();
     const draggedId = e.dataTransfer.getData('studentId');
+    const draggedRouteId = e.dataTransfer.getData('routeId');
     if (draggedId === targetStudentId) return;
+    if (draggedRouteId && draggedRouteId !== routeId) return;
 
     const studentToMove = students.find(s => s.id === draggedId);
     const targetStudent = students.find(s => s.id === targetStudentId);
-    if (!studentToMove || !targetStudent || studentToMove.routeId !== targetStudent.routeId) return;
+    const studentInRoute = (student?: Student) => !!student && (student.routeId === routeId || student.routeId2 === routeId);
+    if (!studentInRoute(studentToMove) || !studentInRoute(targetStudent)) return;
 
-    const routeId = studentToMove.routeId;
-    const routeStudents = students
-      .filter(s => s.routeId === routeId)
-      .sort((a, b) => (a.routeOrder || a.order || 0) - (b.routeOrder || b.order || 0));
+    const routeStudents = getRouteStudents(routeId);
 
     const oldIndex = routeStudents.findIndex(s => s.id === draggedId);
     const newIndex = routeStudents.findIndex(s => s.id === targetStudentId);
+    if (oldIndex === -1 || newIndex === -1) return;
 
     const newOrder = [...routeStudents];
     newOrder.splice(oldIndex, 1);
@@ -120,8 +156,13 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps 
 
     // Salvar nova ordem
     const updates = newOrder.map((s, idx) => {
-      s.routeOrder = idx + 1;
-      return dbService.saveStudent(s);
+      const updatedStudent = { ...s };
+      if (updatedStudent.routeId === routeId) {
+        updatedStudent.routeOrder = idx + 1;
+      } else {
+        updatedStudent.routeOrder2 = idx + 1;
+      }
+      return dbService.saveStudent(updatedStudent);
     });
 
     await Promise.all(updates);
@@ -131,7 +172,13 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps 
 
   const handleRouteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await dbService.saveRoute({ id: editingRouteId || crypto.randomUUID(), name: routeName });
+    const existingRoute = editingRouteId ? routes.find(route => route.id === editingRouteId) : null;
+    await dbService.saveRoute({
+      ...(existingRoute || {}),
+      id: editingRouteId || crypto.randomUUID(),
+      name: routeName,
+      order: existingRoute?.order || routes.length + 1
+    });
     setIsRouteModalOpen(false);
     setRouteName('');
     setEditingRouteId(null);
@@ -139,7 +186,7 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps 
   };
 
   const handleDeleteRoute = async (id: string) => {
-    const routeStudents = students.filter(s => s.routeId === id);
+    const routeStudents = students.filter(s => s.routeId === id || s.routeId2 === id);
     if (routeStudents.length > 0) {
       alert(`Não é possível excluir esta rota pois existem ${routeStudents.length} aluno(s) vinculado(s). Remova os alunos primeiro.`);
       return;
@@ -182,13 +229,34 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps 
         </div>
       ) : (
         <div className="space-y-3">
-          {routes.map(route => {
-            const routeStudents = students.filter(s => s.active && (s.routeId === route.id || s.routeId2 === route.id));
+          {routes.map((route, idx) => {
+            const routeStudents = getRouteStudents(route.id);
             const isExpanded = expandedRoutes[route.id];
             return (
               <div key={route.id} className="bg-navy-800 rounded-xl border border-navy-700 overflow-hidden">
                 <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => toggleRoute(route.id)}>
                   <div className="flex items-center gap-3">
+                    {/* Botões de Reordenação de Rota */}
+                    <div className="flex flex-col items-center justify-center mr-1">
+                      <button 
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); moveRoute(idx, 'up'); }}
+                        disabled={idx === 0}
+                        className="text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 p-0.5"
+                        title="Mover Rota Para Cima"
+                      >
+                        <Icon name="chevron-up" size={14} />
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); moveRoute(idx, 'down'); }}
+                        disabled={idx === routes.length - 1}
+                        className="text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 p-0.5"
+                        title="Mover Rota Para Baixo"
+                      >
+                        <Icon name="chevron-down" size={14} />
+                      </button>
+                    </div>
                     <Icon name="map" size={20} className="text-primary-500" />
                     <div>
                       <h3 className="text-white font-semibold">{route.name}</h3>
@@ -227,9 +295,9 @@ export const RoutesScreen: React.FC<RoutesScreenProps> = ({ settings, canUseGps 
                           <div
                             key={student.id}
                             draggable
-                            onDragStart={(e) => handleDragStart(e, student.id)}
+                            onDragStart={(e) => handleDragStart(e, student.id, route.id)}
                             onDragOver={(e) => handleDragOver(e, student.id)}
-                            onDrop={(e) => handleDrop(e, student.id)}
+                            onDrop={(e) => handleDrop(e, student.id, route.id)}
                             onClick={() => window.location.hash = `/students?open=${student.id}`}
                             className={`bg-navy-800 p-3 rounded-lg border flex items-center justify-between group cursor-move hover:bg-navy-700/50 transition-colors ${draggedStudentId === student.id ? 'opacity-30' : 'border-navy-700'}`}
                           >

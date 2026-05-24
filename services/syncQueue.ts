@@ -64,6 +64,67 @@ const openQueueDB = (): Promise<IDBDatabase> => {
     });
 };
 
+const cleanUUID = (id: string | undefined | null) => (id && id.trim() !== '') ? id : null;
+
+const prepareUpsertData = (op: PendingOperation, userId: string) => {
+    if (op.entity === 'attendance') {
+        return {
+            data: {
+                id: op.data.id,
+                user_id: userId,
+                student_id: op.data.studentId,
+                route_id: op.data.routeId || null,
+                date: op.data.date,
+                status: op.data.status,
+                timestamp: op.data.timestamp
+            },
+            addUpdatedAt: false
+        };
+    }
+
+    if (op.entity === 'student') {
+        return {
+            data: {
+                id: op.data.id,
+                user_id: userId,
+                name: op.data.name,
+                active: op.data.active,
+                guardian_name: op.data.guardianName,
+                contact: op.data.contact,
+                responsible_cpf: op.data.responsibleCpf,
+                responsible_email: op.data.responsibleEmail,
+                responsible_phone: op.data.responsiblePhone,
+                school: op.data.school,
+                sala: op.data.sala,
+                shift: op.data.shift,
+                due_day: op.data.dueDay,
+                monthly_fees: op.data.monthlyFees,
+                stop_id: cleanUUID(op.data.stopId),
+                route_id: cleanUUID(op.data.routeId),
+                route_id_2: cleanUUID(op.data.routeId2),
+                address: op.data.address,
+                latitude: op.data.latitude,
+                longitude: op.data.longitude,
+                route_order: op.data.routeOrder,
+                route_order_2: op.data.routeOrder2,
+                estimated_pickup_time: op.data.estimatedPickupTime,
+                estimated_drop_time: op.data.estimatedDropTime,
+                birth_date: op.data.birthDate,
+                observation: op.data.observation
+            },
+            addUpdatedAt: true
+        };
+    }
+
+    return {
+        data: {
+            ...op.data,
+            user_id: userId
+        },
+        addUpdatedAt: true
+    };
+};
+
 export const syncQueue = {
     /**
      * Adiciona uma operação à fila
@@ -214,12 +275,10 @@ export const syncQueue = {
             const { error } = await supabase.from(tableName).delete().eq('id', op.data.id).eq('user_id', user.id);
             if (error) throw error;
         } else {
-            // Adiciona user_id e updated_at
-            const dataWithUser = {
-                ...op.data,
-                user_id: user.id,
-                updated_at: new Date().toISOString()
-            };
+            const prepared = prepareUpsertData(op, user.id);
+            const dataWithUser = prepared.addUpdatedAt
+                ? { ...prepared.data, updated_at: new Date().toISOString() }
+                : prepared.data;
 
             const { error } = await supabase.from(tableName).upsert(dataWithUser);
             if (error) throw error;

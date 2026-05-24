@@ -12,6 +12,7 @@ import { Capacitor } from '@capacitor/core';
 
 interface StudentStats {
     student: Student;
+    routeId?: string;
     presentCount: number;
     absentCount: number;
     presentDates: number[];
@@ -28,6 +29,35 @@ interface RouteReportGroup {
     routeName: string;
     students: StudentStats[];
 }
+
+const getShiftFromSalaKey = (key: string): string => {
+    const parts = key.split(' - ');
+    return parts[parts.length - 1] || 'SEM TURNO';
+};
+
+const getShiftPriority = (key: string): number => {
+    const shift = getShiftFromSalaKey(key).toUpperCase();
+    if (shift.includes('MANHÃ') || shift.includes('MANHA')) return 0;
+    if (shift.includes('TARDE')) return 1;
+    if (shift.includes('INTEGRAL')) return 2;
+    if (shift.includes('NOITE')) return 3;
+    return 4; // SEM TURNO or other
+};
+
+const compareSalas = (keyA: string, keyB: string): number => {
+    const priorityA = getShiftPriority(keyA);
+    const priorityB = getShiftPriority(keyB);
+    
+    if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+    }
+    
+    const idxA = keyA.lastIndexOf(' - ');
+    const idxB = keyB.lastIndexOf(' - ');
+    const nameA = idxA !== -1 ? keyA.substring(0, idxA) : keyA;
+    const nameB = idxB !== -1 ? keyB.substring(0, idxB) : keyB;
+    return nameA.localeCompare(nameB);
+};
 
 export const ReportsScreen: React.FC = () => {
     const { t, language } = useI18n();
@@ -48,19 +78,25 @@ export const ReportsScreen: React.FC = () => {
         loadData();
     }, [month, date, reportType, groupBy]);
 
-    const getStudentStats = (student: Student, attendance: AttendanceRecord[]): StudentStats => {
+    const getStudentStats = (student: Student, attendance: AttendanceRecord[], routeId?: string): StudentStats => {
         let presentRecs: AttendanceRecord[] = [];
         let absentRecs: AttendanceRecord[] = [];
 
+        const matchesRoute = (record: AttendanceRecord) => {
+            if (!routeId) return true;
+            if (record.routeId) return record.routeId === routeId;
+            return student.routeId === routeId;
+        };
+
         if (reportType === 'monthly') {
             const studentRecords = attendance.filter(a =>
-                a.studentId === student.id && a.date.startsWith(month)
+                a.studentId === student.id && a.date.startsWith(month) && matchesRoute(a)
             );
             presentRecs = studentRecords.filter(a => a.status === 'PRESENT');
             absentRecs = studentRecords.filter(a => a.status === 'ABSENT');
         } else {
             const studentRecords = attendance.filter(a =>
-                a.studentId === student.id && a.date === date
+                a.studentId === student.id && a.date === date && matchesRoute(a)
             );
             presentRecs = studentRecords.filter(a => a.status === 'PRESENT');
             absentRecs = studentRecords.filter(a => a.status === 'ABSENT');
@@ -68,6 +104,7 @@ export const ReportsScreen: React.FC = () => {
 
         return {
             student,
+            routeId,
             presentCount: presentRecs.length,
             absentCount: absentRecs.length,
             presentDates: presentRecs.map(r => parseInt(r.date.split('-')[2])),
@@ -95,13 +132,28 @@ export const ReportsScreen: React.FC = () => {
             grouped['sem_rota'] = { routeName: 'Sem Rota Definida', students: [] };
 
             students.forEach(student => {
-                const groupId = student.routeId || 'sem_rota';
-                if (!grouped[groupId]) {
-                    const routeName = routes.find(r => r.id === groupId)?.name || 'Sem Rota Definida';
-                    grouped[groupId] = { routeName, students: [] };
+                let hasRoute = false;
+                if (student.routeId) {
+                    const groupId = student.routeId;
+                    if (!grouped[groupId]) {
+                        const routeName = routes.find(r => r.id === groupId)?.name || 'Sem Rota Definida';
+                        grouped[groupId] = { routeName, students: [] };
+                    }
+                    grouped[groupId].students.push(getStudentStats(student, attendance, groupId));
+                    hasRoute = true;
                 }
-
-                grouped[groupId].students.push(getStudentStats(student, attendance));
+                if (student.routeId2) {
+                    const groupId2 = student.routeId2;
+                    if (!grouped[groupId2]) {
+                        const routeName = routes.find(r => r.id === groupId2)?.name || 'Sem Rota Definida';
+                        grouped[groupId2] = { routeName, students: [] };
+                    }
+                    grouped[groupId2].students.push(getStudentStats(student, attendance, groupId2));
+                    hasRoute = true;
+                }
+                if (!hasRoute) {
+                    grouped['sem_rota'].students.push(getStudentStats(student, attendance));
+                }
             });
 
             // Ordenar alunos alfabeticamente dentro de cada rota
@@ -228,7 +280,7 @@ export const ReportsScreen: React.FC = () => {
 
                     // Salas ordenadas (tipadas)
                     const sortedSalas = (Object.entries(school.salas) as [string, { salaName: string; students: StudentStats[] }][])
-                        .sort(([a], [b]) => a.localeCompare(b));
+                        .sort(([a], [b]) => compareSalas(a, b));
 
                     sortedSalas.forEach(([salaKey, sala]) => {
                         // Sub-cabeçalho da sala
@@ -416,7 +468,7 @@ export const ReportsScreen: React.FC = () => {
                                     <div className="bg-navy-900/30">
                                         {/* Salas dentro da escola */}
                                         {(Object.entries(school.salas) as [string, { salaName: string; students: StudentStats[] }][])
-                                            .sort(([a], [b]) => a.localeCompare(b))
+                                            .sort(([a], [b]) => compareSalas(a, b))
                                             .map(([salaKey, sala]) => {
                                                 const salaId = `${schoolName}_${salaKey}`;
                                                 return (

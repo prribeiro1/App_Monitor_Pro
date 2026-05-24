@@ -55,6 +55,7 @@ export enum AttendanceStatus {
 export interface AttendanceRecord {
   id: string;
   studentId: string;
+  routeId?: string;
   date: string; // ISO Date string YYYY-MM-DD
   status: AttendanceStatus;
   timestamp: number;

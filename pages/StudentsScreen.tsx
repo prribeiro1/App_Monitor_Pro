@@ -63,6 +63,7 @@ export const StudentsScreen: React.FC = () => {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showAddressMap, setShowAddressMap] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false); // 🆕 Garantir centralização única
 
@@ -395,6 +396,12 @@ export const StudentsScreen: React.FC = () => {
     return `${day}/${month}/${year}`;
   };
 
+  const filteredStudents = students.filter(student => {
+    if (statusFilter === 'active') return student.active;
+    if (statusFilter === 'inactive') return !student.active;
+    return true;
+  });
+
   return (
     <div className="p-4 pb-20">
       <div className="flex justify-between items-center mb-6">
@@ -416,8 +423,33 @@ export const StudentsScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* Filtro de Status de Alunos */}
+      <div className="flex bg-navy-800 p-1 rounded-xl border border-navy-700 mb-4">
+        <button
+          type="button"
+          onClick={() => setStatusFilter('active')}
+          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === 'active' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+        >
+          ATIVOS
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatusFilter('inactive')}
+          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === 'inactive' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+        >
+          INATIVOS
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatusFilter('all')}
+          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === 'all' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+        >
+          TODOS
+        </button>
+      </div>
+
       <div className="space-y-3">
-        {students.map((student) => (
+        {filteredStudents.map((student) => (
           <div
             key={student.id}
             onClick={() => setSelectedStudent(student)}
@@ -453,7 +485,11 @@ export const StudentsScreen: React.FC = () => {
             <Icon name="chevron-right" size={20} className="text-gray-500" />
           </div>
         ))}
-        {students.length === 0 && <p className="text-center text-gray-500 mt-10">Nenhum aluno cadastrado.</p>}
+        {filteredStudents.length === 0 && (
+          <p className="text-center text-gray-500 mt-10">
+            {students.length === 0 ? 'Nenhum aluno cadastrado.' : 'Nenhum aluno encontrado neste filtro.'}
+          </p>
+        )}
       </div>
 
       {/* Modal de Detalhes do Aluno */}

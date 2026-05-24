@@ -120,6 +120,7 @@ export const cloudSync = {
             id: record.id,
             user_id: user.id,
             student_id: record.studentId,
+            route_id: record.routeId || null,
             date: record.date,
             status: record.status,
             timestamp: record.timestamp
@@ -426,6 +427,7 @@ export const cloudSync = {
                 attendance: attendanceRes.data?.map(a => ({
                     id: a.id,
                     studentId: a.student_id,
+                    routeId: a.route_id,
                     date: a.date,
                     status: a.status,
                     timestamp: Number(a.timestamp)

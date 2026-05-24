@@ -1,6 +1,7 @@
 
 import { Route, Stop, Student, AttendanceRecord, Incident, BackupData, Payment, MaintenanceItem, MaintenanceLog, UserSettings, VehicleDocument } from '../types';
 import { cloudSync } from './cloudSync';
+import { syncQueue } from './syncQueue';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 const DB_NAME = 'SchoolMonitorDB';

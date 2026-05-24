@@ -52,7 +52,11 @@ export const AttendanceScreen: React.FC = () => {
     const todayMap: Record<string, AttendanceStatus> = {};
     allAttendance.forEach(r => {
       if (r.date && r.date.startsWith(today)) {
-        todayMap[r.studentId] = r.status;
+        if (r.routeId) {
+          todayMap[`${r.studentId}_${r.routeId}`] = r.status;
+        } else {
+          todayMap[r.studentId] = r.status;
+        }
       }
     });
 
@@ -62,19 +66,42 @@ export const AttendanceScreen: React.FC = () => {
     setAttendance(todayMap);
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
 
-  const markAttendance = async (studentId: string, status: AttendanceStatus) => {
+    const refreshOnReturn = () => loadData();
+    const refreshOnVisible = () => {
+      if (document.visibilityState === 'visible') loadData();
+    };
+
+    window.addEventListener('focus', refreshOnReturn);
+    window.addEventListener('db-synced', refreshOnReturn);
+    document.addEventListener('visibilitychange', refreshOnVisible);
+
+    return () => {
+      window.removeEventListener('focus', refreshOnReturn);
+      window.removeEventListener('db-synced', refreshOnReturn);
+      document.removeEventListener('visibilitychange', refreshOnVisible);
+    };
+  }, []);
+
+  const getAttendanceKey = (studentId: string, routeId: string) => `${studentId}_${routeId}`;
+  const getAttendanceStatus = (studentId: string, routeId: string) => (
+    attendance[getAttendanceKey(studentId, routeId)] || attendance[studentId]
+  );
+
+  const markAttendance = async (studentId: string, status: AttendanceStatus, routeId: string) => {
     const record: AttendanceRecord = {
-      id: `${today}_${studentId}`,
+      id: `${today}_${studentId}_${routeId}`,
       studentId,
+      routeId,
       date: today,
       status,
       timestamp: Date.now()
     };
 
     await dbService.saveAttendance(record);
-    setAttendance(prev => ({ ...prev, [studentId]: status }));
+    setAttendance(prev => ({ ...prev, [getAttendanceKey(studentId, routeId)]: status }));
   };
 
   const toggleRoute = (id: string) => {
@@ -91,7 +118,7 @@ export const AttendanceScreen: React.FC = () => {
     return stop?.routeId;
   };
 
-  const groupedByRoute = routes.sort((a, b) => (a.order || 0) - (b.order || 0)).reduce((acc, route) => {
+  const groupedByRoute = [...routes].sort((a, b) => (a.order || 0) - (b.order || 0)).reduce((acc, route) => {
     // Filtrar por ATIVOS e por TURNO e por ROTA (primária ou secundária)
     let routeStudents = students.filter(s => s.active && (s.routeId === route.id || s.routeId2 === route.id));
     
@@ -133,9 +160,12 @@ export const AttendanceScreen: React.FC = () => {
 
 
   // Stats
-  const total = students.length;
-  const present = Object.values(attendance).filter(s => s === AttendanceStatus.PRESENT).length;
-  const absent = Object.values(attendance).filter(s => s === AttendanceStatus.ABSENT).length;
+  const visibleAttendanceStatuses = Object.entries(groupedByRoute).flatMap(([routeId, group]) =>
+    group.students.map(student => getAttendanceStatus(student.id, routeId))
+  );
+  const total = visibleAttendanceStatuses.length;
+  const present = visibleAttendanceStatuses.filter(s => s === AttendanceStatus.PRESENT).length;
+  const absent = visibleAttendanceStatuses.filter(s => s === AttendanceStatus.ABSENT).length;
 
   return (
     <div className="p-4 pb-20">
@@ -222,8 +252,8 @@ export const AttendanceScreen: React.FC = () => {
 
           // Calculate Route Stats
           const routeTotal = group.students.length;
-          const routePresent = group.students.filter(s => attendance[s.id] === AttendanceStatus.PRESENT).length;
-          const routeAbsent = group.students.filter(s => attendance[s.id] === AttendanceStatus.ABSENT).length;
+          const routePresent = group.students.filter(s => getAttendanceStatus(s.id, routeId) === AttendanceStatus.PRESENT).length;
+          const routeAbsent = group.students.filter(s => getAttendanceStatus(s.id, routeId) === AttendanceStatus.ABSENT).length;
 
           return (
             <div key={routeId}>
@@ -246,7 +276,7 @@ export const AttendanceScreen: React.FC = () => {
               {isExpanded && (
                 <div className="space-y-3 pl-1">
                   {group.students.map(student => {
-                    const status = attendance[student.id];
+                    const status = getAttendanceStatus(student.id, routeId);
                     
                     // 🆕 NOVA ESTRUTURA: Mostrar endereço ou nome do stop (fallback)
                     const locationText = student.address || stops.find(s => s.id === student.stopId)?.name || '';
@@ -285,13 +315,13 @@ export const AttendanceScreen: React.FC = () => {
 
                         <div className="flex gap-2 ml-2">
                           <button
-                            onClick={() => markAttendance(student.id, AttendanceStatus.PRESENT)}
+                            onClick={() => markAttendance(student.id, AttendanceStatus.PRESENT, routeId)}
                             className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${status === AttendanceStatus.PRESENT ? 'bg-green-500 border-green-500 text-white scale-110 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'border-gray-600 text-gray-600 hover:border-green-500/50 hover:text-green-500'}`}
                           >
                             <Icon name="check" size={20} strokeWidth={3} />
                           </button>
                           <button
-                            onClick={() => markAttendance(student.id, AttendanceStatus.ABSENT)}
+                            onClick={() => markAttendance(student.id, AttendanceStatus.ABSENT, routeId)}
                             className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${status === AttendanceStatus.ABSENT ? 'bg-red-500 border-red-500 text-white scale-110 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'border-gray-600 text-gray-600 hover:border-red-500/50 hover:text-red-500'}`}
                           >
                             <Icon name="x" size={20} strokeWidth={3} />
