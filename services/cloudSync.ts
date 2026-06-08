@@ -380,7 +380,8 @@ export const cloudSync = {
                 supabase.from('reminders').select('*').eq('user_id', user.id),
                 supabase.from('vehicle_documents').select('*').eq('user_id', user.id),
                 supabase.from('route_sessions').select('*').eq('user_id', user.id), // 🆕
-                supabase.from('route_events').select('*').eq('user_id', user.id) // 🆕
+                supabase.from('route_events').select('*').eq('user_id', user.id),
+                supabase.from('expenses').select('*').eq('user_id', user.id)
             ]);
 
             // 🔍 LOG DETALHADO DE CADA QUERY
