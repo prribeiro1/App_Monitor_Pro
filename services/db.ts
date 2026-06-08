@@ -313,6 +313,35 @@ export const dbService = {
     } catch (e) { }
   },
 
+
+  // Expenses (Gastos)
+  getExpenses: () => getAll<Expense>('expenses'),
+  saveExpense: async (expense: Expense) => {
+    await putItem('expenses', expense);
+    try {
+      await cloudSync.saveExpense(expense);
+    } catch (e) {
+      console.warn("Cloud Sync Expense falhou, enfileirando...", e);
+      await syncQueue.enqueue({
+        type: 'save',
+        entity: 'expense',
+        data: expense
+      });
+    }
+  },
+  deleteExpense: async (id: string) => {
+    await deleteItem('expenses', id);
+    try {
+      await cloudSync.deleteExpense(id);
+    } catch (e) {
+      await syncQueue.enqueue({
+        type: 'delete',
+        entity: 'expense',
+        data: { id }
+      });
+    }
+  },
+
   // Maintenance
   getMaintenanceItems: () => getAll<MaintenanceItem>('maintenance_items'),
   saveMaintenanceItem: async (item: MaintenanceItem) => {
