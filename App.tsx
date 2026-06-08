@@ -540,11 +540,11 @@ function App() {
         checkAppVersion();
         // 🔧 CORREÇÃO: Sync em background, não bloqueia o app
         dbService.pullFromCloud().then(() => {
-          console.log("✅ pullFromCloud concluído!");
-          fetchSettings(); // Atualiza settings após sync
+          console.log("pullFromCloud concluido!");
+          fetchSettings();
         }).catch((err) => {
-          console.error("❌ Erro no pullFromCloud (app continua funcionando):", err);
-          // App continua funcionando mesmo com erro no sync
+          console.error("Erro no pullFromCloud:", err);
+          alert("Erro no sincronismo inicial: " + (err.message || JSON.stringify(err)));
         });
       }
     });
@@ -558,10 +558,11 @@ function App() {
 
         console.log("☁️ Iniciando pullFromCloud em background...");
         dbService.pullFromCloud().then(() => {
-          console.log("✅ pullFromCloud após SIGNED_IN concluído!");
-          fetchSettings(); // Atualiza após sync
+          console.log("pullFromCloud apos SIGNED_IN concluido!");
+          fetchSettings();
         }).catch((err) => {
-          console.error("❌ Erro no pullFromCloud após SIGNED_IN (app continua):", err);
+          console.error("Erro no pullFromCloud apos SIGNED_IN:", err);
+          alert("Erro no sincronismo do login: " + (err.message || JSON.stringify(err)));
         });
       }
     });
