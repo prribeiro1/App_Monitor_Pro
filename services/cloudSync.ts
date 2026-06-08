@@ -536,6 +536,13 @@ export const cloudSync = {
                     notes: re.notes,
                     createdAt: re.created_at
                 })) || [],
+                expenses: expensesRes.data?.map(e => ({
+                    id: e.id,
+                    description: e.description,
+                    amount: parseFloat(e.amount),
+                    date: e.date,
+                    timestamp: Number(new Date(e.created_at || e.date).getTime())
+                })) || [],
                 userSettings: settingsRes.data ? {
                     id: 'settings',
                     currentKm: settingsRes.data.current_km,
