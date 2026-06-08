@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { supabase } from '../services/auth';
-import { Student, Payment, Stop, Route, UserSettings } from '../types';
+import { Student, Payment, Stop, Route, UserSettings, Expense } from '../types';
 import { Icon } from '../components/Icon';
 import { useI18n } from '../i18n';
 import jsPDF from 'jspdf';
@@ -96,62 +96,54 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         setLoading(false);
     };
 
-    // Buscar gastos do Supabase para o mÃªs/ano selecionado
+    // Buscar gastos localmente do dbService para o mês/ano selecionado
     const fetchExpenses = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Calcula o primeiro e Ãºltimo dia do mÃªs selecionado
+            const localExpenses = await dbService.getExpenses();
+            
+            // Calcula o primeiro e último dia do mês selecionado
             const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
             const lastDay = new Date(year, month, 0).getDate();
             const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
 
-            const { data, error } = await supabase
-                .from('expenses')
-                .select('*')
-                .eq('user_id', user.id)
-                .gte('date', startDate)
-                .lte('date', endDate)
-                .order('date', { ascending: false });
+            // Filtra gastos dentro do intervalo do mês selecionado
+            const filtered = localExpenses.filter(exp => exp.date >= startDate && exp.date <= endDate);
+            
+            // Ordena por data decrescente
+            filtered.sort((a, b) => b.date.localeCompare(a.date));
 
-            if (error) throw error;
-            setExpenses(data || []);
+            setExpenses(filtered);
         } catch (err) {
-            console.warn('âš ï¸ NÃ£o foi possÃ­vel carregar gastos:', err);
+            console.warn('Não foi possível carregar gastos localmente:', err);
             setExpenses([]);
         }
     };
 
-    // Salvar novo gasto no Supabase
+    // Salvar novo gasto localmente e sincronizar
     const saveExpense = async () => {
         if (!newExpenseDescription.trim() || !newExpenseAmount) {
-            alert('Preencha a descriÃ§Ã£o e o valor do gasto.');
+            alert('Preencha a descrição e o valor do gasto.');
             return;
         }
 
         const amount = parseFloat(newExpenseAmount.replace(',', '.'));
         if (isNaN(amount) || amount <= 0) {
-            alert('Valor invÃ¡lido.');
+            alert('Valor inválido.');
             return;
         }
 
         setSavingExpense(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('UsuÃ¡rio nÃ£o autenticado');
+            const newExpense: Expense = {
+                id: crypto.randomUUID(),
+                description: newExpenseDescription.trim(),
+                amount: amount,
+                // Formato YYYY-MM-DD em timezone local
+                date: new Date().toLocaleDateString('en-CA'),
+                timestamp: Date.now()
+            };
 
-            const { error } = await supabase
-                .from('expenses')
-                .insert([{
-                    user_id: user.id,
-                    description: newExpenseDescription.trim(),
-                    amount: amount,
-                    // Usa data local (evita problema de timezone com toISOString que converte para UTC)
-                    date: new Date().toLocaleDateString('en-CA') // Formato YYYY-MM-DD em timezone local
-                }]);
-
-            if (error) throw error;
+            await dbService.saveExpense(newExpense);
 
             // Limpa campos e fecha modal
             setNewExpenseDescription('');
@@ -167,17 +159,12 @@ export const FinancialScreen: React.FC<FinancialScreenProps> = ({ settings, onUp
         }
     };
 
-    // Deletar gasto
+    // Deletar gasto localmente e sincronizar
     const deleteExpense = async (expenseId: string) => {
         if (!confirm('Remover este gasto?')) return;
 
         try {
-            const { error } = await supabase
-                .from('expenses')
-                .delete()
-                .eq('id', expenseId);
-
-            if (error) throw error;
+            await dbService.deleteExpense(expenseId);
             await fetchExpenses();
         } catch (err: any) {
             alert('Erro ao remover gasto: ' + err.message);

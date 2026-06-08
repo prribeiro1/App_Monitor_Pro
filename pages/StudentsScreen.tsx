@@ -266,11 +266,19 @@ export const StudentsScreen: React.FC = () => {
 
     const existing = editingId ? students.find(s => s.id === editingId) : null;
 
+    const currentStatusHistory = existing?.statusHistory || (existing ? [{ active: existing.active, date: new Date().toISOString().split('T')[0] }] : []);
+    const newStatusHistory = [...currentStatusHistory];
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (!existing || existing.active !== active) {
+      newStatusHistory.push({ active, date: todayStr });
+    }
+
     const student: Student = {
       id: editingId || crypto.randomUUID(),
       stopId: undefined, // 🛠️ VAN PRO FIX: Não enviar "" para evitar erro de UUID no Supabase
       name: studentName,
-      active: active, // Usar estado (Novo)
+      active: active,
+      statusHistory: newStatusHistory, // Usar estado (Novo)
       birthDate: birthDate || undefined,
       school: school || undefined,
       sala: sala || undefined, // Campo sala (Novo)

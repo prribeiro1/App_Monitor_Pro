@@ -1,5 +1,5 @@
 
-import { Route, Stop, Student, AttendanceRecord, Incident, BackupData, Payment, MaintenanceItem, MaintenanceLog, UserSettings, VehicleDocument } from '../types';
+import { Route, Stop, Student, AttendanceRecord, Incident, BackupData, Payment, MaintenanceItem, MaintenanceLog, UserSettings, VehicleDocument, Expense } from '../types';
 import { cloudSync } from './cloudSync';
 import { syncQueue } from './syncQueue';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -46,7 +46,10 @@ const openDB = (): Promise<IDBDatabase> => {
         ];
         standardItems.forEach(item => store.put(item));
       }
-      if (!db.objectStoreNames.contains('maintenance_logs')) {
+            if (!db.objectStoreNames.contains('expenses')) {
+        db.createObjectStore('expenses', { keyPath: 'id' });
+      }
+if (!db.objectStoreNames.contains('maintenance_logs')) {
         const store = db.createObjectStore('maintenance_logs', { keyPath: 'id' });
         store.createIndex('itemId', 'itemId', { unique: false });
       }
@@ -129,6 +132,45 @@ const getItem = async <T>(storeName: string, id: string): Promise<T | undefined>
   });
 };
 
+
+const getTimeFieldValue = (item: any): number | string | null => {
+  if (!item) return null;
+  const fields = ['timestamp', 'updated_at', 'updatedAt', 'lastDate', 'date', 'created_at', 'createdAt'];
+  for (const f of fields) {
+    if (item[f] !== undefined && item[f] !== null) {
+      return item[f];
+    }
+  }
+  return null;
+};
+
+const getNewerStatus = (localItem: any, cloudItem: any): boolean => {
+  const localVal = getTimeFieldValue(localItem);
+  const cloudVal = getTimeFieldValue(cloudItem);
+  if (localVal === null || localVal === undefined) return false;
+  if (cloudVal === null || cloudVal === undefined) return true;
+  
+  if (typeof localVal === 'number' && typeof cloudVal === 'number') {
+    return localVal > cloudVal;
+  }
+  if (typeof localVal === 'string' && typeof cloudVal === 'string') {
+    return localVal.localeCompare(cloudVal) > 0;
+  }
+  const localMs = typeof localVal === 'string' ? new Date(localVal).getTime() : localVal;
+  const cloudMs = typeof cloudVal === 'string' ? new Date(cloudVal).getTime() : cloudVal;
+  if (!isNaN(localMs) && !isNaN(cloudMs)) {
+    return localMs > cloudMs;
+  }
+  return false;
+};
+
+const isRecentLocalItem = (localItem: any): boolean => {
+  const val = getTimeFieldValue(localItem);
+  if (val === null || val === undefined) return false;
+  const ms = typeof val === 'string' ? new Date(val).getTime() : val;
+  if (isNaN(ms)) return false;
+  return (Date.now() - ms) < 60000; // 1 minute
+};
 
 export const dbService = {
   // Routes
@@ -374,6 +416,7 @@ export const dbService = {
     const maintenanceItems = await getAll<MaintenanceItem>('maintenance_items');
     const maintenanceLogs = await getAll<MaintenanceLog>('maintenance_logs');
     const userSettings = await getItem<UserSettings>('user_settings', 'settings');
+    const expenses = await getAll<Expense>('expenses');
 
     return {
       routes,
@@ -396,7 +439,7 @@ export const dbService = {
       'routes', 'stops', 'students', 'attendance',
       'incidents', 'payments', 'maintenance_items',
       'maintenance_logs', 'user_settings', 'contract_signatures', 'reminders',
-      'vehicle_documents', 'route_sessions', 'route_events'
+      'vehicle_documents', 'route_sessions', 'route_events', 'expenses'
     ];
 
     return new Promise((resolve, reject) => {
@@ -433,7 +476,7 @@ export const dbService = {
     const stores = [
       'routes', 'stops', 'students', 'attendance', 'incidents', 'payments',
       'maintenance_items', 'maintenance_logs', 'user_settings', 'reminders',
-      'vehicle_documents', 'route_sessions', 'route_events'
+      'vehicle_documents', 'route_sessions', 'route_events', 'expenses'
     ];
     const tx = db.transaction(stores, 'readwrite');
 
@@ -454,6 +497,7 @@ export const dbService = {
     addItems('vehicle_documents', (data as any).vehicleDocuments || []);
     addItems('route_sessions', (data as any).routeSessions || []);
     addItems('route_events', (data as any).routeEvents || []);
+    addItems('expenses', data.expenses || []);
 
     // v2 Support
     if ((data as any).maintenanceItems) addItems('maintenance_items', (data as any).maintenanceItems);
@@ -482,60 +526,101 @@ export const dbService = {
   saveVehicleDocument: (doc: VehicleDocument) => putItem('vehicle_documents', doc),
   deleteVehicleDocument: (id: string) => deleteItem('vehicle_documents', id),
 
-  // Cloud Pull (Sync from Server to Local)
+    // Cloud Pull (Sync from Server to Local)
   pullFromCloud: async (): Promise<void> => {
     try {
-      console.log("🔄 db.ts: Iniciando pullFromCloud...");
+      console.log("🔄 db.ts: Iniciando pullFromCloud com Smart Merge...");
       const cloudData = await cloudSync.pullAllData();
       if (!cloudData) {
         console.warn("⚠️ pullAllData retornou null, abortando sync");
         return;
       }
 
-      // 🛡️ SEGURANÇA CONTRA PERDA DE DADOS:
-      // Se a nuvem estiver vazia mas o local tiver dados, não sobrescrevemos.
-      // Isso evita que um app recém-atualizado (v1.3.0) perda dados locais antes de subir.
+      // ⚠️ SEGURANÇA CONTRA PERDA DE DADOS:
       const isCloudEmpty = (!cloudData.students || cloudData.students.length === 0) &&
         (!cloudData.routes || cloudData.routes.length === 0);
 
       const localStudents = await dbService.getStudents();
       const localRoutes = await dbService.getRoutes();
+      const localAttendance = await dbService.getAttendance();
+      const localPayments = await dbService.getPayments();
+      const localIncidents = await dbService.getIncidents();
+      const localReminders = await dbService.getReminders();
+      const localMaintItems = await dbService.getMaintenanceItems();
+      const localMaintLogs = await dbService.getMaintenanceLogs();
+      const localVehicleDocs = await dbService.getVehicleDocuments();
+      const localRouteSessions = await dbService.getRouteSessions();
+      const localRouteEvents = await dbService.getRouteEvents();
+      const localExpenses = await dbService.getExpenses();
+      const localStops = await dbService.getStops();
+
       const isLocalNotEmpty = localStudents.length > 0 || localRoutes.length > 0;
 
       if (isCloudEmpty && isLocalNotEmpty) {
         console.warn("⚠️ Nuvem vazia detectada, mas o local possui dados. Abortando pull para evitar perda de dados. Sincronizando local -> nuvem...");
-        // Em vez de puxar o vazio, empurramos o que temos para salvar na nuvem
         dbService.pushAllToCloud().catch(err => console.error("Erro no push emergencial:", err));
         return;
       }
 
-      console.log("✅ Dados recebidos da nuvem, iniciando restore no IndexedDB...");
+      console.log("🔄 Dados recebidos da nuvem, iniciando smart merge no IndexedDB...");
       const db = await openDB();
-      const stores = ['routes', 'stops', 'students', 'attendance', 'payments', 'user_settings', 'maintenance_items', 'maintenance_logs', 'incidents', 'reminders', 'vehicle_documents', 'route_sessions', 'route_events'];
+      const stores = [
+        'routes', 'stops', 'students', 'attendance', 'payments', 
+        'user_settings', 'maintenance_items', 'maintenance_logs', 
+        'incidents', 'reminders', 'vehicle_documents', 'route_sessions', 
+        'route_events', 'expenses'
+      ];
       const tx = db.transaction(stores, 'readwrite');
 
-      const restore = (storeName: string, items: any[]) => {
-        console.log(`  📦 Restaurando ${storeName}: ${items?.length || 0} itens`);
+      const restore = (storeName: string, items: any[], localItems: any[]) => {
+        console.log(`  🚀 Smart Merge ${storeName}: ${items?.length || 0} itens da nuvem`);
         const store = tx.objectStore(storeName);
-        store.clear();
-        if (items) items.forEach(item => store.put(item));
+        
+        const localMap = new Map((localItems || []).map(i => [i.id, i]));
+        const cloudIds = new Set(items ? items.map(i => i.id) : []);
+
+        // 1. Put items from cloud if they are newer or local does not exist
+        if (items) {
+          items.forEach(item => {
+            const localItem = localMap.get(item.id);
+            if (localItem && getNewerStatus(localItem, item)) {
+              console.log(`[Sync Merge] Mantendo local mais novo para ${storeName} ID ${item.id}`);
+              return;
+            }
+            store.put(item);
+          });
+        }
+
+        // 2. Delete local items not in cloud, unless they were modified/created in the last 1 minute
+        if (localItems) {
+          localItems.forEach(localItem => {
+            if (!cloudIds.has(localItem.id)) {
+              if (isRecentLocalItem(localItem)) {
+                console.log(`[Sync Merge] Preservando item local recém-criado fora da nuvem em ${storeName} ID ${localItem.id}`);
+              } else {
+                store.delete(localItem.id);
+              }
+            }
+          });
+        }
       };
 
-      restore('routes', cloudData.routes);
-      restore('stops', cloudData.stops);
-      restore('students', cloudData.students);
-      restore('attendance', cloudData.attendance);
-      restore('payments', cloudData.payments);
-      restore('incidents', cloudData.incidents);
-      restore('reminders', cloudData.reminders);
-      restore('maintenance_items', cloudData.maintenanceItems);
-      restore('maintenance_logs', cloudData.maintenanceLogs);
-      restore('vehicle_documents', cloudData.vehicleDocuments);
-      restore('route_sessions', cloudData.routeSessions || []);
-      restore('route_events', cloudData.routeEvents || []);
+      restore('routes', cloudData.routes, localRoutes);
+      restore('stops', cloudData.stops, localStops);
+      restore('students', cloudData.students, localStudents);
+      restore('attendance', cloudData.attendance, localAttendance);
+      restore('payments', cloudData.payments, localPayments);
+      restore('incidents', cloudData.incidents, localIncidents);
+      restore('reminders', cloudData.reminders, localReminders);
+      restore('maintenance_items', cloudData.maintenanceItems, localMaintItems);
+      restore('maintenance_logs', cloudData.maintenanceLogs, localMaintLogs);
+      restore('vehicle_documents', cloudData.vehicleDocuments, localVehicleDocs);
+      restore('route_sessions', cloudData.routeSessions || [], localRouteSessions);
+      restore('route_events', cloudData.routeEvents || [], localRouteEvents);
+      restore('expenses', cloudData.expenses || [], localExpenses);
 
       if (cloudData.userSettings) {
-        console.log("  ⚙️ Restaurando user_settings");
+        console.log("  👤 Restaurando user_settings");
         tx.objectStore('user_settings').put(cloudData.userSettings);
       }
 
@@ -556,7 +641,7 @@ export const dbService = {
     }
   },
 
-  // ☁️ Pushes all local data to cloud (Force Sync Up)
+// ☁️ Pushes all local data to cloud (Force Sync Up)
   pushAllToCloud: async (): Promise<void> => {
     try {
       console.log("☁️ db.ts: Iniciando pushAllToCloud...");
@@ -596,6 +681,10 @@ export const dbService = {
       for (const rs of routeSessions) await cloudSync.saveRouteSession(rs);
       for (const re of routeEvents) await cloudSync.saveRouteEvent(re);
       for (const rem of reminders) await cloudSync.saveReminder(rem);
+
+      console.log(`  🚀 Subindo despesas/gastos...`);
+      const expenses = await dbService.getExpenses();
+      for (const exp of expenses) await cloudSync.saveExpense(exp);
 
       if (settings) {
         console.log(`  ⬆️ Subindo configurações...`);

@@ -329,6 +329,33 @@ export const cloudSync = {
         if (error) throw error;
     },
 
+    // Expenses (Gastos)
+    saveExpense: async (expense: any) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase.from('expenses').upsert({
+            id: expense.id,
+            user_id: user.id,
+            description: expense.description,
+            amount: expense.amount,
+            date: expense.date,
+            created_at: expense.created_at || new Date(expense.timestamp || Date.now()).toISOString()
+        });
+        if (error) {
+            console.error('Erro sync cloud (expense):', error.message);
+            throw error;
+        }
+    },
+
+    deleteExpense: async (id: string) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        const query = supabase.from('expenses').delete().eq('id', id);
+        if (user) query.eq('user_id', user.id);
+        const { error } = await query;
+        if (error) throw error;
+    },
+
     // FUNÇÃO PRINCIPAL: Puxar tudo da nuvem para o celular
     pullAllData: async (): Promise<any> => {
         try {
@@ -340,7 +367,7 @@ export const cloudSync = {
 
             console.log("✅ Iniciando PULL de dados da nuvem para usuário:", user.id);
 
-            const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes, vehicleDocsRes, routeSessionsRes, routeEventsRes] = await Promise.all([
+            const [studentsRes, routesRes, stopsRes, attendanceRes, paymentsRes, settingsRes, maintRes, logsRes, incidentRes, reminderRes, vehicleDocsRes, routeSessionsRes, routeEventsRes, expensesRes] = await Promise.all([
                 supabase.from('students').select('*').eq('user_id', user.id),
                 supabase.from('routes').select('*').eq('user_id', user.id).order('order'),
                 supabase.from('stops').select('*').eq('user_id', user.id).order('order'),
@@ -370,6 +397,7 @@ export const cloudSync = {
             console.log("  reminders:", reminderRes.error ? `❌ ${reminderRes.error.message}` : `✅ ${reminderRes.data?.length || 0} registros`);
             console.log("  vehicle_documents:", vehicleDocsRes.error ? `❌ ${vehicleDocsRes.error.message}` : `✅ ${vehicleDocsRes.data?.length || 0} registros`);
             console.log("  route_sessions:", routeSessionsRes.error ? `❌ ${routeSessionsRes.error.message}` : `✅ ${routeSessionsRes.data?.length || 0} registros`);
+            console.log("  expenses:", expensesRes.error ? `❌ ${expensesRes.error.message}` : `✅ ${expensesRes.data?.length || 0} registros`);
             console.log("  route_events:", routeEventsRes.error ? `❌ ${routeEventsRes.error.message}` : `✅ ${routeEventsRes.data?.length || 0} registros`);
 
             // 🚨 SE HOUVER ERRO EM ALGUMA QUERY, LOGAR E CONTINUAR
@@ -386,6 +414,7 @@ export const cloudSync = {
             if (vehicleDocsRes.error) console.error("❌ Erro em vehicle_documents:", vehicleDocsRes.error);
             if (routeSessionsRes.error) console.error("❌ Erro em route_sessions:", routeSessionsRes.error);
             if (routeEventsRes.error) console.error("❌ Erro em route_events:", routeEventsRes.error);
+            if (expensesRes.error) console.error("❌ Erro em expenses:", expensesRes.error);
 
             return {
                 students: studentsRes.data?.map(s => ({

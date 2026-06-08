@@ -22,6 +22,7 @@ export interface Student {
   routeId2?: string; // 🆕 NOVO: ID da segunda rota (opcional)
   name: string;
   active: boolean;
+  statusHistory?: { active: boolean; date: string }[];
   guardianName?: string; // Nome do Responsável
   contact?: string; // Telefone/Contato
   responsibleCpf?: string;
@@ -80,7 +81,16 @@ export interface Payment {
   timestamp: number;
 }
 
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  date: string;
+  timestamp: number;
+}
+
 export interface BackupData {
+  expenses: Expense[];
   routes: Route[];
   stops: Stop[];
   students: Student[];

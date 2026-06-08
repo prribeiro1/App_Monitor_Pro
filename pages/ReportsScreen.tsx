@@ -2,6 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { Student, AttendanceRecord, Route, Stop } from '../types';
 import { Icon } from '../components/Icon';
+
+const isStudentActiveOnDate = (student: Student, dateStr: string): boolean => {
+  if (!student.statusHistory || student.statusHistory.length === 0) {
+    return student.active;
+  }
+  const history = [...student.statusHistory].sort((a, b) => a.date.localeCompare(b.date));
+  let lastActive = student.active;
+  let found = false;
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].date <= dateStr) {
+      lastActive = history[i].active;
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    lastActive = !history[0].active;
+  }
+  return lastActive;
+};
+
 import { InitialsAvatar } from '../components/Avatar';
 import { useI18n } from '../i18n';
 import jsPDF from 'jspdf';
@@ -124,6 +145,30 @@ export const ReportsScreen: React.FC = () => {
             dbService.getAttendance(),
         ]);
 
+        const [y, mVal] = month.split('-').map(Number);
+        const daysInMonth = new Date(y, mVal, 0).getDate();
+        const isActiveInMonth = (student: Student) => {
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${y}-${String(mVal).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                if (isStudentActiveOnDate(student, dateStr)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        const filteredStudents = students.filter(student => {
+            if (reportType === 'daily') {
+                const isActive = isStudentActiveOnDate(student, date);
+                if (!isActive) return false;
+                const record = attendance.find(a => a.studentId === student.id && a.date === date);
+                const isMarked = record && (record.status === 'PRESENT' || record.status === 'ABSENT');
+                return !!isMarked;
+            } else {
+                return isActiveInMonth(student);
+            }
+        });
+
         if (groupBy === 'route') {
             // --- RELATÓRIO POR ROTA (organizado e ordenado) ---
             const grouped: Record<string, RouteReportGroup> = {};
@@ -135,7 +180,7 @@ export const ReportsScreen: React.FC = () => {
             });
             grouped['sem_rota'] = { routeName: 'Sem Rota Definida', students: [] };
 
-            students.forEach(student => {
+            filteredStudents.forEach(student => {
                 let hasRoute = false;
                 if (student.routeId) {
                     const groupId = student.routeId;
@@ -176,7 +221,7 @@ export const ReportsScreen: React.FC = () => {
             // --- RELATÓRIO POR ESCOLA (hierárquico: Escola -> Sala/Turma) ---
             const schoolGroups: Record<string, SchoolGroup> = {};
 
-            students.forEach(student => {
+            filteredStudents.forEach(student => {
                 const schoolName = student.school || 'Sem Escola';
                 const salaName = student.sala || 'Sem Sala';
                 const shiftLabel = student.shift ? student.shift.toUpperCase() : 'SEM TURNO';
@@ -369,6 +414,12 @@ export const ReportsScreen: React.FC = () => {
                     const dateObj = new Date(y, m - 1, day);
                     const dayOfWeek = dateObj.getDay();
                     if (dayOfWeek === 0 || dayOfWeek === 6) return null;
+                    
+                    const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    if (!isStudentActiveOnDate(stats.student, dateStr)) {
+                        return <div key={day} className="h-8 w-8" />;
+                    }
+
                     let bgClass = "bg-navy-700 text-gray-400";
                     if (stats.presentDates.includes(day)) bgClass = "bg-green-500 text-white";
                     if (stats.absentDates.includes(day)) bgClass = "bg-red-500 text-white";

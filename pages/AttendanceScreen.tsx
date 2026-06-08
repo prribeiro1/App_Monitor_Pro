@@ -91,17 +91,34 @@ export const AttendanceScreen: React.FC = () => {
   );
 
   const markAttendance = async (studentId: string, status: AttendanceStatus, routeId: string) => {
-    const record: AttendanceRecord = {
-      id: `${today}_${studentId}_${routeId}`,
-      studentId,
-      routeId,
-      date: today,
-      status,
-      timestamp: Date.now()
-    };
+    const student = students.find(s => s.id === studentId);
+    const routesToMark = [routeId];
+    
+    if (student) {
+      if (student.routeId && student.routeId2) {
+        if (student.routeId === routeId) {
+          routesToMark.push(student.routeId2);
+        } else if (student.routeId2 === routeId) {
+          routesToMark.push(student.routeId);
+        }
+      }
+    }
 
-    await dbService.saveAttendance(record);
-    setAttendance(prev => ({ ...prev, [getAttendanceKey(studentId, routeId)]: status }));
+    const updates: Record<string, AttendanceStatus> = {};
+    for (const rId of routesToMark) {
+      const record: AttendanceRecord = {
+        id: `${today}_${studentId}_${rId}`,
+        studentId,
+        routeId: rId,
+        date: today,
+        status,
+        timestamp: Date.now()
+      };
+      await dbService.saveAttendance(record);
+      updates[getAttendanceKey(studentId, rId)] = status;
+    }
+
+    setAttendance(prev => ({ ...prev, ...updates }));
   };
 
   const toggleRoute = (id: string) => {

@@ -67,6 +67,20 @@ const openQueueDB = (): Promise<IDBDatabase> => {
 const cleanUUID = (id: string | undefined | null) => (id && id.trim() !== '') ? id : null;
 
 const prepareUpsertData = (op: PendingOperation, userId: string) => {
+        if (op.entity === 'expense') {
+        return {
+            data: {
+                id: op.data.id,
+                user_id: userId,
+                description: op.data.description,
+                amount: op.data.amount,
+                date: op.data.date,
+                created_at: new Date(op.data.timestamp).toISOString()
+            },
+            addUpdatedAt: false
+        };
+    }
+
     if (op.entity === 'attendance') {
         return {
             data: {
@@ -110,7 +124,8 @@ const prepareUpsertData = (op: PendingOperation, userId: string) => {
                 estimated_pickup_time: op.data.estimatedPickupTime,
                 estimated_drop_time: op.data.estimatedDropTime,
                 birth_date: op.data.birthDate,
-                observation: op.data.observation
+                observation: op.data.observation,
+                status_history: op.data.statusHistory || []
             },
             addUpdatedAt: true
         };
@@ -265,7 +280,8 @@ export const syncQueue = {
             'maintenance_item': 'maintenance_items',
             'maintenance_log': 'maintenance_logs',
             'user_settings': 'user_settings',
-            'reminder': 'reminders'
+            'reminder': 'reminders',
+            'expense': 'expenses'
         };
 
         const tableName = entityMap[op.entity];
