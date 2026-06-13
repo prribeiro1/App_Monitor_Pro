@@ -5,7 +5,7 @@ import { syncQueue } from './syncQueue';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 const DB_NAME = 'SchoolMonitorDB';
-const DB_VERSION = 4; // Incremented for New Route Structure
+const DB_VERSION = 5; // Incremented for expenses store
 
 // Helper to open DB
 const openDB = (): Promise<IDBDatabase> => {

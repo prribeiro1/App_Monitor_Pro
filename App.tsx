@@ -544,7 +544,7 @@ function App() {
           fetchSettings();
         }).catch((err) => {
           console.error("Erro no pullFromCloud:", err);
-          alert("Erro no sincronismo inicial: " + (err.message || JSON.stringify(err)));
+          
         });
       }
     });
@@ -562,7 +562,7 @@ function App() {
           fetchSettings();
         }).catch((err) => {
           console.error("Erro no pullFromCloud apos SIGNED_IN:", err);
-          alert("Erro no sincronismo do login: " + (err.message || JSON.stringify(err)));
+          
         });
       }
     });
